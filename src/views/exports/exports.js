@@ -83,266 +83,443 @@ export async function renderExports(container) {
   const enseignants = await db.enseignants.toArray();
   const classes = await db.classes.toArray();
 
+  const noData = seances.length === 0;
+
   container.innerHTML = `
-    <div style="max-width:900px;margin:0 auto;">
-      <h2 style="margin-bottom:var(--sp-6);">Exports</h2>
+    <div style="max-width:960px;margin:0 auto;">
 
-      <div class="dashboard-grid">
-
-        <!-- Partage lecture seule -->
-        <div class="card" style="cursor:default;grid-column:1/-1;border-left:4px solid #3b82f6;">
-          <div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-2);">
-            <span style="font-size:1.8rem;">&#128279;</span>
-            <h3 style="margin:0;">Partage lecture seule</h3>
-            <span style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;
-                         border-radius:12px;padding:2px 10px;font-size:11px;font-weight:700;
-                         letter-spacing:.04em;text-transform:uppercase;margin-left:4px;">Nouveau</span>
-          </div>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Génère un fichier <strong>HTML autonome</strong> que vous pouvez envoyer aux enseignants par e-mail ou déposer sur un espace partagé.
-            Ils l'ouvrent dans leur navigateur&nbsp;: navigation par enseignant, par classe, filtre période, impression — <em>aucun accès à l'outil de saisie</em>.
+      <!-- ── En-tête page ── -->
+      <div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-8);">
+        <div>
+          <h2 style="margin:0;font-size:var(--fs-xl);font-weight:700;letter-spacing:-0.02em;">Exports</h2>
+          <p style="margin:var(--sp-1) 0 0;font-size:var(--fs-sm);color:var(--c-text-muted);">
+            ${seances.length} séance${seances.length !== 1 ? 's' : ''}
+            · ${periodes.length} période${periodes.length !== 1 ? 's' : ''}
+            · ${enseignants.length} enseignant${enseignants.length !== 1 ? 's' : ''}
           </p>
-          <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
-            <select class="form-select" id="export-partage-per" style="flex:1;max-width:260px;">
-              <option value="">Toutes les périodes (recommandé)</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-export-partage" ${seances.length === 0 ? 'disabled' : ''}
-                    style="background:#3b82f6;">
-              &#128279;&nbsp;Générer le fichier HTML
-            </button>
+        </div>
+        ${noData ? `<span class="exports-no-data">Aucune séance — exports désactivés</span>` : ''}
+      </div>
+
+      <!-- ════════════════════════════════════════
+           SECTION 1 — PARTAGE & SAUVEGARDE
+      ════════════════════════════════════════ -->
+      <div class="export-section export-section--blue">
+        <div class="export-section-heading">
+          <div class="export-section-heading-icon" style="background:#DBEAFE;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
           </div>
+          <div class="export-section-heading-text">
+            <span class="export-section-heading-title">Partage &amp; Sauvegarde</span>
+            <span class="export-section-heading-sub">Fichiers à partager ou à archiver</span>
+          </div>
+          <div class="export-section-heading-line"></div>
         </div>
 
-        <!-- Export CSV Mairie -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#127963;</div>
-          <h3 style="margin-bottom:var(--sp-2);">CSV Mairie (réservations)</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Export des réservations d'installations au format CSV, inspiré du format Direction des Sports d'Antibes.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);">
-            <select class="form-select" id="export-mairie-per" style="flex:1;">
-              <option value="">Toutes les périodes</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-export-mairie" ${seances.length === 0 ? 'disabled' : ''}>
-              Exporter CSV
-            </button>
-          </div>
-        </div>
+        <div class="export-grid-2">
 
-        <!-- Export Transport CSV -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#128652;</div>
-          <h3 style="margin-bottom:var(--sp-2);">Transport (demandes bus)</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Export des besoins en transport : 1 ligne = 1 classe, avec dates, lieu, horaires départ/retour.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);">
-            <select class="form-select" id="export-transport-per" style="flex:1;">
-              <option value="">Toutes les périodes</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-export-transport" ${seances.length === 0 ? 'disabled' : ''}>
-              Exporter CSV
-            </button>
-          </div>
-        </div>
-
-        <!-- Dates exclues transport -->
-        <div class="card" style="cursor:default;grid-column:1/-1;">
-          <div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-2);">
-            <span style="font-size:1.6rem;">🚫</span>
-            <h3 style="margin:0;">Dates exclues du transport</h3>
-            <span style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-left:auto;">
-              Journées péda, voyages, bac blanc…
-            </span>
-          </div>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
-            Ces dates sont retirées du planning PDF transport. Une page récapitulative est ajoutée au PDF si des exclusions sont appliquées.
-          </p>
-
-          <!-- Formulaire ajout -->
-          <div style="display:flex;gap:var(--sp-2);align-items:flex-end;flex-wrap:wrap;
-                      background:var(--c-surface-2,#f5f7fa);border-radius:8px;padding:var(--sp-3);
-                      margin-bottom:var(--sp-3);">
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <label style="font-size:var(--fs-sm);font-weight:600;">Date</label>
-              <input type="date" class="form-control" id="excl-date" style="width:150px;">
+          <!-- Partage HTML lecture seule — carte principale (pleine largeur) -->
+          <div class="export-card export-card-featured export-card-full">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#EFF6FF;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Partage lecture seule</span>
+                  <span class="fmt-badge fmt-badge-html">HTML</span>
+                  <span style="background:var(--c-primary-bg-strong);color:var(--c-primary-dark);border:1px solid #BFDBFE;border-radius:var(--radius-full);padding:2px 8px;font-size:var(--fs-xs);font-weight:700;letter-spacing:.03em;">Nouveau</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                Génère un fichier <strong>HTML autonome</strong> à envoyer par e-mail ou à déposer sur un espace partagé.
+                Navigation par enseignant, par classe, filtre période, impression — <em>aucun accès à la saisie</em>.
+              </p>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px;">
-              <label style="font-size:var(--fs-sm);font-weight:600;">Raison</label>
-              <input type="text" class="form-control" id="excl-raison"
-                     placeholder="ex : Journée pédagogique, Voyage 3eA…">
+            <div class="export-card-footer">
+              <select class="form-select" id="export-partage-per" style="flex:1;max-width:280px;">
+                <option value="">Toutes les périodes (recommandé)</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <button class="btn btn-primary" id="btn-export-partage" ${noData ? 'disabled' : ''}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Générer le fichier HTML
+              </button>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <label style="font-size:var(--fs-sm);font-weight:600;">Classes concernées</label>
-              <select class="form-select" id="excl-classes" multiple
-                      style="height:72px;min-width:180px;">
-                <option value="all" selected>Toutes les classes</option>
+          </div>
+
+          <!-- Fichier projet JSON -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#F5F3FF;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Fichier projet</span>
+                  <span class="fmt-badge" style="background:#F5F5F5;color:#475569;font-family:var(--font-mono);">JSON</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                Sauvegarde complète : données, séances, réservations. Permet de restaurer ou de transférer le projet vers un autre poste.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <button class="btn btn-primary" id="btn-export-json" style="flex:1;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+                Exporter
+              </button>
+              <button class="btn btn-outline" id="btn-import-json" style="flex:1;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+                Importer
+              </button>
+              <input type="file" id="import-json-file" accept=".json" style="display:none;">
+            </div>
+          </div>
+
+          <!-- Synthèse occupation installations -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#CFFAFE;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Occupation des installations</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                Tableau croisé installations × créneaux : qui est où, quand. S'ouvre dans une fenêtre prête à imprimer.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <select class="form-select" id="synthese-occ-per" style="flex:1;min-width:150px;">
+                <option value="">Toutes les périodes</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <button class="btn btn-outline" id="btn-synthese-occ" ${noData ? 'disabled' : ''}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                Afficher
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           SECTION 2 — EMPLOI DU TEMPS
+      ════════════════════════════════════════ -->
+      <div class="export-section export-section--purple">
+        <div class="export-section-heading">
+          <div class="export-section-heading-icon" style="background:#DDD6FE;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="export-section-heading-text">
+            <span class="export-section-heading-title">Emploi du Temps</span>
+            <span class="export-section-heading-sub">PDF et Excel — grille équipe et fiches individuelles</span>
+          </div>
+          <div class="export-section-heading-line"></div>
+        </div>
+
+        <div class="export-grid-2">
+
+          <!-- PDF EDT Équipe -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#F3E8FF;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">EDT Équipe</span>
+                  <span class="fmt-badge fmt-badge-pdf">PDF</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                Grille semaine complète de l'équipe, paysage A4, avec couleurs par installation.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <select class="form-select" id="export-pdf-equipe-per" style="flex:1;">
+                <option value="">Toutes les périodes</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <button class="btn btn-primary" id="btn-export-pdf-equipe" ${noData ? 'disabled' : ''}>Exporter</button>
+            </div>
+          </div>
+
+          <!-- Excel EDT Équipe -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#D1FAE5;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">EDT Équipe</span>
+                  <span class="fmt-badge fmt-badge-xlsx">XLSX</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                Emploi du temps complet avec une feuille par période, plus un onglet par enseignant.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <select class="form-select" id="export-edt-per" style="flex:1;">
+                <option value="">Toutes les périodes</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <button class="btn btn-primary" id="btn-export-excel" ${noData ? 'disabled' : ''}>Exporter</button>
+            </div>
+          </div>
+
+          <!-- Fiches individuelles PDF -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#F3E8FF;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Fiches individuelles</span>
+                  <span class="fmt-badge fmt-badge-pdf">PDF</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                EDT personnel de chaque enseignant, portrait A4. Filtrables par enseignant et par période.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <select class="form-select" id="export-pdf-fiche-per" style="flex:1;min-width:120px;">
+                <option value="">Toutes les périodes</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <select class="form-select" id="export-pdf-fiche-ens" style="flex:1;min-width:140px;">
+                <option value="">Tous les enseignants</option>
+                ${enseignants.map(e => `<option value="${e.id}">${e.prenom ? e.prenom + ' ' : ''}${e.nom}</option>`).join('')}
+              </select>
+              <button class="btn btn-primary" id="btn-export-pdf-fiches" ${noData ? 'disabled' : ''}>Exporter</button>
+            </div>
+          </div>
+
+          <!-- Fiches par classe PDF -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#F3E8FF;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Fiches par classe</span>
+                  <span class="fmt-badge fmt-badge-pdf">PDF</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                EDT de chaque classe, portrait A4 — professeur, activité, installation. Filtrable par classe.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <select class="form-select" id="export-pdf-classe-per" style="flex:1;min-width:120px;">
+                <option value="">Toutes les périodes</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <select class="form-select" id="export-pdf-classe-cls" style="flex:1;min-width:140px;">
+                <option value="">Toutes les classes</option>
                 ${classes.sort((a,b) => a.nom.localeCompare(b.nom,'fr')).map(c =>
                   `<option value="${c.id}">${c.nom}</option>`).join('')}
               </select>
-              <small style="color:var(--c-text-secondary);font-size:10px;">
-                Ctrl+clic pour sélection multiple
-              </small>
+              <button class="btn btn-primary" id="btn-export-pdf-classes" ${noData ? 'disabled' : ''}>Exporter</button>
             </div>
-            <button class="btn btn-primary" id="btn-add-exclusion">+ Ajouter</button>
           </div>
 
-          <!-- Liste des exclusions -->
-          <div id="exclusions-list"></div>
         </div>
-
-        <!-- Export Transport PDF -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#128652;</div>
-          <h3 style="margin-bottom:var(--sp-2);">Transport PDF (planning bus)</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Planning transport au format PDF — 1 page collège + 1 page lycée. Toutes les dates de la période, triées par jour, avec lieux, horaires et enseignants.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);">
-            <select class="form-select" id="export-transport-pdf-per" style="flex:1;">
-              <option value="">Toutes les périodes</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-export-transport-pdf" ${seances.length === 0 ? 'disabled' : ''}>
-              Exporter PDF
-            </button>
-          </div>
-        </div>
-
-        <!-- Export EDT Excel -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#128196;</div>
-          <h3 style="margin-bottom:var(--sp-2);">EDT Équipe (Excel)</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Emploi du temps complet de l'équipe EPS au format Excel, avec une feuille par période.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);">
-            <select class="form-select" id="export-edt-per" style="flex:1;">
-              <option value="">Toutes les périodes (1 feuille chacune)</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-export-excel" ${seances.length === 0 ? 'disabled' : ''}>
-              Exporter Excel
-            </button>
-          </div>
-        </div>
-
-        <!-- Export Projet (JSON) -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#128190;</div>
-          <h3 style="margin-bottom:var(--sp-2);">Fichier projet (JSON)</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Sauvegarde complète du projet (données + séances + réservations) au format JSON.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);">
-            <button class="btn btn-primary" id="btn-export-json">Exporter</button>
-            <button class="btn btn-outline" id="btn-import-json">Importer</button>
-            <input type="file" id="import-json-file" accept=".json" style="display:none;">
-          </div>
-        </div>
-
-        <!-- Synthèses -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#128202;</div>
-          <h3 style="margin-bottom:var(--sp-2);">Synthèses</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Occupation des installations, répartition intra/extra-muros par période et niveau.
-          </p>
-          <button class="btn btn-primary" id="btn-synthese" ${seances.length === 0 ? 'disabled' : ''}>
-            Exporter synthèses (Excel)
-          </button>
-        </div>
-
-        <!-- Export PDF EDT Équipe -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#128196;</div>
-          <h3 style="margin-bottom:var(--sp-2);">PDF EDT Équipe</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Grille semaine complète de l'équipe EPS au format PDF (paysage A4), avec couleurs par installation.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);">
-            <select class="form-select" id="export-pdf-equipe-per" style="flex:1;">
-              <option value="">Toutes les périodes</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-export-pdf-equipe" ${seances.length === 0 ? 'disabled' : ''}>
-              Exporter PDF
-            </button>
-          </div>
-        </div>
-
-        <!-- Export PDF Fiches individuelles -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#128101;</div>
-          <h3 style="margin-bottom:var(--sp-2);">Fiches individuelles (PDF)</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Emploi du temps individuel de chaque enseignant au format PDF (portrait A4), à distribuer.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
-            <select class="form-select" id="export-pdf-fiche-per" style="flex:1;min-width:120px;">
-              <option value="">Toutes les périodes</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <select class="form-select" id="export-pdf-fiche-ens" style="flex:1;min-width:130px;">
-              <option value="">Tous les enseignants</option>
-              ${enseignants.map(e => `<option value="${e.id}">${e.prenom ? e.prenom + ' ' : ''}${e.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-export-pdf-fiches" ${seances.length === 0 ? 'disabled' : ''}>
-              Exporter PDF
-            </button>
-          </div>
-        </div>
-
-        <!-- Export PDF Fiches par classe -->
-        <div class="card" style="cursor:default;">
-          <div style="font-size:2rem;margin-bottom:var(--sp-3);">&#127979;</div>
-          <h3 style="margin-bottom:var(--sp-2);">Fiches par classe (PDF)</h3>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Emploi du temps de chaque classe au format PDF (portrait A4) — affiche le professeur, l'activité et l'installation.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
-            <select class="form-select" id="export-pdf-classe-per" style="flex:1;min-width:120px;">
-              <option value="">Toutes les périodes</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <select class="form-select" id="export-pdf-classe-cls" style="flex:1;min-width:130px;">
-              <option value="">Toutes les classes</option>
-              ${classes.sort((a,b) => a.nom.localeCompare(b.nom,'fr')).map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-export-pdf-classes" ${seances.length === 0 ? 'disabled' : ''}>
-              Exporter PDF
-            </button>
-          </div>
-        </div>
-        <!-- Synthèse occupation installations -->
-        <div class="card" style="cursor:default;grid-column:1/-1;">
-          <div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-2);">
-            <span style="font-size:1.8rem;">📍</span>
-            <h3 style="margin:0;">Synthèse occupation installations</h3>
-            <span style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-left:auto;">
-              Qui est où, quand — vue sur une page
-            </span>
-          </div>
-          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-            Tableau croisé installations × créneaux : toutes les classes et enseignants, jour par jour.
-            S'ouvre dans une nouvelle fenêtre prête à imprimer ou enregistrer en PDF.
-          </p>
-          <div style="display:flex;gap:var(--sp-2);">
-            <select class="form-select" id="synthese-occ-per" style="flex:1;max-width:280px;">
-              <option value="">Toutes les périodes</option>
-              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
-            </select>
-            <button class="btn btn-primary" id="btn-synthese-occ" ${seances.length === 0 ? 'disabled' : ''}>
-              Afficher / Imprimer
-            </button>
-          </div>
-        </div>
-
       </div>
+
+      <!-- ════════════════════════════════════════
+           SECTION 3 — INSTALLATIONS & RÉSERVATIONS
+      ════════════════════════════════════════ -->
+      <div class="export-section export-section--green">
+        <div class="export-section-heading">
+          <div class="export-section-heading-icon" style="background:#BBF7D0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="export-section-heading-text">
+            <span class="export-section-heading-title">Installations &amp; Réservations</span>
+            <span class="export-section-heading-sub">CSV mairie et synthèses analytiques</span>
+          </div>
+          <div class="export-section-heading-line"></div>
+        </div>
+
+        <div class="export-grid-2">
+
+          <!-- CSV Mairie -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#D1FAE5;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Réservations Mairie</span>
+                  <span class="fmt-badge fmt-badge-csv">CSV</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                Format Direction des Sports — complexe, installation, créneaux, dates. Prêt à envoyer.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <select class="form-select" id="export-mairie-per" style="flex:1;">
+                <option value="">Toutes les périodes</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <button class="btn btn-primary" id="btn-export-mairie" ${noData ? 'disabled' : ''}>Exporter</button>
+            </div>
+          </div>
+
+          <!-- Synthèses Excel -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#D1FAE5;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Synthèses analytiques</span>
+                  <span class="fmt-badge fmt-badge-xlsx">XLSX</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                Occupation installations, répartition intra/extra, charge enseignants, activités par classe et transport.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <button class="btn btn-primary" id="btn-synthese" ${noData ? 'disabled' : ''} style="width:100%;">
+                Exporter les synthèses
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           SECTION 4 — TRANSPORT
+      ════════════════════════════════════════ -->
+      <div class="export-section export-section--amber">
+        <div class="export-section-heading">
+          <div class="export-section-heading-icon" style="background:#FDE68A;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <div class="export-section-heading-text">
+            <span class="export-section-heading-title">Transport</span>
+            <span class="export-section-heading-sub">Planning bus — CSV, PDF et dates exclues</span>
+          </div>
+          <div class="export-section-heading-line"></div>
+        </div>
+
+        <div class="export-grid-2">
+
+          <!-- Transport CSV -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#FEF3C7;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Demandes de transport</span>
+                  <span class="fmt-badge fmt-badge-csv">CSV</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                1 ligne = 1 classe — jour, créneau, lieu, horaires bus aller/retour, toutes les dates et nombre de rotations.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <select class="form-select" id="export-transport-per" style="flex:1;">
+                <option value="">Toutes les périodes</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <button class="btn btn-primary" id="btn-export-transport" ${noData ? 'disabled' : ''}>Exporter</button>
+            </div>
+          </div>
+
+          <!-- Transport PDF -->
+          <div class="export-card">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#FEF3C7;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Planning transport</span>
+                  <span class="fmt-badge fmt-badge-pdf">PDF</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                1 page collège + 1 page lycée — toutes les dates, triées par jour, avec lieux, horaires et enseignants.
+              </p>
+            </div>
+            <div class="export-card-footer">
+              <select class="form-select" id="export-transport-pdf-per" style="flex:1;">
+                <option value="">Toutes les périodes</option>
+                ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+              </select>
+              <button class="btn btn-primary" id="btn-export-transport-pdf" ${noData ? 'disabled' : ''}>Exporter</button>
+            </div>
+          </div>
+
+          <!-- Dates exclues transport — pleine largeur -->
+          <div class="export-card export-card-full">
+            <div class="export-card-body">
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background:#FEE2E2;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                </div>
+                <div class="export-card-meta">
+                  <span class="export-card-title">Dates exclues du transport</span>
+                </div>
+              </div>
+              <p class="export-card-desc">
+                Ces dates sont retirées du planning PDF. Une page récapitulative est ajoutée si des exclusions sont appliquées.
+                <span style="color:var(--c-text-muted);">Journées pédagogiques, voyages, bac blanc…</span>
+              </p>
+
+              <!-- Formulaire ajout -->
+              <div class="excl-form">
+                <div class="excl-form-group">
+                  <label for="excl-date">Date</label>
+                  <input type="date" class="form-input" id="excl-date" style="width:150px;">
+                </div>
+                <div class="excl-form-group" style="flex:1;min-width:200px;">
+                  <label for="excl-raison">Raison</label>
+                  <input type="text" class="form-input" id="excl-raison"
+                         placeholder="ex : Journée pédagogique, Voyage 3eA…">
+                </div>
+                <div class="excl-form-group">
+                  <label for="excl-classes">Classes concernées</label>
+                  <select class="form-select" id="excl-classes" multiple style="height:72px;min-width:180px;">
+                    <option value="all" selected>Toutes les classes</option>
+                    ${classes.sort((a,b) => a.nom.localeCompare(b.nom,'fr')).map(c =>
+                      `<option value="${c.id}">${c.nom}</option>`).join('')}
+                  </select>
+                  <span style="font-size:var(--fs-xs);color:var(--c-text-muted);margin-top:2px;">Ctrl+clic pour sélection multiple</span>
+                </div>
+                <button class="btn btn-primary" id="btn-add-exclusion" style="align-self:flex-end;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Ajouter
+                </button>
+              </div>
+            </div>
+
+            <div id="exclusions-list" style="padding:0 var(--sp-5) var(--sp-4);"></div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   `;
 
