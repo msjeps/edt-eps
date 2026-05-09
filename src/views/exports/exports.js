@@ -8,8 +8,16 @@ import { genererDatesJour, getCalendrierExclusions } from '../../utils/dates.js'
 import { JOURS_OUVRES, slugify } from '../../utils/helpers.js';
 import Papa from 'papaparse';
 import { saveExportFile } from '../../utils/filesystem.js';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { exportPdfEquipe, exportPdfEnseignants, exportPdfClasses } from '../../export/pdf-edt.js';
+
+function addSheetFromAoa(wb, sheetName, wsData, colWidths, merges) {
+  const ws = wb.addWorksheet(sheetName);
+  wsData.forEach(row => ws.addRow(row));
+  if (colWidths) colWidths.forEach((c, i) => { ws.getColumn(i + 1).width = c.wch || 10; });
+  if (merges) merges.forEach(m => ws.mergeCells(m.s.r + 1, m.s.c + 1, m.e.r + 1, m.e.c + 1));
+  return ws;
+}
 import { exportPdfTransport } from '../../export/pdf-transport.js';
 import { exportPartageHtml } from '../../export/partage-html.js';
 
@@ -775,12 +783,11 @@ async function exportExcelEdt(periodeId) {
     });
   }
 
-  const wb = XLSX.utils.book_new();
+  const wb = new ExcelJS.Workbook();
 
   for (const per of periodesToExport) {
     const perSeances = seances.filter(s => s.periodeId === per.id);
 
-    // Construire la matrice : lignes = créneaux, colonnes = jours
     const headerRow = ['Créneau', ...joursOuvres.map(j => j.charAt(0).toUpperCase() + j.slice(1))];
     const dataRows = [];
 
@@ -788,21 +795,18 @@ async function exportExcelEdt(periodeId) {
       const row = [slot.label];
 
       for (const jour of joursOuvres) {
-        // Trouver les séances qui couvrent ce créneau ce jour
         const slotSeances = perSeances.filter(s => {
           if ((s.jour || '').toLowerCase() !== jour) return false;
           const sStart = heureToMin(s.heureDebut);
           const sEnd = heureToMin(s.heureFin);
           const slotStart = heureToMin(slot.debut);
           const slotEnd = heureToMin(slot.fin);
-          // La séance couvre ce slot si elle chevauche
           return sStart < slotEnd && sEnd > slotStart;
         });
 
         if (slotSeances.length === 0) {
           row.push('');
         } else {
-          // Afficher toutes les séances du créneau
           const cellContent = slotSeances.map(s => {
             const cls = classes.find(c => c.id === s.classeId);
             const ens = enseignants.find(e => e.id === s.enseignantId);
@@ -826,7 +830,6 @@ async function exportExcelEdt(periodeId) {
       dataRows.push(row);
     }
 
-    // Créer la feuille
     const wsData = [
       [`EDT ${etablissement} — ${per.nom}`],
       [],
@@ -834,22 +837,10 @@ async function exportExcelEdt(periodeId) {
       ...dataRows,
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // Largeurs de colonnes
-    ws['!cols'] = [
-      { wch: 14 }, // Créneau
-      ...joursOuvres.map(() => ({ wch: 40 })), // Jours
-    ];
-
-    // Fusionner la ligne de titre
-    ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: joursOuvres.length } },
-    ];
-
-    // Nom de feuille (max 31 caractères pour Excel)
-    const sheetName = per.nom.substring(0, 31);
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    addSheetFromAoa(wb, per.nom.substring(0, 31), wsData,
+      [{ wch: 14 }, ...joursOuvres.map(() => ({ wch: 40 }))],
+      [{ s: { r: 0, c: 0 }, e: { r: 0, c: joursOuvres.length } }],
+    );
   }
 
   // Export EDT par enseignant (une feuille par prof)
@@ -864,7 +855,6 @@ async function exportExcelEdt(periodeId) {
       const perSeances = ensSeances.filter(s => s.periodeId === per.id);
       if (perSeances.length === 0) continue;
 
-      // Ajouter une ligne avec le nom de la période
       dataRows.push([`— ${per.nom} —`, ...joursOuvres.map(() => '')]);
 
       for (const slot of slots) {
@@ -912,21 +902,15 @@ async function exportExcelEdt(periodeId) {
       ...dataRows,
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [
-      { wch: 14 },
-      ...joursOuvres.map(() => ({ wch: 35 })),
-    ];
-    ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: joursOuvres.length } },
-    ];
-
     const sheetName = `${ens.prenom?.[0] || ''}. ${ens.nom}`.substring(0, 31);
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    addSheetFromAoa(wb, sheetName, wsData,
+      [{ wch: 14 }, ...joursOuvres.map(() => ({ wch: 35 }))],
+      [{ s: { r: 0, c: 0 }, e: { r: 0, c: joursOuvres.length } }],
+    );
   }
 
   // Télécharger
-  const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   await saveExportFile(blob, `EDT_EPS_${etablissement}_${new Date().toISOString().split('T')[0]}.xlsx`);
   toast.success('Export Excel sauvegardé');
@@ -978,14 +962,10 @@ function buildOccupationSheet(wb, titre, sheetName, installations, lieux, seance
   dataRows.push(totalRow);
 
   const wsData = [[titre], [], headerRow, ...dataRows];
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws['!cols'] = [
-    { wch: 25 }, { wch: 20 }, { wch: 10 },
-    ...periodesTriees.map(() => ({ wch: 14 })),
-    { wch: 10 },
-  ];
-  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: periodesTriees.length + 3 } }];
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  addSheetFromAoa(wb, sheetName, wsData,
+    [{ wch: 25 }, { wch: 20 }, { wch: 10 }, ...periodesTriees.map(() => ({ wch: 14 })), { wch: 10 }],
+    [{ s: { r: 0, c: 0 }, e: { r: 0, c: periodesTriees.length + 3 } }],
+  );
 }
 
 // Construit une feuille transport.
@@ -1036,12 +1016,10 @@ function buildTransportSheet(wb, titre, sheetName, installations, lieux, classes
   });
 
   const wsData = [[titre], [], headerRow, ...rows.map(r => r.data)];
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws['!cols'] = [
-    { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 25 },
-  ];
-  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  addSheetFromAoa(wb, sheetName, wsData,
+    [{ wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 25 }],
+    [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }],
+  );
 }
 
 async function exportSyntheses() {
@@ -1062,7 +1040,7 @@ async function exportSyntheses() {
   const seancesCollege = seances.filter(s => collegeIds.has(s.classeId));
   const seancesLycee   = seances.filter(s => lyceeIds.has(s.classeId));
 
-  const wb = XLSX.utils.book_new();
+  const wb = new ExcelJS.Workbook();
 
   // ── Feuilles Occupation installations ──
   buildOccupationSheet(wb, 'Occupation des installations', 'Occupation Installations',
@@ -1124,17 +1102,10 @@ async function exportSyntheses() {
       ...dataRows,
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [
-      { wch: 10 },
-      ...periodesTriees.map(() => ({ wch: 14 })),
-      ...periodesTriees.map(() => ({ wch: 14 })),
-      { wch: 14 }, { wch: 14 },
-    ];
-    ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: periodesTriees.length * 2 + 2 } },
-    ];
-    XLSX.utils.book_append_sheet(wb, ws, 'Intra-Extra par Niveau');
+    addSheetFromAoa(wb, 'Intra-Extra par Niveau', wsData,
+      [{ wch: 10 }, ...periodesTriees.map(() => ({ wch: 14 })), ...periodesTriees.map(() => ({ wch: 14 })), { wch: 14 }, { wch: 14 }],
+      [{ s: { r: 0, c: 0 }, e: { r: 0, c: periodesTriees.length * 2 + 2 } }],
+    );
   }
 
   // ── Feuille : Heures enseignants par période ──
@@ -1167,16 +1138,10 @@ async function exportSyntheses() {
       ...dataRows,
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [
-      { wch: 25 }, { wch: 8 },
-      ...periodesTriees.map(() => ({ wch: 14 })),
-      { wch: 18 },
-    ];
-    ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: periodesTriees.length + 2 } },
-    ];
-    XLSX.utils.book_append_sheet(wb, ws, 'Charge Enseignants');
+    addSheetFromAoa(wb, 'Charge Enseignants', wsData,
+      [{ wch: 25 }, { wch: 8 }, ...periodesTriees.map(() => ({ wch: 14 })), { wch: 18 }],
+      [{ s: { r: 0, c: 0 }, e: { r: 0, c: periodesTriees.length + 2 } }],
+    );
   }
 
   // ── Feuille : Activités par niveau et période ──
@@ -1211,15 +1176,10 @@ async function exportSyntheses() {
       ...dataRows,
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [
-      { wch: 8 }, { wch: 10 },
-      ...periodesTriees.map(() => ({ wch: 30 })),
-    ];
-    ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: periodesTriees.length + 1 } },
-    ];
-    XLSX.utils.book_append_sheet(wb, ws, 'Activités par Classe');
+    addSheetFromAoa(wb, 'Activités par Classe', wsData,
+      [{ wch: 8 }, { wch: 10 }, ...periodesTriees.map(() => ({ wch: 30 }))],
+      [{ s: { r: 0, c: 0 }, e: { r: 0, c: periodesTriees.length + 1 } }],
+    );
   }
 
   // ── Feuilles Transport ──
@@ -1234,7 +1194,7 @@ async function exportSyntheses() {
   }
 
   // Télécharger
-  const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const etablissement = await getConfig('etablissementNom') || 'Établissement';
   await saveExportFile(blob, `Syntheses_EPS_${etablissement}_${new Date().toISOString().split('T')[0]}.xlsx`);
