@@ -31,7 +31,7 @@ const HELP_TOPICS = {
   },
   importMairie: {
     titre: 'Import disponibilités mairie',
-    corps: 'La Direction des Sports publie un PDF hebdomadaire listant les réservations sur les équipements municipaux. Ce fichier JSON (extrait du PDF) permet de bloquer automatiquement les créneaux déjà réservés sur vos installations, évitant les conflits avec d\'autres clubs.',
+    corps: 'La Direction des Sports fournit les réservations sur les équipements municipaux (par période ou par semaine). L\'import accepte trois sources :\n• Fichier Excel .xlsx fourni par la mairie (Format A : onglets T1/T2/T3 — Format B : onglets Lundi…Vendredi)\n• Fichier JSON extrait du PDF Direction des Sports\n• Données intégrées 2025-2026\nLes créneaux importés bloquent automatiquement les installations concernées, évitant les conflits de réservation.',
   },
   reservationStatut: {
     titre: 'Statut de réservation',
