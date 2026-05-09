@@ -1,0 +1,567 @@
+/* ============================================================
+   Vue Programmation Annuelle
+   ============================================================ */
+
+.prog-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ---- Toolbar ---- */
+.prog-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.prog-filters {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.prog-filters .form-select { min-width: 180px; }
+
+.prog-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+/* ---- Tabs bar ---- */
+.prog-tabs-bar {
+  display: flex;
+  border-bottom: 2px solid var(--c-border);
+  margin-bottom: var(--sp-4);
+}
+
+.prog-tab-btn {
+  padding: var(--sp-2) var(--sp-5);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  font-family: var(--font-sans);
+  color: var(--c-text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.prog-tab-btn:hover { color: var(--c-text); }
+
+.prog-tab-btn.active {
+  color: var(--c-primary);
+  border-bottom-color: var(--c-primary);
+}
+
+/* ---- Empty state ---- */
+.prog-empty {
+  text-align: center;
+  padding: var(--sp-10) var(--sp-4);
+  color: var(--c-text-secondary);
+}
+
+.prog-empty-icon { font-size: 2.5rem; margin-bottom: var(--sp-3); opacity: 0.4; }
+
+/* ---- Matrix wrapper ---- */
+.prog-matrix-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---- Table ---- */
+.prog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  min-width: 700px;
+}
+
+.prog-table th,
+.prog-table td {
+  border: 1px solid var(--c-border-light);
+  padding: 0;
+}
+
+.prog-table thead th {
+  background: var(--c-surface-alt);
+  padding: var(--sp-3) var(--sp-3);
+  font-weight: 600;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  color: var(--c-text-secondary);
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--c-border);
+}
+
+.prog-th-classe {
+  text-align: left !important;
+  min-width: 220px;
+  width: 240px;
+}
+
+.prog-th-periode { min-width: 130px; }
+.prog-th-actions { width: 36px; min-width: 36px; }
+
+/* ---- Niveau header row ---- */
+.prog-niveau-row td {
+  background: var(--c-primary);
+  color: white;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.prog-niveau-count {
+  font-weight: 400;
+  opacity: 0.7;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+/* ---- Classe row ---- */
+.prog-classe-row .prog-classe-cell {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface-alt);
+}
+
+.prog-classe-name {
+  font-weight: 700;
+  color: var(--c-text);
+  margin-right: var(--sp-2);
+  font-size: var(--fs-sm);
+}
+
+.prog-empty-cell-wide {
+  padding: var(--sp-2) var(--sp-3);
+  text-align: center;
+}
+
+.prog-muted {
+  color: var(--c-text-muted);
+  font-style: italic;
+  margin-right: var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+/* ---- Créneau row ---- */
+.prog-creneau-row:hover { background: var(--c-primary-bg); }
+
+.prog-creneau-cell {
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);
+  background: var(--c-surface-alt);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 46px;
+}
+
+td.prog-creneau-cell {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+td.prog-creneau-cell > * {
+  display: inline;
+  vertical-align: middle;
+}
+
+.prog-creneau-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--c-text-secondary);
+}
+
+.prog-creneau-jour {
+  font-weight: 600;
+  color: var(--c-primary);
+  background: var(--c-primary-bg);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+}
+
+.prog-creneau-heures { font-size: var(--fs-xs); }
+
+.prog-ens-badge {
+  font-size: var(--fs-xs);
+  color: var(--c-text-muted);
+  background: var(--c-border-light);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Period cells ---- */
+.prog-cell {
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background var(--transition);
+  padding: var(--sp-1);
+}
+
+.prog-cell:hover { background: var(--c-primary-bg); }
+.prog-cell-empty { background: var(--c-surface); }
+
+.prog-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 38px;
+  color: var(--c-text-muted);
+  font-size: 1.1rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+
+.prog-cell-empty:hover .prog-add-btn {
+  background: var(--c-primary-bg);
+  color: var(--c-primary);
+}
+
+/* ---- Assignment cell —— COULEURS SYNCHRONISÉES avec EDT ---- */
+.prog-assignment {
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  min-height: 38px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  border-left: 3px solid var(--c-border-dark);
+}
+
+.prog-act-name {
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.prog-inst-badge {
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.prog-custom-time {
+  font-size: 0.65rem;
+  color: var(--c-primary);
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+/* ---- Status cells ---- */
+.prog-status-ok   { background: #F0FDF4; }
+.prog-status-warn { background: #FFFBEB; }
+
+/* ---- Action cell ---- */
+.prog-action-cell {
+  text-align: center;
+  vertical-align: middle;
+  width: 36px;
+  background: var(--c-surface-alt);
+}
+
+/* ============================================================
+   Installation Matrix (Tab 2)
+   ============================================================ */
+
+.prog-th-install { text-align: left !important; min-width: 160px; }
+.prog-th-cap     { width: 50px; min-width: 50px; text-align: center !important; }
+
+/* ---- Lieu header ---- */
+.prog-lieu-row td {
+  background: #334155;
+  color: white;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* ---- Installation row ---- */
+.prog-install-row { transition: background var(--transition); }
+.prog-install-row:hover { background: var(--c-primary-bg); }
+
+.prog-install-name {
+  padding: var(--sp-2) var(--sp-3);
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.prog-install-cap {
+  text-align: center;
+  padding: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--c-text-muted);
+}
+
+/* ---- Libre cell ---- */
+.prog-cell-libre {
+  text-align: center;
+  vertical-align: middle;
+  padding: var(--sp-1);
+}
+
+.prog-libre {
+  color: var(--c-text-muted);
+  font-size: var(--fs-xs);
+}
+
+/* ---- Installation entries ---- */
+.prog-cell-install {
+  padding: var(--sp-1);
+  vertical-align: top;
+}
+
+.prog-install-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.prog-install-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 4px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-alt);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  transition: all var(--transition);
+  border-left: 2px solid var(--c-border-dark);
+}
+
+.prog-install-entry:hover { background: var(--c-primary-bg); }
+
+.entry-classe {
+  font-weight: 700;
+  color: var(--c-primary);
+  min-width: 30px;
+  font-size: var(--fs-xs);
+}
+
+.entry-act {
+  color: var(--c-text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.entry-horaire {
+  color: var(--c-text-muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.entry-status { font-size: 0.7rem; }
+
+/* ---- Status entry colors ---- */
+.entry-ok      { background: #F0FDF4; border-left-color: #86EFAC; }
+.entry-warn    { background: #FEFCE8; border-left-color: #FDE047; }
+.entry-conflict {
+  background: #FFF1F2 !important;
+  border: 1px solid #FECACA !important;
+  border-left: 2px solid #EF4444 !important;
+}
+
+.prog-cell-conflict { background: #FFF1F2 !important; }
+
+/* ---- Conflict summary ---- */
+.prog-conflict-summary {
+  margin-top: var(--sp-4);
+  padding: var(--sp-4);
+  background: #FFF1F2;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-sm);
+}
+
+.prog-conflict-summary strong { color: var(--c-danger); }
+
+.prog-conflict-summary ul {
+  margin: var(--sp-2) 0 0 var(--sp-4);
+  padding: 0;
+}
+
+.prog-conflict-summary li {
+  margin-bottom: var(--sp-1);
+  color: var(--c-text-secondary);
+  line-height: 1.5;
+}
+
+/* ---- Stats bar ---- */
+.prog-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-3);
+  background: var(--c-surface-alt);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}
+
+.prog-progress-wrap {
+  flex: 1;
+  max-width: 200px;
+  height: 5px;
+  background: var(--c-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.prog-progress-bar {
+  display: block;
+  height: 100%;
+  background: var(--c-primary);
+  border-radius: 3px;
+  transition: width 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Assignment modal context ---- */
+.prog-assign-context {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.prog-assign-badge {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--c-surface-alt);
+  border: 1px solid var(--c-border);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--c-text-secondary);
+}
+
+.prog-assign-periode {
+  background: var(--c-primary-bg);
+  border-color: var(--c-primary-bg-strong);
+  color: var(--c-primary);
+}
+
+/* ---- Status legend ---- */
+.prog-status-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  background: var(--c-surface-alt);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-sm);
+}
+
+.prog-status-legend-label {
+  color: var(--c-text-muted);
+  font-weight: 500;
+  margin-right: var(--sp-1);
+}
+
+.prog-status-arrow { color: var(--c-text-muted); font-size: 0.9rem; }
+
+/* ---- Chevauchement de périodes ---- */
+.prog-cell-ghost { background: #F8FAFC; cursor: default; }
+
+.prog-ghost-assignment {
+  padding: var(--sp-1) var(--sp-2);
+  text-align: left;
+  min-height: 38px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  border-left: 2px solid var(--c-border-dark) !important;
+  opacity: 0.45;
+}
+
+.prog-ghost-badge {
+  font-size: 0.6rem;
+  color: var(--c-text-muted);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prog-cell-overlap-full { cursor: default; }
+
+.prog-overlap-source-badge {
+  font-size: 0.6rem;
+  color: var(--c-text-muted);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.ghost-full-cover { background: #F8FAFC; cursor: default; opacity: 0.55; }
+.ghost-partial    { background: #F8FAFC; cursor: default; opacity: 0.45; }
+
+.entry-ghost-badge {
+  font-size: 0.6rem;
+  color: var(--c-text-muted);
+  font-style: italic;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ---- Duree badge ---- */
+.prog-duree-badge {
+  font-size: 0.7rem;
+  color: var(--c-text-muted);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  padding: 0 5px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Add créneau row ---- */
+.prog-add-creneau-row td {
+  border-top: none !important;
+  border-bottom: 2px solid var(--c-border) !important;
+}
+
+.prog-add-creneau-td { padding: 3px var(--sp-3) 6px !important; }
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .prog-toolbar { flex-direction: column; align-items: stretch; }
+  .prog-filters { flex-direction: column; }
+  .prog-filters .form-select { min-width: auto; width: 100%; }
+}

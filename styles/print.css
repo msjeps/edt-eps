@@ -1,0 +1,370 @@
+/* ============================================================
+   PRINT CSS — Grille EDT
+   Format cible : A4 paysage (297 × 210 mm)
+   ============================================================ */
+
+@media print {
+
+  /* ---- Mise en page ---- */
+  @page {
+    size: A4 landscape;
+    margin: 10mm 8mm 8mm;
+  }
+
+  /* ---- Forcer couleurs (arrière-plans + textes) ---- */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ---- Typo de base ---- */
+  body {
+    background: white !important;
+    color: #0F172A !important;
+    font-family: Arial, Helvetica, 'Inter', sans-serif;
+    font-size: 8pt;
+    /* Déverrouiller la hauteur fixée à 100vh dans main.css */
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* ---- Éléments UI à masquer ---- */
+  #app-sidebar,
+  #app-header,
+  .edt-toolbar,
+  .edt-stats,
+  .bloc-detail-panel,
+  .modal-overlay,
+  .toast-container,
+  #conflict-banner,
+  .sidebar-actions,
+  nav,
+  .btn-print-trigger,
+  .edt-legend { display: none !important; }
+  /* .edt-legend = légende écran (CSS vars non imprimables) → remplacée par .edt-legend-print */
+
+  /* ---- Déverrouiller toute la chaîne de hauteurs fixes ----
+     body → #app → #app-body → #app-main → .view → .edt-container → .edt-grid-wrapper
+     Chaque niveau a height/overflow contraint ; tout doit passer en auto/visible.
+  ---- */
+  #app {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #app-body {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin-left: 0 !important;
+    padding: 0 !important;
+    flex: none !important;
+  }
+
+  #app-main {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    flex: none !important;
+    padding: 0 !important;
+  }
+
+  /* N'afficher que la vue active ---- */
+  .view { display: none !important; }
+  .view.active {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    animation: none !important;
+  }
+
+  /* ---- Conteneur EDT ---- */
+  .edt-container {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* ---- Header d'impression (masqué à l'écran, visible en print) ---- */
+  .print-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 0 5px;
+    margin-bottom: 5px;
+    border-bottom: 2px solid #1E293B;
+  }
+
+  .print-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .print-header-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #1E293B;
+    letter-spacing: -0.01em;
+  }
+
+  .print-header-subtitle {
+    font-size: 8pt;
+    color: #475569;
+    font-weight: 500;
+  }
+
+  .print-header-right {
+    text-align: right;
+    font-size: 7pt;
+    color: #94A3B8;
+    line-height: 1.5;
+  }
+
+  /* ---- Légende (masquée à l'écran, visible en print) ---- */
+  .edt-legend-print {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 4px 0 6px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #CBD5E1;
+  }
+
+  .edt-legend-print-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 6.5pt;
+    color: #475569;
+  }
+
+  .edt-legend-print-swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: inline-block;
+  }
+
+  /* ---- Grille wrapper ---- */
+  .edt-grid-wrapper {
+    /* flex:1 + overflow:auto en écran = hauteur fixe = contenu coupé en print */
+    flex: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: 100%;
+  }
+
+  /* ---- Grille CSS ---- */
+  .edt-grid {
+    min-width: 0 !important;
+    width: 100%;
+    font-size: 7pt;
+    row-gap: 1px;
+    background: #CBD5E1;
+  }
+
+  /* ---- En-têtes horaires (supprimer sticky) ---- */
+  .edt-header-cell {
+    position: static !important;
+    font-size: 6.5pt;
+    padding: 2px 1px;
+    background: #EEF2F7 !important;
+    z-index: auto !important;
+  }
+
+  .edt-header-cell.corner {
+    position: static !important;
+    z-index: auto !important;
+    background: #EEF2F7 !important;
+  }
+
+  .edt-header-cell.half-hour {
+    font-size: 5.5pt;
+    background: #F4F7FA !important;
+  }
+
+  /* ---- Bande jour ---- */
+  .edt-day-header {
+    padding: 4px 10px;
+    background: #1E293B !important;
+    border-top: 2px solid #3B82F6 !important;
+    /* Ne jamais laisser le titre d'un jour seul en bas de page :
+       le navigateur pousse l'ensemble {header + lignes} sur la page suivante si besoin. */
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .edt-day-header-name {
+    font-size: 7.5pt;
+    font-weight: 800;
+    color: #F1F5F9 !important;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .edt-day-header-count {
+    font-size: 6pt;
+    color: rgba(148, 163, 184, 0.9) !important;
+    background: rgba(59, 130, 246, 0.25) !important;
+    padding: 1px 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.35) !important;
+  }
+
+  /* ---- Cellule période (vue "Toutes") ---- */
+  .edt-period-cell {
+    font-size: 6.5pt;
+    font-weight: 700;
+    padding: 0 2px;
+    background: #E8EEF6 !important;
+  }
+
+  /* Lignes de période 2, 3… d'un même jour : coller à la ligne précédente.
+     Combiné avec break-after:avoid du day-header, toute la journée reste groupée.
+     Break possible uniquement AVANT un .edt-day-header (= entre deux jours). */
+  .edt-period-continued {
+    break-before: avoid !important;
+    page-break-before: avoid !important;
+  }
+
+  /* ---- Slot (zone de dépôt) ---- */
+  .edt-slot {
+    background: #FFFFFF !important;
+    border-right: 1px solid rgba(0,0,0,0.05) !important;
+    transition: none !important;
+    /* Empêche la coupure d'un slot au milieu de ses blocs empilés.
+       Sans cette règle, le navigateur coupe la ligne Vendredi entre le 2e et 3e niveau de pile. */
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .edt-slot.hour-border {
+    border-right: 1px solid #CBD5E1 !important;
+  }
+
+  /* ---- Blocs séances ---- */
+  .edt-bloc {
+    cursor: default !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    font-size: 6.5pt;
+    line-height: 1.2;
+    height: 30px !important;
+    padding: 2px 5px !important;
+    border-radius: 3px !important;
+    border-bottom-width: 2px !important;
+  }
+
+  .edt-bloc.conflict {
+    animation: none !important;
+    outline: 1.5px solid #DC2626 !important;
+    outline-offset: -1px !important;
+  }
+
+  .edt-bloc.dragging { opacity: 1 !important; }
+
+  /* Sous-éléments bloc */
+  .edt-bloc .bloc-class    { font-size: 7pt; font-weight: 700; }
+  .edt-bloc .bloc-activity { font-size: 6pt; }
+  .edt-bloc .bloc-install  { font-size: 5.5pt; }
+  .edt-bloc .bloc-prof     { font-size: 5.5pt; }
+  .edt-bloc .bloc-lock-icon { display: none; }
+
+  /* Masquer le point "from-prog" ---- */
+  .edt-bloc.from-prog::after { display: none !important; }
+
+  /* ---- Couleurs blocs — maintenues à l'impression ---- */
+  .edt-bloc[data-install="fort-carre"]  { background: #FCE4EC !important; border-color: #E91E63 !important; color: #880E4F !important; }
+  .edt-bloc[data-install="beach-fc"]    { background: #FFEBEE !important; border-color: #D32F2F !important; color: #B71C1C !important; }
+  .edt-bloc[data-install="auvergne"]    { background: #FFF8E1 !important; border-color: #F59E0B !important; color: #78350F !important; }
+  .edt-bloc[data-install="foch"]        { background: #E8F5E9 !important; border-color: #43A047 !important; color: #1B5E20 !important; }
+  .edt-bloc[data-install="fontonne"]    { background: #EDE7F6 !important; border-color: #7B1FA2 !important; color: #4A148C !important; }
+  .edt-bloc[data-install="piscine"]     { background: #E0F7FA !important; border-color: #0097A7 !important; color: #006064 !important; }
+  .edt-bloc[data-install="gymnase"]     { background: #E0F2F1 !important; border-color: #00796B !important; color: #004D40 !important; }
+  .edt-bloc[data-install="terr-msj"]    { background: #ECEFF1 !important; border-color: #546E7A !important; color: #263238 !important; }
+  .edt-bloc[data-install="parc-exflora"]{ background: #F5F5F5 !important; border-color: #757575 !important; color: #424242 !important; }
+  .edt-bloc[data-install="default"],
+  .edt-bloc:not([data-install])         { background: #EFF6FF !important; border-color: #3B82F6 !important; color: #1E40AF !important; }
+
+  /* ---- Masquer scrollbars résiduelles ---- */
+  ::-webkit-scrollbar { display: none !important; }
+
+
+  /* ================================================================
+     VUES INDIVIDUELLES — Par enseignant / classe / installation
+     Format : A4 paysage, 2 colonnes, header d'impression, zoom mini-grid
+  ================================================================ */
+
+  /* ---- Masquer les contrôles écran ---- */
+  .vues-toolbar { display: none !important; }
+
+  /* ---- Header d'impression (masqué à l'écran via display:none inline) ---- */
+  .vues-print-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 0 5px;
+    margin-bottom: 6px;
+    border-bottom: 2px solid #1E293B;
+  }
+
+  /* ---- Grille de cartes : 2 colonnes ---- */
+  .vues-cards-wrap {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6mm !important;
+    /* Annuler le flex/wrap de l'écran */
+    flex-wrap: unset !important;
+  }
+
+  /* ---- Carte individuelle ---- */
+  .vue-card {
+    min-width: 0 !important;   /* annule le min-width:400px écran */
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 4px !important;
+    padding: 8px 10px 10px !important;
+    background: #FFFFFF !important;
+  }
+
+  /* ---- Wrapper overflow mini-grid ---- */
+  .mini-grid-scroll {
+    overflow: visible !important;
+  }
+
+  /* ---- Zoom mini-grid pour tenir sur 2 colonnes ----
+     586px (5 jours max) × 0.78 ≈ 457px < ~490px dispo par colonne.
+     zoom est supporté par Chrome et Safari (navigateurs cibles). ---- */
+  .mini-grid-scroll .mini-grid {
+    zoom: 0.78;
+  }
+
+  /* ---- Lignes guides mini-grid : arrière-plans ---- */
+  .mini-grid-day-col,
+  .mini-grid-time-col {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ---- En-tête jour mini-grid ---- */
+  .mini-grid-day-hdr {
+    background: #EEF2F7 !important;
+    font-size: 7.5pt;
+    font-weight: 700;
+    text-align: center;
+    padding: 2px 0;
+    border-bottom: 1px solid #CBD5E1 !important;
+  }
+}

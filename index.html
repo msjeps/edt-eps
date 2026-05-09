@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EDT EPS</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1E293B">
+  <meta name="description" content="Emploi du temps EPS - Gestion des installations et transports">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="stylesheet" href="/styles/grid.css">
+  <link rel="stylesheet" href="/styles/wizard.css">
+  <link rel="stylesheet" href="/styles/components.css">
+  <link rel="stylesheet" href="/styles/programmation.css">
+  <link rel="stylesheet" href="/styles/print.css" media="print">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===== Sidebar ===== -->
+    <aside id="app-sidebar">
+
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-mark">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <rect width="28" height="28" rx="7" fill="#3B82F6"/>
+              <path d="M7 9h14M7 14h9M7 19h6" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="sidebar-title">EDT EPS</span>
+        </div>
+        <button id="btn-sidebar-toggle" class="sidebar-toggle" title="Réduire">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 3L6 8l5 5"/>
+          </svg>
+        </button>
+      </div>
+
+      <nav id="main-nav" class="sidebar-nav">
+
+        <button class="nav-btn active" data-view="dashboard" title="Tableau de bord">
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="7" height="7" rx="1.5"/>
+              <rect x="11" y="2" width="7" height="7" rx="1.5"/>
+              <rect x="2" y="11" width="7" height="7" rx="1.5"/>
+              <rect x="11" y="11" width="7" height="7" rx="1.5"/>
+            </svg>
+          </span>
+          <span class="nav-label">Accueil</span>
+        </button>
+
+        <button class="nav-btn" data-view="donnees" title="Données">
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+              <ellipse cx="10" cy="5" rx="7" ry="2.5"/>
+              <path d="M3 5v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V5"/>
+              <path d="M3 9v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V9"/>
+            </svg>
+          </span>
+          <span class="nav-label">Données</span>
+        </button>
+
+        <button class="nav-btn" data-view="programmation" title="Programmation annuelle">
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+              <rect x="2" y="2" width="16" height="16" rx="2"/>
+              <path d="M2 7h16M2 13h16M7 7v9M13 7v9"/>
+            </svg>
+          </span>
+          <span class="nav-label">Programmation</span>
+        </button>
+
+        <button class="nav-btn" data-view="edt" title="Emploi du temps">
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+              <rect x="2" y="3" width="16" height="15" rx="2"/>
+              <path d="M6 1.5v3M14 1.5v3M2 8.5h16"/>
+            </svg>
+          </span>
+          <span class="nav-label">EDT</span>
+        </button>
+
+        <button class="nav-btn" data-view="conflits" title="Conflits">
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 2.5L2 17.5h16L10 2.5z"/>
+              <path d="M10 8.5v4M10 14.5v.5"/>
+            </svg>
+          </span>
+          <span class="nav-label">Conflits</span>
+          <span id="conflict-badge" class="badge hidden">0</span>
+        </button>
+
+        <button class="nav-btn" data-view="reservations" title="Réservations">
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+              <path d="M7 3.5h6M6 3H4a1 1 0 00-1 1v13a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1h-2"/>
+              <rect x="6" y="1.5" width="8" height="3.5" rx="1"/>
+              <path d="M7 10.5h6M7 14h4"/>
+            </svg>
+          </span>
+          <span class="nav-label">Réservations</span>
+        </button>
+
+        <button class="nav-btn" data-view="vues" title="Vues individuelles">
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="6" cy="6" r="3"/>
+              <circle cx="14" cy="6" r="3"/>
+              <circle cx="6" cy="14" r="3"/>
+              <path d="M11 14h6M14 11v6"/>
+            </svg>
+          </span>
+          <span class="nav-label">Vues</span>
+        </button>
+
+        <button class="nav-btn" data-view="exports" title="Exports">
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 3v9M6.5 8.5L10 12l3.5-3.5"/>
+              <path d="M4 14v1a2 2 0 002 2h8a2 2 0 002-2v-1"/>
+            </svg>
+          </span>
+          <span class="nav-label">Exports</span>
+        </button>
+
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-project">
+          <span id="project-name" class="project-badge-sidebar"></span>
+        </div>
+
+        <div class="sidebar-actions">
+          <button id="btn-snapshots" class="sidebar-action-btn" title="Versions du projet (snapshots)">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="10" cy="10" r="8"/>
+              <path d="M10 6v4l2.5 2.5"/>
+            </svg>
+            <span class="nav-label">Versions</span>
+          </button>
+
+          <button id="btn-undo" class="sidebar-action-btn undo-btn" title="Rien à annuler (Ctrl+Z)" disabled>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.5 9a5.5 5.5 0 109 4.2"/>
+              <path d="M3.5 4v5h5"/>
+            </svg>
+            <span class="nav-label">Annuler</span>
+          </button>
+
+          <button id="btn-save-project" class="sidebar-action-btn save-btn" title="Sauvegarder le projet (JSON)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M2 2.5A.5.5 0 012.5 2h8l3.5 3.5V13.5a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5v-11z"/>
+              <path d="M5 2v4h6V2M5 10.5h6"/>
+            </svg>
+            <span class="nav-label">Sauvegarder</span>
+          </button>
+
+          <button id="btn-load-project" class="sidebar-action-btn" title="Charger un projet (JSON)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M2 5.5a1 1 0 011-1h2.5L7 6h6a1 1 0 011 1v5.5a1 1 0 01-1 1H3a1 1 0 01-1-1V5.5z"/>
+            </svg>
+            <span class="nav-label">Charger</span>
+          </button>
+
+          <button id="btn-settings" class="sidebar-action-btn" title="Assistant de configuration">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="8" cy="8" r="2.5"/>
+              <path d="M8 1.5v1.3M8 13.2v1.3M1.5 8h1.3M13.2 8h1.3M3.3 3.3l.9.9M11.8 11.8l.9.9M3.3 12.7l.9-.9M11.8 4.2l.9-.9"/>
+            </svg>
+            <span class="nav-label">Paramètres</span>
+          </button>
+        </div>
+
+        <span id="save-status" class="save-status-sidebar"></span>
+        <input type="file" id="load-project-file" accept=".json" style="display:none;">
+      </div>
+
+    </aside>
+
+    <!-- ===== Corps principal ===== -->
+    <div id="app-body">
+      <header id="app-header">
+        <div class="header-left">
+          <h1 class="view-title" id="view-title">Accueil</h1>
+        </div>
+        <div class="header-right">
+          <span class="header-project" id="header-project-name"></span>
+        </div>
+      </header>
+
+      <main id="app-main">
+        <div id="view-dashboard" class="view active"></div>
+        <div id="view-donnees" class="view"></div>
+        <div id="view-programmation" class="view"></div>
+        <div id="view-edt" class="view"></div>
+        <div id="view-conflits" class="view"></div>
+        <div id="view-reservations" class="view"></div>
+        <div id="view-vues" class="view"></div>
+        <div id="view-exports" class="view"></div>
+        <div id="view-wizard" class="view"></div>
+      </main>
+    </div>
+
+  </div>
+
+  <div id="modal-overlay" class="modal-overlay hidden"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

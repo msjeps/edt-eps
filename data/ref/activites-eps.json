@@ -1,0 +1,51 @@
+{
+  "CA1": {
+    "nom": "Produire une performance optimale",
+    "activites": [
+      {"nom": "Athlétisme", "code": "ATH"},
+      {"nom": "Relais Vitesse", "code": "REL"},
+      {"nom": "Demi-fond", "code": "1/2FD"},
+      {"nom": "Pentabond", "code": "PTABD"},
+      {"nom": "Course en durée", "code": "DUREE"},
+      {"nom": "Biathlon", "code": "BIATHL"},
+      {"nom": "Épreuves combinées", "code": "EPCOMB"},
+      {"nom": "Natation", "code": "NAT", "exigence": "piscine"},
+      {"nom": "Sauvetage", "code": "SAUV", "exigence": "piscine"}
+    ]
+  },
+  "CA2": {
+    "nom": "Adapter ses déplacements à des environnements variés",
+    "activites": [
+      {"nom": "Course d'orientation", "code": "CO"},
+      {"nom": "Laser Fit", "code": "LASER"},
+      {"nom": "Escalade", "code": "ESCAL"},
+      {"nom": "Kayak", "code": "KAYAK"}
+    ]
+  },
+  "CA3": {
+    "nom": "S'exprimer devant les autres par une prestation artistique / acrobatique",
+    "activites": [
+      {"nom": "Gymnastique", "code": "GYM"},
+      {"nom": "Acrosport", "code": "ACRO"},
+      {"nom": "Danse", "code": "DANSE"},
+      {"nom": "Arts du cirque", "code": "CIRQUE"},
+      {"nom": "Step", "code": "STEP"},
+      {"nom": "Musculation", "code": "MUSCU"}
+    ]
+  },
+  "CA4": {
+    "nom": "Conduire et maitriser un affrontement individuel ou collectif",
+    "activites": [
+      {"nom": "Volley-ball", "code": "VB"},
+      {"nom": "Basket-ball", "code": "BB"},
+      {"nom": "Handball", "code": "HB"},
+      {"nom": "Football", "code": "FOOT"},
+      {"nom": "Rugby", "code": "RUGBY"},
+      {"nom": "Ultimate", "code": "ULTI"},
+      {"nom": "Tennis de table", "code": "TT"},
+      {"nom": "Lutte", "code": "LUTTE"},
+      {"nom": "Balle ovale", "code": "BF"},
+      {"nom": "Badminton", "code": "BAD"}
+    ]
+  }
+}
