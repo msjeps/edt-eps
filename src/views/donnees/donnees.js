@@ -22,6 +22,7 @@ import {
   supprimerDisponibilitesMairie,
   compterIndisposMairie,
 } from '../../import/disponibilites.js';
+import { parseExcelMairie, guessLieuFromFilename } from '../../import/excel-mairie.js';
 import { buildMiniGrid, seancesHebdo, totalHStr } from '../vues/vues.js';
 import { helpTip } from '../../components/help-tooltip.js';
 
@@ -975,10 +976,12 @@ async function openImportMairieModal(installations, parentContainer) {
   let jsonData = null;
   let etape = 1; // 1 = charger les données, 2 = mapping + options
 
-  // -- Étape 1 : charger le JSON --
+  const periodes = await db.periodes.toArray();
+
+  // -- Étape 1 : charger les données --
   const { close, modal } = openModal({
     title: 'Import disponibilités — Direction des Sports',
-    content: buildImportStep1Html(),
+    content: buildImportStep1Html(periodes),
     footer: `
       <button class="btn btn-outline" id="md-import-cancel">Annuler</button>
       <button class="btn btn-primary" id="md-import-next" disabled>Suivant →</button>
@@ -1007,8 +1010,8 @@ async function openImportMairieModal(installations, parentContainer) {
     }
   });
 
-  // Source : fichier uploadé
-  modal.querySelector('#import-file')?.addEventListener('change', async (e) => {
+  // Source : fichier JSON
+  modal.querySelector('#import-file-json')?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
@@ -1022,6 +1025,52 @@ async function openImportMairieModal(installations, parentContainer) {
       jsonData = null;
       btnNext.disabled = true;
     }
+  });
+
+  // Source : fichier Excel
+  modal.querySelector('#import-file-xlsx')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Pré-remplir le nom du lieu
+    const lieuInput = modal.querySelector('#import-lieu-name');
+    if (lieuInput && !lieuInput.value) {
+      lieuInput.value = guessLieuFromFilename(file.name);
+    }
+
+    updateStep1Status(modal, 'Lecture du fichier Excel…');
+    btnNext.disabled = true;
+
+    try {
+      const lieuName = lieuInput?.value || guessLieuFromFilename(file.name);
+      const periodeLabel = modal.querySelector('#import-periode-label')?.value || '';
+      const { format, entries } = await parseExcelMairie(file, lieuName, periodeLabel);
+
+      jsonData = entries;
+
+      // Format B détecté → afficher le sélecteur de période
+      const periodeRow = modal.querySelector('#import-periode-row');
+      if (periodeRow) periodeRow.style.display = format === 'B' ? '' : 'none';
+
+      updateStep1Status(modal, `${entries.length} créneau(x) extrait(s) (Format ${format}) depuis « ${file.name} ».`);
+      btnNext.disabled = entries.length === 0;
+    } catch (err) {
+      console.error(err);
+      toast.error('Impossible de lire le fichier Excel : ' + err.message);
+      jsonData = null;
+      btnNext.disabled = true;
+      updateStep1Status(modal, '');
+    }
+  });
+
+  // Re-parser si le lieu ou la période changent (Format B)
+  modal.querySelector('#import-lieu-name')?.addEventListener('change', () => {
+    const fileInput = modal.querySelector('#import-file-xlsx');
+    if (fileInput?.files[0]) fileInput.dispatchEvent(new Event('change'));
+  });
+  modal.querySelector('#import-periode-label')?.addEventListener('change', () => {
+    const fileInput = modal.querySelector('#import-file-xlsx');
+    if (fileInput?.files[0]) fileInput.dispatchEvent(new Event('change'));
   });
 
   btnNext.addEventListener('click', async () => {
@@ -1039,13 +1088,19 @@ async function openImportMairieModal(installations, parentContainer) {
   });
 }
 
-function buildImportStep1Html() {
+function buildImportStep1Html(periodes = []) {
+  const periodeOptions = periodes.map(p =>
+    `<option value="${p.nom}">${p.nom}</option>`
+  ).join('');
+
   return `
     <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
-      Chargez le fichier JSON de la Direction des Sports pour importer les créneaux réservés par les autres établissements.
-      Ces créneaux seront enregistrés comme indisponibilités sur vos installations.
+      Importez les créneaux réservés par les autres établissements — ils seront enregistrés comme
+      indisponibilités sur vos installations.
     </p>
     <div style="display:flex;flex-direction:column;gap:var(--sp-4);">
+
+      <!-- Données intégrées -->
       <label style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);border:1px solid var(--c-border);border-radius:var(--radius-md);cursor:pointer;">
         <input type="radio" name="import-src" id="import-src-builtin" value="builtin">
         <div>
@@ -1055,18 +1110,56 @@ function buildImportStep1Html() {
           </div>
         </div>
       </label>
+
+      <!-- Fichier JSON -->
       <label style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);border:1px solid var(--c-border);border-radius:var(--radius-md);cursor:pointer;">
-        <input type="radio" name="import-src" id="import-src-file" value="file">
+        <input type="radio" name="import-src" id="import-src-json" value="json">
         <div style="flex:1;">
-          <strong>Charger un fichier JSON</strong>
+          <strong>Fichier JSON</strong>
           <div style="font-size:var(--fs-sm);color:var(--c-text-secondary);">
             JSON exporté depuis le script d'extraction PDF
           </div>
-          <input type="file" id="import-file" accept=".json" style="margin-top:var(--sp-2);display:none;">
+          <input type="file" id="import-file-json" accept=".json" style="margin-top:var(--sp-2);display:none;">
           <button type="button" class="btn btn-sm btn-outline" style="margin-top:var(--sp-2);"
-            onclick="document.getElementById('import-file').click()">Choisir un fichier…</button>
+            onclick="document.getElementById('import-file-json').click()">Choisir un fichier JSON…</button>
         </div>
       </label>
+
+      <!-- Fichier Excel -->
+      <label style="display:flex;align-items:flex-start;gap:var(--sp-3);padding:var(--sp-3);border:1px solid var(--c-border);border-radius:var(--radius-md);cursor:pointer;">
+        <input type="radio" name="import-src" id="import-src-xlsx" value="xlsx" style="margin-top:3px;">
+        <div style="flex:1;">
+          <strong>Fichier Excel Direction des Sports (.xlsx)</strong>
+          <div style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-2);">
+            Deux formats acceptés :
+            <em>par lieu/période</em> (onglets T1/T2/T3)
+            ou <em>par lieu/jour</em> (onglets Lundi…Vendredi).
+          </div>
+          <input type="file" id="import-file-xlsx" accept=".xlsx" style="display:none;">
+          <button type="button" class="btn btn-sm btn-outline"
+            onclick="document.getElementById('import-file-xlsx').click()">Choisir un fichier Excel…</button>
+
+          <!-- Nom du complexe -->
+          <div style="margin-top:var(--sp-3);">
+            <label class="form-label" style="font-size:var(--fs-sm);">Nom du complexe / lieu</label>
+            <input type="text" id="import-lieu-name" class="form-input form-input-sm"
+              placeholder="ex : FORT CARRÉ, AUVERGNE, PISCINE…" style="max-width:320px;">
+          </div>
+
+          <!-- Sélecteur de période (Format B uniquement, affiché après détection) -->
+          <div id="import-periode-row" style="display:none;margin-top:var(--sp-3);">
+            <label class="form-label" style="font-size:var(--fs-sm);">
+              Période concernée
+              <span style="font-weight:normal;color:var(--c-text-muted);">(format 1 fichier = 1 période)</span>
+            </label>
+            <select id="import-periode-label" class="form-select form-select-sm" style="max-width:280px;">
+              <option value="">— Sélectionner —</option>
+              ${periodeOptions}
+            </select>
+          </div>
+        </div>
+      </label>
+
       <div id="import-step1-status" style="font-size:var(--fs-sm);color:var(--c-success);min-height:1.5em;"></div>
     </div>
   `;
