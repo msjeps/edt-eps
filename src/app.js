@@ -14,6 +14,7 @@ import { renderReservations } from './views/reservations/reservations.js';
 import { renderExports } from './views/exports/exports.js';
 import { renderVues } from './views/vues/vues.js';
 import { renderWizard } from './views/wizard/wizard.js';
+import { renderAide } from './views/aide/aide.js';
 import { exportAllData, importAllData, hasData } from './db/store.js';
 import { toast } from './components/toast.js';
 import { saveProjectFile, fsSupported } from './utils/filesystem.js';
@@ -272,6 +273,7 @@ const VIEW_LABELS = {
   reservations: 'Réservations',
   vues: 'Vues individuelles',
   exports: 'Exports',
+  aide: 'Aide',
   wizard: 'Configuration',
 };
 
@@ -340,6 +342,9 @@ export async function navigateTo(viewName) {
         break;
       case 'exports':
         await renderExports(viewEl);
+        break;
+      case 'aide':
+        renderAide(viewEl);
         break;
       case 'wizard':
         await renderWizard(viewEl);
