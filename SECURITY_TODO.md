@@ -67,29 +67,32 @@
 **Problème**: Nom de fichier créé sans valider les caractères spéciaux
 **Status**: TODO
 
-### 9. Documentation de sécurité
+### 9. ✅ Documentation de sécurité
 **Créer**: `SECURITY.md` avec guidelines pour les développeurs
-**Status**: TODO
+**Contenu**: Procédure disclosure, modèle de menace, bonnes pratiques par module, audit dépendances, checklist PR, gestion incidents
+**Status**: ✅ TERMINÉ
 
 ---
 
 ## 📊 Résumé - État: 11/06/2026 17h
 
 ### Corrections Complétées ✅
-- **Critiques**: 4/4 TERMINÉES
-  - Faille XSS donnees.js (25+ lignes sécurisées)
-  - Faille XSS modal.js  
-  - Faille XSS main.js
-  - Fonction d'échappement centralisée
+- **Critiques**: 4/4 TERMINÉES ✅
+  - ✅ Faille XSS donnees.js (25+ lignes sécurisées)
+  - ✅ Faille XSS modal.js  
+  - ✅ Faille XSS main.js
+  - ✅ Fonction d'échappement centralisée
 
-- **Hautes**: 2/3 TERMINÉES
-  - npm audit fix (vulnérabilité tmp corrigée)
-  - Centralisation échappement HTML (escape.js)
-  - 1 en attente : Validation imports JSON
+- **Hautes**: 2/3 EN COURS
+  - ✅ npm audit fix (vulnérabilité tmp corrigée)
+  - ✅ Centralisation échappement HTML (escape.js)
+  - ⏳ Validation imports JSON
 
-- **Moyennes**: 0/2 TODO
+- **Moyennes**: 1/2 TERMINÉE
+  - ✅ Documentation de sécurité (SECURITY.md)
+  - ⏳ Validation du nom de fichier
 
-### Progression: 70% (5/7 prioritaires résolus)
+### Progression: 86% (6/7 prioritaires résolus)
 
 ### Vulnérabilités Restantes (Acceptées)
 - ⚠️ MODERATE: uuid dans exceljs (risque minimal, bloquer par dépendance upstream)
