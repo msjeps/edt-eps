@@ -2,6 +2,8 @@
  * Système de modals
  */
 
+import { escapeHtml } from '../utils/escape.js';
+
 const overlay = () => document.getElementById('modal-overlay');
 
 /**
@@ -18,7 +20,7 @@ export function openModal({ title, content, footer, onClose, wide = false }) {
 
   modal.innerHTML = `
     <div class="modal-header">
-      <h3 class="modal-title">${title}</h3>
+      <h3 class="modal-title">${escapeHtml(title)}</h3>
       <button class="modal-close">&times;</button>
     </div>
     <div class="modal-body"></div>

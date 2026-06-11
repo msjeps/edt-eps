@@ -5,6 +5,7 @@
 import db from '../../db/schema.js';
 import { toast } from '../../components/toast.js';
 import { openModal, confirmModal } from '../../components/modal.js';
+import { escapeHtml, h } from '../../utils/escape.js';
 import { NIVEAUX, CHAMPS_APPRENTISSAGE, getChampsApprentissage, JOURS_OUVRES, JOURS_COURTS } from '../../utils/helpers.js';
 import { getConfig, setConfig } from '../../db/schema.js';
 import { captureUndo } from '../../utils/undo.js';
@@ -115,9 +116,9 @@ async function renderEnseignantsTab(container) {
               const nbIndispos = indisposParEns[e.id] || 0;
               return `
                 <tr data-id="${e.id}">
-                  <td><strong>${e.nom || '-'}</strong></td>
-                  <td>${e.prenom || '-'}</td>
-                  <td><span class="tag tag-primary">${e.initiales || '?'}</span></td>
+                  <td><strong>${h(e.nom) || '-'}</strong></td>
+                  <td>${h(e.prenom) || '-'}</td>
+                  <td><span class="tag tag-primary">${h(e.initiales || '?')}</span></td>
                   <td>${e.ors || 0}h</td>
                   <td>${e.heuresAS || 0}h</td>
                   <td>${nbSeances}</td>
@@ -235,17 +236,17 @@ async function openEnseignantModal(ens = null) {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Prénom</label>
-          <input type="text" class="form-input" id="md-ens-prenom" value="${ens?.prenom || ''}">
+          <input type="text" class="form-input" id="md-ens-prenom" value="${h(ens?.prenom || '')}">
         </div>
         <div class="form-group">
           <label class="form-label">Nom</label>
-          <input type="text" class="form-input" id="md-ens-nom" value="${ens?.nom || ''}">
+          <input type="text" class="form-input" id="md-ens-nom" value="${h(ens?.nom || '')}">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Initiales</label>
-          <input type="text" class="form-input" id="md-ens-init" value="${ens?.initiales || ''}" maxlength="4"
+          <input type="text" class="form-input" id="md-ens-init" value="${h(ens?.initiales || '')}" maxlength="4"
                  style="text-transform:uppercase;width:80px;">
         </div>
         <div class="form-group">
@@ -452,9 +453,9 @@ async function renderClassesTab(container) {
                 const ens = enseignants.find(e => e.id === c.enseignantId);
                 return `
                   <tr>
-                    <td><strong>${c.nom || '<em style="color:var(--c-text-muted)">sans nom</em>'}</strong></td>
+                    <td><strong>${h(c.nom) || '<em style="color:var(--c-text-muted)">sans nom</em>'}</strong></td>
                     <td>${c.effectif}</td>
-                    <td>${ens ? `${ens.prenom} ${ens.nom}` : '<span style="color:var(--c-text-muted)">-</span>'}</td>
+                    <td>${ens ? `${h(ens.prenom)} ${h(ens.nom)}` : '<span style="color:var(--c-text-muted)">-</span>'}</td>
                     <td>
                       <button class="btn btn-sm btn-outline btn-edit-cls" data-id="${c.id}">Modifier</button>
                       <button class="btn btn-sm btn-danger btn-del-cls" data-id="${c.id}">Suppr.</button>
@@ -544,12 +545,12 @@ async function renderClassesTab(container) {
 
 function openClasseModal(cls, niveaux, enseignants, parentContainer) {
   const { close } = openModal({
-    title: `Modifier la classe ${cls.nom || ''}`,
+    title: `Modifier la classe ${h(cls.nom) || ''}`,
     content: `
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Nom</label>
-          <input type="text" class="form-input" id="md-cls-nom" value="${cls.nom || ''}">
+          <input type="text" class="form-input" id="md-cls-nom" value="${h(cls.nom || '')}">
         </div>
         <div class="form-group">
           <label class="form-label">Niveau</label>
@@ -567,7 +568,7 @@ function openClasseModal(cls, niveaux, enseignants, parentContainer) {
           <label class="form-label">Enseignant</label>
           <select class="form-select" id="md-cls-ens">
             <option value="">-- Aucun --</option>
-            ${enseignants.map(e => `<option value="${e.id}" ${cls.enseignantId == e.id ? 'selected' : ''}>${e.prenom} ${e.nom}</option>`).join('')}
+            ${enseignants.map(e => `<option value="${e.id}" ${cls.enseignantId == e.id ? 'selected' : ''}>${h(e.prenom)} ${h(e.nom)}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -633,11 +634,11 @@ async function renderActivitesTab(container) {
                 <tbody>
                   ${acts.map(a => {
                     const niveauxAct = Array.isArray(a.niveaux) && a.niveaux.length > 0
-                      ? a.niveaux.map(n => `<span class="tag tag-info" style="font-size:var(--fs-xs);padding:1px 6px;">${n}</span>`).join(' ')
+                      ? a.niveaux.map(n => `<span class="tag tag-info" style="font-size:var(--fs-xs);padding:1px 6px;">${h(n)}</span>`).join(' ')
                       : '<span style="color:var(--c-text-muted);font-size:var(--fs-xs);">Tous</span>';
                     return `
                       <tr>
-                        <td><strong>${a.nom || '<em style="color:var(--c-text-muted)">sans nom</em>'}</strong></td>
+                        <td><strong>${h(a.nom) || '<em style="color:var(--c-text-muted)">sans nom</em>'}</strong></td>
                         <td>${niveauxAct}</td>
                         <td>
                           <button class="btn btn-sm btn-outline btn-edit-act" data-id="${a.id}">Modifier</button>
@@ -687,11 +688,11 @@ function openActiviteModal(act, champsDisponibles, tousNiveaux, parentContainer)
   const niveauxAct = act?.niveaux || [];
 
   const { close } = openModal({
-    title: isEdit ? `Modifier : ${act.nom}` : 'Nouvelle activité',
+    title: isEdit ? `Modifier : ${h(act.nom)}` : 'Nouvelle activité',
     content: `
       <div class="form-group">
         <label class="form-label">Nom de l'activité <span class="required">*</span></label>
-        <input type="text" class="form-input" id="md-act-nom" value="${act?.nom || ''}" placeholder="Ex: Natation, Basket-ball, Gymnastique...">
+        <input type="text" class="form-input" id="md-act-nom" value="${h(act?.nom || '')}" placeholder="Ex: Natation, Basket-ball, Gymnastique...">
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -845,8 +846,8 @@ async function renderInstallationsTab(container) {
             <div style="margin-bottom:var(--sp-4);border:1px solid var(--c-border);border-radius:var(--radius-md);overflow:hidden;">
               <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);background:var(--c-surface-alt);">
                 <span style="font-size:1.2rem;">${l.necessiteBus ? '&#128652;' : '&#127939;'}</span>
-                <strong>${l.nom}</strong>
-                <span class="tag ${l.type === 'intra' ? 'tag-success' : 'tag-warning'}">${l.type}</span>
+                <strong>${h(l.nom)}</strong>
+                <span class="tag ${l.type === 'intra' ? 'tag-success' : 'tag-warning'}">${h(l.type)}</span>
                 ${l.necessiteBus ? '<span class="tag tag-info">Bus</span>' : ''}
                 <span style="flex:1;"></span>
                 <button class="btn btn-sm btn-outline btn-edit-lieu" data-id="${l.id}" title="Modifier le lieu">Modifier</button>
@@ -861,13 +862,13 @@ async function renderInstallationsTab(container) {
                       const actsCompat = Array.isArray(inst.activitesCompatibles) && inst.activitesCompatibles.length > 0
                         ? inst.activitesCompatibles.map(aId => {
                             const a = activites.find(x => x.id === aId);
-                            return a ? `<span class="tag tag-primary" style="font-size:var(--fs-xs);padding:1px 6px;">${a.nom}</span>` : '';
+                            return a ? `<span class="tag tag-primary" style="font-size:var(--fs-xs);padding:1px 6px;">${h(a.nom)}</span>` : '';
                           }).filter(Boolean).join(' ')
                         : '<span style="color:var(--c-text-muted);font-size:var(--fs-xs);">Toutes</span>';
                       const nbIndispos = indisposParInst[inst.id] || 0;
                       return `
                         <tr>
-                          <td><strong>${inst.nom}</strong></td>
+                          <td><strong>${h(inst.nom)}</strong></td>
                           <td>${inst.capaciteSimultanee} classe(s)</td>
                           <td>${actsCompat}</td>
                           <td>
@@ -1090,7 +1091,7 @@ async function openImportMairieModal(installations, parentContainer) {
 
 function buildImportStep1Html(periodes = []) {
   const periodeOptions = periodes.map(p =>
-    `<option value="${p.nom}">${p.nom}</option>`
+    `<option value="${h(p.nom)}">${h(p.nom)}</option>`
   ).join('');
 
   return `
@@ -1171,7 +1172,7 @@ function updateStep1Status(modal, msg) {
 }
 
 function buildImportStep2Html(spaces, installations) {
-  const instOptions = installations.map(i => `<option value="${i.id}">${i.nom}</option>`).join('');
+  const instOptions = installations.map(i => `<option value="${i.id}">${h(i.nom)}</option>`).join('');
 
   const rows = spaces.map(({ facility, space, count }) => {
     const key = `${facility}|||${space}`;
@@ -1185,8 +1186,8 @@ function buildImportStep2Html(spaces, installations) {
     return `
       <tr>
         <td style="font-size:var(--fs-sm);">
-          <div style="font-weight:600;">${space}</div>
-          <div style="color:var(--c-text-muted);font-size:var(--fs-xs);">${facility} · ${count} créneau(x)</div>
+          <div style="font-weight:600;">${h(space)}</div>
+          <div style="color:var(--c-text-muted);font-size:var(--fs-xs);">${h(facility)} · ${count} créneau(x)</div>
         </td>
         <td>
           <select class="form-select form-select-sm mapping-select" data-key="${safeKey}" style="min-width:180px;">
