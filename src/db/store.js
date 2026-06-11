@@ -3,6 +3,7 @@
  * Chaque entité a : getAll, getById, add, update, remove
  */
 import db from './schema.js';
+import { validateExport, formatValidationErrors } from '../import/schema-validator.js';
 
 // === Helpers génériques ===
 
@@ -187,8 +188,35 @@ export async function exportAllData() {
  * Import complet (remplace toutes les données).
  * Compatible avec les anciens exports (sans _meta) et les nouveaux.
  * Ignore les tables inconnues et gère les tables manquantes.
+ * Valide le schéma des données avant l'import.
+ *
+ * @param {Object} data - Données à importer
+ * @param {Object} options - { strict?: boolean, validateOnly?: boolean }
+ *   - strict: true → rejette les erreurs de validation, false → avertit seulement
+ *   - validateOnly: true → valide sans importer
+ * @throws {Error} Si strict=true et erreurs de validation
+ * @returns {Object} { valid: boolean, issues?: Array, stats?: Object }
  */
-export async function importAllData(data) {
+export async function importAllData(data, options = {}) {
+  const { strict = false, validateOnly = false } = options;
+
+  // Valider le schéma
+  const validation = validateExport(data);
+
+  if (!validation.valid) {
+    const message = formatValidationErrors(validation);
+    if (strict) {
+      throw new Error(`Erreurs de validation de schéma :\n${message}`);
+    } else {
+      console.warn('Avertissements de validation :', message);
+      // Continuer l'import même avec les erreurs (mode lenient)
+    }
+  }
+
+  if (validateOnly) {
+    return validation;
+  }
+
   // Toutes les tables de la base actuelle
   const allTables = db.tables.map(t => t.name);
   // Tables de données à importer (exclure _meta et tables système)
@@ -211,6 +239,8 @@ export async function importAllData(data) {
       }
     }
   });
+
+  return { valid: true };
 }
 
 // === Suppressions en cascade ===

@@ -16,6 +16,7 @@ import { renderVues } from './views/vues/vues.js';
 import { renderWizard } from './views/wizard/wizard.js';
 import { renderAide } from './views/aide/aide.js';
 import { exportAllData, importAllData, hasData } from './db/store.js';
+import { importProjectFile, validateProjectFile, createImportConfirmDialog } from './import/import-utils.js';
 import { toast } from './components/toast.js';
 import { saveProjectFile, fsSupported } from './utils/filesystem.js';
 import { canUndo, getUndoLabel, undo, clearUndoStack, onUndoStackChange } from './utils/undo.js';
@@ -113,20 +114,30 @@ export async function initApp() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      // Vérification basique : le fichier contient des tables connues
-      if (!data.enseignants && !data.classes && !data.config) {
-        throw new Error('Ce fichier ne semble pas être un projet EDT EPS valide');
-      }
-      const confirm = window.confirm(
-        `Charger le projet depuis "${file.name}" ?\n\nAttention : cela remplacera TOUTES les données actuelles.`
-      );
-      if (!confirm) {
-        e.target.value = ''; // Reset file input
+      // 1. Valider le fichier SANS rien importer (pas d'écrasement des données actuelles)
+      const check = await validateProjectFile(file);
+      if (check.validation === undefined) {
+        // Fichier illisible / JSON invalide
+        toast.error('Erreur : ' + check.message);
+        e.target.value = '';
         return;
       }
-      await importAllData(data);
+
+      // 2. Demander confirmation avant tout remplacement
+      const confirm = createImportConfirmDialog(check.validation, file.name);
+      if (!confirm) {
+        e.target.value = '';
+        return;
+      }
+
+      // 3. Importer une seule fois, après confirmation
+      const result = await importProjectFile(file);
+      if (!result.success) {
+        toast.error('Erreur : ' + result.message);
+        e.target.value = '';
+        return;
+      }
+
       clearUndoStack();
       toast.success('Projet chargé avec succès ! Rechargement...');
       dataModifiedSinceLastSave = false;

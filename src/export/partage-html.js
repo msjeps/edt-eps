@@ -11,6 +11,22 @@ import { getConfig } from '../db/schema.js';
 import { saveExportFile } from '../utils/filesystem.js';
 import { toast } from '../components/toast.js';
 
+/**
+ * Sérialise des données JSON pour une insertion sûre dans un bloc <script>.
+ * Neutralise les séquences qui pourraient fermer le bloc ou démarrer un
+ * commentaire HTML (`</script>`, `<!--`) en échappant `<`, `>` et les
+ * séparateurs de ligne Unicode (U+2028/U+2029, invalides en littéral JS).
+ * @param {*} data
+ * @returns {string} JSON échappé, sûr entre <script>…</script>
+ */
+function safeJsonForScript(data) {
+  return JSON.stringify(data)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
 export async function exportPartageHtml(periodeId) {
   const [seances, periodes, enseignants, classes, activites, installations, lieux] = await Promise.all([
     db.seances.toArray(),
@@ -135,7 +151,7 @@ function buildHtml(data) {
 </div>
 
 <script>
-const DATA = ${JSON.stringify(data)};
+const DATA = ${safeJsonForScript(data)};
 ${JS}
 </script>
 </body>

@@ -6,3 +6,4 @@ dist/
 *.pdf
 extracted_*.json
 extracted_*.txt
+.claude/worktrees/

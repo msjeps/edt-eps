@@ -47,10 +47,21 @@
 - **Risque**: Faible - uuid vulnérabilité affecte seulement la génération d'exports (buffer bounds check), pas les données utilisateur
 - **Recommandation**: Accepter cette limitation connue jusqu'à ce que exceljs mette à jour ses dépendances
 
-### 6. Validation des imports JSON
-**Fichier**: `src/db/store.js:191-214`
-**Problème**: Aucune validation de schéma lors de `importAllData()`
-**Status**: TODO
+### 6. ✅ Validation des imports JSON
+**Fichier**: `src/db/store.js`, `src/import/schema-validator.js`
+**Solution appliquée**: Système complet de validation de schéma JSON
+- Moteur de validation avec schémas pour 25+ tables EDT EPS
+- Validation des types, énumérations, limites numériques, formats de date
+- Validation des champs obligatoires vs optionnels
+- Messages d'erreur localisés et détaillés
+- Modes strict (rejette) vs lenient (avertit)
+- Intégration transparente dans `importAllData(data, options)`
+**Fichiers créés**:
+  - `src/import/schema-validator.js` (570 lignes, 25+ schémas)
+  - `src/import/import-utils.js` (140 lignes, gestion UI)
+  - `src/import/__tests__/schema-validator.test.js` (9 tests)
+  - `src/import/SCHEMA_VALIDATION.md` (documentation)
+**Status**: ✅ TERMINÉ (11/06/2026)
 
 ### 7. ✅ Centraliser l'échappement HTML
 **Solution appliquée**: Créé `src/utils/escape.js` avec fonction d'échappement centralisée
@@ -83,16 +94,25 @@
   - ✅ Faille XSS main.js
   - ✅ Fonction d'échappement centralisée
 
-- **Hautes**: 2/3 EN COURS
+- **Hautes**: 3/3 TERMINÉES ✅
   - ✅ npm audit fix (vulnérabilité tmp corrigée)
   - ✅ Centralisation échappement HTML (escape.js)
-  - ⏳ Validation imports JSON
+  - ✅ Validation imports JSON (schéma validator)
 
-- **Moyennes**: 1/2 TERMINÉE
+- **Moyennes**: 1/2 
   - ✅ Documentation de sécurité (SECURITY.md)
-  - ⏳ Validation du nom de fichier
+  - ⏳ Validation du nom de fichier (non-bloquant, low priority)
 
-### Progression: 86% (6/7 prioritaires résolus)
+### Progression: 100% (7/7 prioritaires résolus) 🎉
+
+### Bénéfices de Sécurité - Validation des Imports JSON
+
+La validation de schéma JSON (item #6) améliore la sécurité en:
+1. **Validant l'intégrité des données** avant insertion en base
+2. **Rejetant les structures malformées** qui pourraient exploiter des bugs
+3. **Limitant les attaques par injection** (données non-conformes rejetées)
+4. **Détectant les tentatives de corruption** de projet
+5. **Fournissant un audit trail** via logs de validation
 
 ### Vulnérabilités Restantes (Acceptées)
 - ⚠️ MODERATE: uuid dans exceljs (risque minimal, bloquer par dépendance upstream)
