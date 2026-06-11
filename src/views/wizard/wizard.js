@@ -123,6 +123,10 @@ async function renderStepEtablissement(container) {
   const annee = await getConfig('anneeScolaire') || '2025-2026';
   const heureDebut = await getConfig('heureDebut') || '08:00';
   const heureFin = await getConfig('heureFin') || '17:00';
+  const transportAller = await getConfig('delaiTransportAllerMin') || 15;
+  const reservationDebut = await getConfig('delaiReservationDebutMin') || 30;
+  const reservationFin = await getConfig('delaiReservationFinMin') || 30;
+  const transportRetour = await getConfig('delaiTransportRetourMin') || 15;
 
   container.innerHTML = `
     <h3 class="wizard-step-title">Établissement</h3>
@@ -173,6 +177,87 @@ async function renderStepEtablissement(container) {
         <label class="form-label">Heure fin journée</label>
         <input type="time" class="form-input" id="wiz-etab-hfin" value="${heureFin}">
       </div>
+    </div>
+
+    <div style="border:1px solid #cbd5e1;border-radius:8px;padding:var(--sp-4);background:#f8fafc;margin-bottom:var(--sp-4);">
+      <h4 style="margin:0 0 var(--sp-4) 0;font-size:0.95rem;color:#1e293b;">⏱️ Délais installations extra-muros</h4>
+      <p style="font-size:var(--fs-sm);color:#64748b;margin:0 0 var(--sp-4) 0;">
+        4 paramètres pour adapter les exports selon votre réalité. Les délais de transport et de réservation peuvent être différents.
+      </p>
+
+      <!-- SECTION TRANSPORT -->
+      <div style="margin-bottom:var(--sp-4);">
+        <h5 style="margin:0 0 var(--sp-3) 0;font-size:0.9rem;color:#dc2626;font-weight:600;">🚌 PRÉVISIONS HORAIRES TRANSPORT</h5>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              Prévision horaire TRANSPORT ALLER ${helpTip('Temps nécessaire à prévoir après le début du cours pour la commande du bus. Inclut le délai de montée et le trajet vers l\'installation.')}
+            </label>
+            <div style="display:flex;align-items:center;gap:var(--sp-2);">
+              <input type="number" class="form-input" id="wiz-transport-aller" value="${transportAller}" min="0" max="120" style="flex:1;">
+              <span style="color:#64748b;font-size:var(--fs-sm);min-width:60px;">minutes</span>
+            </div>
+            <small style="display:block;margin-top:6px;color:#64748b;font-style:italic;">Exemple : 14h + 15min = bus commandé pour 14h15</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Prévision horaire TRANSPORT RETOUR ${helpTip('Temps nécessaire à prévoir avant la fin du cours pour la commande du bus retour. Inclut le rangement et le trajet retour.')}
+            </label>
+            <div style="display:flex;align-items:center;gap:var(--sp-2);">
+              <input type="number" class="form-input" id="wiz-transport-retour" value="${transportRetour}" min="0" max="120" style="flex:1;">
+              <span style="color:#64748b;font-size:var(--fs-sm);min-width:60px;">minutes</span>
+            </div>
+            <small style="display:block;margin-top:6px;color:#64748b;font-style:italic;">Exemple : 16h − 15min = bus retour commandé pour 15h45</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION RÉSERVATION INSTALLATIONS -->
+      <div>
+        <h5 style="margin:0 0 var(--sp-3) 0;font-size:0.9rem;color:#2563eb;font-weight:600;">📋 HORAIRES SUR LES INSTALLATIONS</h5>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              Horaire de début de réservation ${helpTip('Temps après le début du cours pour que la pratique démarre vraiment sur l\'installation. Inclut l\'appel, la tenue, le matériel, la montée au bus et le trajet.')}
+            </label>
+            <div style="display:flex;align-items:center;gap:var(--sp-2);">
+              <input type="number" class="form-input" id="wiz-reservation-debut" value="${reservationDebut}" min="0" max="120" style="flex:1;">
+              <span style="color:#64748b;font-size:var(--fs-sm);min-width:60px;">minutes</span>
+            </div>
+            <small style="display:block;margin-top:6px;color:#64748b;font-style:italic;">Exemple : 14h + 30min = pratique commence à 14h30</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Horaire de fin de réservation ${helpTip('Temps avant la fin du cours pour que la pratique finisse vraiment sur l\'installation. Inclut le rangement et le trajet retour.')}
+            </label>
+            <div style="display:flex;align-items:center;gap:var(--sp-2);">
+              <input type="number" class="form-input" id="wiz-reservation-fin" value="${reservationFin}" min="0" max="120" style="flex:1;">
+              <span style="color:#64748b;font-size:var(--fs-sm);min-width:60px;">minutes</span>
+            </div>
+            <small style="display:block;margin-top:6px;color:#64748b;font-style:italic;">Exemple : 16h − 30min = pratique finit à 15h30</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="border-left:4px solid #ef4444;background:#fef2f2;padding:var(--sp-3);border-radius:4px;font-size:var(--fs-sm);margin-top:var(--sp-3);">
+      <p style="margin:0 0 var(--sp-2) 0;"><strong>🚌 Export Transport (horaires bus)</strong></p>
+      <p style="margin:0 0 var(--sp-2) 0;">
+        <code style="background:#fff;padding:2px 4px;border-radius:3px;">Départ = heure début + ${transportAller || 15} min</code><br>
+        <code style="background:#fff;padding:2px 4px;border-radius:3px;">Retour = heure fin − ${transportRetour || 15} min</code>
+      </p>
+      <p style="margin:0;color:#1e293b;">Exemple : cours 14h-16h → bus départ 14h15, retour 15h45</p>
+    </div>
+
+    <div style="border-left:4px solid #3b82f6;background:#eff6ff;padding:var(--sp-3);border-radius:4px;font-size:var(--fs-sm);margin-top:var(--sp-3);">
+      <p style="margin:0 0 var(--sp-2) 0;"><strong>📋 CSV Mairie (réservation installation)</strong></p>
+      <p style="margin:0 0 var(--sp-2) 0;">
+        <code style="background:#fff;padding:2px 4px;border-radius:3px;">Début = heure début + ${reservationDebut || 30} min</code><br>
+        <code style="background:#fff;padding:2px 4px;border-radius:3px;">Fin = heure fin − ${reservationFin || 30} min</code>
+      </p>
+      <p style="margin:0;color:#1e293b;">Exemple : cours 14h-16h → réservation 14h30-15h30</p>
     </div>
 
     <div class="form-group">
@@ -1077,6 +1162,10 @@ async function saveCurrentStep() {
     const annee = document.getElementById('wiz-etab-annee')?.value?.trim();
     const hDebut = document.getElementById('wiz-etab-hdebut')?.value;
     const hFin = document.getElementById('wiz-etab-hfin')?.value;
+    const transportAller = parseInt(document.getElementById('wiz-transport-aller')?.value) || 15;
+    const reservationDebut = parseInt(document.getElementById('wiz-reservation-debut')?.value) || 30;
+    const reservationFin = parseInt(document.getElementById('wiz-reservation-fin')?.value) || 30;
+    const transportRetour = parseInt(document.getElementById('wiz-transport-retour')?.value) || 15;
 
     await setConfig('etablissementNom', nom || '');
     await setConfig('etablissementType', type || 'mixte');
@@ -1084,6 +1173,10 @@ async function saveCurrentStep() {
     await setConfig('anneeScolaire', annee || '2025-2026');
     await setConfig('heureDebut', hDebut || '08:00');
     await setConfig('heureFin', hFin || '17:00');
+    await setConfig('delaiTransportAllerMin', transportAller);
+    await setConfig('delaiReservationDebutMin', reservationDebut);
+    await setConfig('delaiReservationFinMin', reservationFin);
+    await setConfig('delaiTransportRetourMin', transportRetour);
 
     // Jours ouvrés
     const joursSelected = [];

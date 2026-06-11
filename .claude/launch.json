@@ -4,8 +4,9 @@
     {
       "name": "edt-eps-dev",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "--host"],
-      "port": 3000
+      "runtimeArgs": ["vite"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

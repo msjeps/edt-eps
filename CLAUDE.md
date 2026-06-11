@@ -4,7 +4,7 @@
 Application web pour coordonnateurs EPS (utilisée **avec connexion internet**).
 Objectif : produire l'emploi du temps EPS, gérer les réservations d'installations sportives et les transports. Stockage 100% local (IndexedDB), pas de serveur externe.
 
-**Dernière mise à jour : 08/05/2026**
+**Dernière mise à jour : 11/06/2026**
 
 ## Stack technique
 - **Framework** : Vanilla JS + HTML5 + CSS3 (pas de framework lourd, PWA légère)
@@ -143,6 +143,7 @@ Objectif : produire l'emploi du temps EPS, gérer les réservations d'installati
 21. ✅ Indisponibilités UI : colonne compteur dans la liste Enseignants, modal par enseignant (cases "Absent jour entier" + plages horaires par jour), sauvegarde/mise à jour IDB — `src/views/donnees/donnees.js`
 22. ✅ Import disponibilités mairie : bouton "Import mairie" dans l'onglet Installations (badge compteur), modal de mapping espaces→installations, parse JSON Direction des Sports, captureUndo — `src/import/disponibilites.js`, `src/views/donnees/donnees.js`
 23. ✅ Jeu de données démo : bouton "Charger la démo" dans le dashboard, dataset fictif complet (5 profs, 12 classes, 3 trimestres, 60 séances, Collège-Lycée Les Quatre Vents) — `src/data/demo.js`, `src/views/dashboard.js`
+24. ✅ Délais configurables installations extra-muros (11/06/2026) : 4 paramètres dans l'étape Établissement du wizard — **Prévision horaire Transport Aller** (défaut 15 min), **Prévision horaire Transport Retour** (défaut 15 min), **Horaire de début de réservation** (défaut 30 min), **Horaire de fin de réservation** (défaut 30 min). Utilisés dans les exports **CSV Mairie** (horaires réels de pratique) et **Transport** (commande du bus). Icône configuration améliorée (roue crantée plus lisible) — `src/views/wizard/wizard.js`, `src/views/exports/exports.js`, `index.html`
 
 ### Reste à implémenter
 - Aucune fonctionnalité MVP en attente. Le MVP Phase 1 est complet.
@@ -202,10 +203,16 @@ Transport {id, seanceId, jour, dates[], lieuId, departEtablissement, retourInsta
 - 1ère/Term : 2h (groupes EPS inter-classes)
 - Pas de contrainte 24h
 
-### Transport
-- Temps trajet ignoré dans le planning (géré en interne)
-- 2h de cours en déplacement = 1h sur l'installation
-- Export : départ MSJ = heure cours + 15min trajet (configurable)
+### Transport et réservations installations extra-muros
+Géré par 4 paramètres configurables dans l'étape Établissement du wizard :
+- **Prévision horaire TRANSPORT ALLER** (défaut 15 min) : délai après le début du cours pour commander le bus aller
+- **Prévision horaire TRANSPORT RETOUR** (défaut 15 min) : délai avant la fin du cours pour commander le bus retour
+- **Horaire de début de réservation** (défaut 30 min) : délai après le début du cours pour que la pratique commence (inclut appel, tenue, matériel, trajet)
+- **Horaire de fin de réservation** (défaut 30 min) : délai avant la fin du cours pour que la pratique finisse (inclut rangement, trajet retour)
+
+Exemple (cours 14h-16h, établissement avec temps trajet 30 min) :
+- Export Transport : départ 14h15, retour 15h45
+- CSV Mairie (réservation installation) : pratique 14h30-15h30
 
 ### Association Sportive
 - Hors ORS 6h/jour mais peut bloquer ressources si activé

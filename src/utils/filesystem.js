@@ -151,10 +151,50 @@ export async function saveProjectFile(blob, filename) {
 }
 
 /**
- * Sauvegarde un fichier export dans EDT EPS/EXPORTS/
+ * Sauvegarde un fichier export directement dans le dossier choisi (sans sous-dossier)
  */
 export async function saveExportFile(blob, filename) {
-  return saveToDir('fs_exports_dir', 'EXPORTS', filename, blob);
+  if (!SUPPORTED) {
+    _fallbackSave(blob, filename);
+    return { saved: true, path: null, fallback: true };
+  }
+
+  const stored = await loadHandle('fs_exports_dir');
+  if (!stored) {
+    // Aucun dossier mémorisé → afficher picker
+    let dirHandle;
+    try {
+      dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } catch {
+      // Utilisateur a annulé
+      _fallbackSave(blob, filename);
+      return { saved: true, path: null, fallback: true };
+    }
+    await storeHandle('fs_exports_dir', dirHandle);
+
+    // Sauvegarder dans ce dossier
+    const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+
+    return { saved: true, path: filename, fallback: false };
+  }
+
+  // Dossier mémorisé : vérifier permission et sauvegarder
+  const ok = await ensurePermission(stored);
+  if (!ok) {
+    // Permission refusée → fallback
+    _fallbackSave(blob, filename);
+    return { saved: true, path: null, fallback: true };
+  }
+
+  const fileHandle = await stored.getFileHandle(filename, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+
+  return { saved: true, path: filename, fallback: false };
 }
 
 /**
@@ -164,6 +204,30 @@ export async function saveExportFile(blob, filename) {
 export async function resetDir(which = 'all') {
   if (which === 'projet' || which === 'all') await removeHandle('fs_projet_dir');
   if (which === 'exports' || which === 'all') await removeHandle('fs_exports_dir');
+}
+
+/**
+ * Retourne le nom du dossier courant pour les exports (ou null si non configuré).
+ * Essaie de récupérer le chemin via le FileSystemHandle.
+ */
+export async function getExportsDirPath() {
+  if (!SUPPORTED) return null;
+
+  const stored = await loadHandle('fs_exports_dir');
+  if (!stored) return null;
+
+  try {
+    // Essayer d'accéder à la propriété name du handle
+    if (stored.name) return `.../${stored.name}`;
+
+    // Fallback : demander la permission et essayer d'accéder au parent
+    const ok = await ensurePermission(stored);
+    if (!ok) return 'Dossier EXPORTS (permission refusée)';
+
+    return 'Dossier EXPORTS';
+  } catch {
+    return 'Dossier EXPORTS';
+  }
 }
 
 export const fsSupported = SUPPORTED;
