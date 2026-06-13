@@ -22,8 +22,13 @@ import { saveProjectFile, fsSupported } from './utils/filesystem.js';
 import { canUndo, getUndoLabel, undo, clearUndoStack, onUndoStackChange } from './utils/undo.js';
 import { openSnapshotsModal } from './versioning/snapshots-modal.js';
 import { isConfigComplete } from './engine/config-validator.js';
+import { getPeriodeGlobale, setPeriodeGlobale, onPeriodeGlobaleChange } from './utils/period-store.js';
+import { getTheme, applyTheme, toggleTheme } from './utils/theme-store.js';
 
 let currentView = 'dashboard';
+
+// Vues filtrées par la période globale (sélecteur du header)
+const VUES_PERIODE = ['edt', 'vues'];
 // Indicateur : les données ont-elles été modifiées depuis la dernière sauvegarde ?
 let dataModifiedSinceLastSave = false;
 
@@ -67,6 +72,25 @@ export async function initApp() {
   } else {
     navigateTo('dashboard');
   }
+
+  // Thème clair / sombre (le script inline de index.html a déjà posé data-theme ;
+  // on resynchronise meta + bouton, et on câble la bascule).
+  applyTheme(getTheme());
+  document.getElementById('header-theme-toggle')?.addEventListener('click', () => {
+    toggleTheme();
+  });
+
+  // Sélecteur de période global (header)
+  await refreshHeaderPeriode();
+  document.getElementById('header-periode')?.addEventListener('change', (e) => {
+    setPeriodeGlobale(e.target.value);
+  });
+  // Source de vérité unique : à chaque changement, on resynchronise le header
+  // et on re-rend la vue courante si elle dépend de la période.
+  onPeriodeGlobaleChange((v) => {
+    setHeaderPeriodeValue(v);
+    if (VUES_PERIODE.includes(currentView)) rerenderCurrentView();
+  });
 
   // Bind navigation
   document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -213,7 +237,40 @@ async function rerenderCurrentView() {
     case 'edt':           await renderEdt(viewEl); break;
     case 'conflits':      await renderConflits(viewEl); break;
     case 'reservations':  await renderReservations(viewEl); break;
+    case 'vues':          await renderVues(viewEl); break;
   }
+}
+
+/**
+ * Sélecteur de période global (header) — remplit les options, valide la
+ * valeur mémorisée et la synchronise avec l'affichage.
+ */
+async function refreshHeaderPeriode() {
+  const sel = document.getElementById('header-periode');
+  if (!sel) return;
+  const all = await db.periodes.toArray();
+  const main = all.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
+
+  let val = getPeriodeGlobale();
+  const validIds = new Set(all.map(p => String(p.id)));
+  // Période mémorisée qui n'existe plus (autre projet chargé) → repli sur Toutes
+  if (val !== 'all' && !validIds.has(val)) { setPeriodeGlobale('all'); val = 'all'; }
+
+  // Si la période active est une sous-période, l'ajouter pour pouvoir l'afficher
+  let opts = main;
+  if (val !== 'all' && !main.some(p => String(p.id) === val)) {
+    const extra = all.find(p => String(p.id) === val);
+    if (extra) opts = [...main, extra];
+  }
+
+  sel.innerHTML = `<option value="all">Toutes les périodes</option>` +
+    opts.map(p => `<option value="${p.id}">${p.nom}</option>`).join('');
+  sel.value = val;
+}
+
+function setHeaderPeriodeValue(v) {
+  const sel = document.getElementById('header-periode');
+  if (sel && sel.value !== v) sel.value = v;
 }
 
 async function saveProjectChooseDir() {
@@ -312,6 +369,10 @@ export async function navigateTo(viewName) {
   // Mettre à jour le titre dans le header
   const titleEl = document.getElementById('view-title');
   if (titleEl) titleEl.textContent = VIEW_LABELS[viewName] || viewName;
+
+  // Sélecteur de période : visible seulement sur les vues filtrées par période
+  const periodeWrap = document.getElementById('header-periode-wrap');
+  if (periodeWrap) periodeWrap.hidden = !VUES_PERIODE.includes(viewName);
 
   // Vues nécessitant une configuration complète
   const VUES_PROTEGEES = ['edt'];

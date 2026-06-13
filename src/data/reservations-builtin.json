@@ -1,0 +1,1082 @@
+[
+  {
+    "page": 1,
+    "facility": "COMPLEXE DES SEMBOULES",
+    "space": "Terrain Stabilise Semboules",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / TOURNIERE"
+  },
+  {
+    "page": 1,
+    "facility": "COMPLEXE DES SEMBOULES",
+    "space": "Terrain Stabilise Semboules",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / TOURNIERE"
+  },
+  {
+    "page": 1,
+    "facility": "COMPLEXE DES SEMBOULES",
+    "space": "Terrain Stabilise Semboules",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 07/10/2025",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / PREVERT - ST CLAUDE"
+  },
+  {
+    "page": 1,
+    "facility": "COMPLEXE DES SEMBOULES",
+    "space": "Terrain Stabilise Semboules",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "14:30 - 16:30",
+    "activity": "EPS / PREVERT -ST CLAUDE"
+  },
+  {
+    "page": 1,
+    "facility": "COMPLEXE DES SEMBOULES",
+    "space": "Terrain Stabilise Semboules",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "20/03/2026 - 05/06/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 1,
+    "facility": "COMPLEXE DES SEMBOULES",
+    "space": "Terrain Stabilise Semboules",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "20/03/2026 - 05/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 3,
+    "facility": "SALLE OMNISPORT SAINT CLAUDE",
+    "space": "Espace Hand St Claude",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "14:30 - 16:30",
+    "activity": "EPS / PREVERT - ST CLAUDE"
+  },
+  {
+    "page": 3,
+    "facility": "SALLE OMNISPORT SAINT CLAUDE",
+    "space": "Espace Hand St Claude",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / PREVERT - ST CLAUDE"
+  },
+  {
+    "page": 3,
+    "facility": "SALLE OMNISPORT SAINT CLAUDE",
+    "space": "Espace Hand St Claude",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "02/12/2025 - 03/03/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / LAVAL1 &2"
+  },
+  {
+    "page": 3,
+    "facility": "SALLE OMNISPORT SAINT CLAUDE",
+    "space": "Espace Hand St Claude",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "19/03/2026 - 04/06/2026",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / LAVAL 1ET2"
+  },
+  {
+    "page": 4,
+    "facility": "STADE FOCH",
+    "space": "Piste d’Athletisme et sautoirs Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / GUYNEMER -STE"
+  },
+  {
+    "page": 4,
+    "facility": "STADE FOCH",
+    "space": "Piste d’Athletisme et sautoirs Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 4,
+    "facility": "STADE FOCH",
+    "space": "Piste d’Athletisme et sautoirs Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "02/12/2025 - 05/03/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / PONTEIL -G.ROUX"
+  },
+  {
+    "page": 4,
+    "facility": "STADE FOCH",
+    "space": "Piste d’Athletisme et sautoirs Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "05/05/2026 - 02/06/2026",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 4,
+    "facility": "STADE FOCH",
+    "space": "Piste d’Athletisme et sautoirs Foch",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "11/09/2025 - 09/10/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 4,
+    "facility": "STADE FOCH",
+    "space": "Piste d’Athletisme et sautoirs Foch",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "02/12/2025 - 05/03/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / PONTEIL -G.ROUX"
+  },
+  {
+    "page": 4,
+    "facility": "STADE FOCH",
+    "space": "Piste d’Athletisme et sautoirs Foch",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "12/09/2025 - 28/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / GUYNEMER -STE"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 12/01/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / G.MUSSO -MT ST JEAN"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "19/01/2026 - 02/03/2026",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / G.MUSSO -MT ST JEAN"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STMARIE"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "02/12/2025 - 05/03/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / PONTEIL -G.ROUX"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "05/05/2026 - 02/06/2026",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "11/09/2025 - 09/10/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "16/10/2025 - 27/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "02/12/2025 - 05/03/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / PONTEIL -G.ROUX"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "19/03/2026 - 05/06/2026",
+    "time_range": "08:30 - 10:30",
+    "activity": "EPS / GUYNEMER -STE"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "12/09/2025 - 28/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "05/12/2025 - 06/03/2026",
+    "time_range": "08:30 - 11:30 / 13:30 - 16:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 5,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 1 Foch",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "19/03/2026 - 05/06/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 6,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 2 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / PONTEIL -G ROUX"
+  },
+  {
+    "page": 6,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 2 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 12/01/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / G.MUSSO -MT ST JEAN"
+  },
+  {
+    "page": 6,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 2 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "19/01/2026 - 02/03/2026",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / G.MUSSO -MT ST JEAN"
+  },
+  {
+    "page": 6,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 2 Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STMARIE"
+  },
+  {
+    "page": 6,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 2 Foch",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "16/10/2025 - 27/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 6,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 2 Foch",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "19/03/2026 - 05/06/2026",
+    "time_range": "08:30 - 10:30",
+    "activity": "EPS / GUYNEMER -STE"
+  },
+  {
+    "page": 6,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 2 Foch",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "05/12/2025 - 06/03/2026",
+    "time_range": "08:30 - 11:30 / 13:30 - 16:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 6,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 2 Foch",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "19/03/2026 - 05/06/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 7,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 3 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 7,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 3 Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / JMOULIN"
+  },
+  {
+    "page": 7,
+    "facility": "STADE FOCH",
+    "space": "Plateau EPS Central 3 Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / G MUSSO -MSJ"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 15/01/2026",
+    "time_range": "09:30 - 11:30 / 13:30 - 15:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "19/01/2026 - 05/03/2026",
+    "time_range": "09:30 - 11:30 / 13:30 - 15:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GMUSSO -MSJ"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / PONTEIL -G ROUX"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 15/01/2026",
+    "time_range": "08:30 - 11:30 / 13:30 - 16:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "19/01/2026 - 05/03/2026",
+    "time_range": "08:30 - 11:30 / 13:30 - 15:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "17/03/2026 - 30/04/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "17/03/2026 - 02/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / PONTEIL -G ROUX"
+  },
+  {
+    "page": 8,
+    "facility": "STADE FOCH",
+    "space": "Salle Foch",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "05/05/2026 - 04/06/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 9,
+    "facility": "Jeudi",
+    "space": "08:00 09:00 10:00 11:00 12:00 13:00 14:00 15:00 16:00 17:00",
+    "day": "",
+    "organizer": "Direction des sports",
+    "date_range": "11/09/2025 - 27/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / PONTEIL -G ROUX"
+  },
+  {
+    "page": 9,
+    "facility": "Jeudi",
+    "space": "08:00 09:00 10:00 11:00 12:00 13:00 14:00 15:00 16:00 17:00",
+    "day": "",
+    "organizer": "Direction des sports",
+    "date_range": "04/12/2025 - 05/03/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / G.MUSSO -MT ST JEAN"
+  },
+  {
+    "page": 9,
+    "facility": "Jeudi",
+    "space": "08:00 09:00 10:00 11:00 12:00 13:00 14:00 15:00 16:00 17:00",
+    "day": "",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 15/01/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 9,
+    "facility": "Jeudi",
+    "space": "08:00 09:00 10:00 11:00 12:00 13:00 14:00 15:00 16:00 17:00",
+    "day": "",
+    "organizer": "Direction des sports",
+    "date_range": "19/01/2026 - 05/03/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 9,
+    "facility": "Jeudi",
+    "space": "08:00 09:00 10:00 11:00 12:00 13:00 14:00 15:00 16:00 17:00",
+    "day": "",
+    "organizer": "Direction des sports",
+    "date_range": "17/03/2026 - 30/04/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / GUYNEMER -STEMARIE"
+  },
+  {
+    "page": 9,
+    "facility": "Jeudi",
+    "space": "08:00 09:00 10:00 11:00 12:00 13:00 14:00 15:00 16:00 17:00",
+    "day": "",
+    "organizer": "Direction des sports",
+    "date_range": "05/05/2026 - 04/06/2026",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / GUYNEMER -STE"
+  },
+  {
+    "page": 13,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 #",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 02/03/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 13,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 #",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 30/04/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 13,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 #",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "04/05/2026 - 04/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 13,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 #",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 07/10/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 13,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 #",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "11/09/2025 - 27/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / PREVERT - ST CLAUDE"
+  },
+  {
+    "page": 13,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 #",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 30/04/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 13,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 #",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "04/05/2026 - 04/06/2026",
+    "time_range": "14:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 14,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 ⁄",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 02/03/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 14,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 ⁄",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 30/04/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 14,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 ⁄",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "04/05/2026 - 04/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 14,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 ⁄",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 07/10/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 14,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 ⁄",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "11/09/2025 - 27/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / PREVERT - ST CLAUDE"
+  },
+  {
+    "page": 14,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 ⁄",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 30/04/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 14,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 synthetique T2 ⁄",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "04/05/2026 - 04/06/2026",
+    "time_range": "14:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 16,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 Terrain Synthetique Hockey A",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 10/10/2025",
+    "time_range": "10:00 - 11:00",
+    "activity": "EPS /"
+  },
+  {
+    "page": 16,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 Terrain Synthetique Hockey A",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 16,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 Terrain Synthetique Hockey A",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 16,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 Terrain Synthetique Hockey A",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "07/05/2026 - 04/06/2026",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 17,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 Terrain Synthetique Hockey B",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 10/10/2025",
+    "time_range": "10:00 - 11:00",
+    "activity": "EPS /"
+  },
+  {
+    "page": 17,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 Terrain Synthetique Hockey B",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 17,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 Terrain Synthetique Hockey B",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 17,
+    "facility": "STADE FONTONNE",
+    "space": "1/2 Terrain Synthetique Hockey B",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "07/05/2026 - 04/06/2026",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 18,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Hockey Fontonne",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 10/10/2025",
+    "time_range": "10:00 - 11:00",
+    "activity": "EPS /"
+  },
+  {
+    "page": 18,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Hockey Fontonne",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 18,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Hockey Fontonne",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 01/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 18,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Hockey Fontonne",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "07/05/2026 - 04/06/2026",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / FONTONNE"
+  },
+  {
+    "page": 20,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Synthetique Fontonne 2",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 02/03/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 20,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Synthetique Fontonne 2",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 30/04/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 20,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Synthetique Fontonne 2",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "04/05/2026 - 04/06/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 20,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Synthetique Fontonne 2",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 07/10/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 20,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Synthetique Fontonne 2",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "11/09/2025 - 27/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / PREVERT - ST CLAUDE"
+  },
+  {
+    "page": 20,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Synthetique Fontonne 2",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "16/03/2026 - 30/04/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 20,
+    "facility": "STADE FONTONNE",
+    "space": "Terrain Synthetique Fontonne 2",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "04/05/2026 - 04/06/2026",
+    "time_range": "14:30 - 16:30",
+    "activity": "EPS / BOISSIER"
+  },
+  {
+    "page": 21,
+    "facility": "STADE FORT CARRE",
+    "space": "1/2 Terrain Synthetique Foot 1 Fort",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "04/12/2025 - 05/03/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / GUYNEMER / STEMARIE"
+  },
+  {
+    "page": 23,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 synthetique Foot A G.Auvergne",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "13/10/2025 - 24/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / STMAYMES"
+  },
+  {
+    "page": 23,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 synthetique Foot A G.Auvergne",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 03/03/2026",
+    "time_range": "08:30 - 11:30 / 13:30 - 16:30",
+    "activity": "EPS / TRAMONTANE"
+  },
+  {
+    "page": 23,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 synthetique Foot A G.Auvergne",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "01/12/2025 - 03/03/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / TRAMONTANE"
+  },
+  {
+    "page": 25,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby A",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / JMOULIN"
+  },
+  {
+    "page": 25,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby A",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "13/10/2025 - 24/11/2025",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / TOURNIERE"
+  },
+  {
+    "page": 25,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby A",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / STPHILIPPE"
+  },
+  {
+    "page": 25,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby A",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "02/12/2025 - 03/03/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / G.MUSSO -MT ST JEAN"
+  },
+  {
+    "page": 25,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby A",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "05/12/2025 - 06/03/2026",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / PONTEIL -G.ROUX"
+  },
+  {
+    "page": 25,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby A",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "20/03/2026 - 05/06/2026",
+    "time_range": "13:30 - 15:30",
+    "activity": "EPS / JMOULIN"
+  },
+  {
+    "page": 25,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby A",
+    "day": "Vendredi",
+    "organizer": "Direction des sports",
+    "date_range": "20/03/2026 - 05/06/2026",
+    "time_range": "14:30 - 16:30",
+    "activity": "EPS / STPHILIPPE"
+  },
+  {
+    "page": 26,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby B",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / TRAMONTANE"
+  },
+  {
+    "page": 26,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "1/2 terrain Rugby B",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "13:30 - 16:30",
+    "activity": "EPS / TRAMONTANE"
+  },
+  {
+    "page": 27,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "Petit Synthetique G.Auvergne",
+    "day": "Lundi",
+    "organizer": "Direction des sports",
+    "date_range": "08/09/2025 - 24/11/2025",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / TRAMONTANE"
+  },
+  {
+    "page": 27,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "Petit Synthetique G.Auvergne",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "09/09/2025 - 25/11/2025",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / TRAMONTANE"
+  },
+  {
+    "page": 27,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "Petit Synthetique G.Auvergne",
+    "day": "Mardi",
+    "organizer": "Direction des sports",
+    "date_range": "02/12/2025 - 05/03/2026",
+    "time_range": "09:30 - 11:30",
+    "activity": "EPS / TRAMONTANE"
+  },
+  {
+    "page": 27,
+    "facility": "STADE GILBERT AUVERGNE",
+    "space": "Petit Synthetique G.Auvergne",
+    "day": "Jeudi",
+    "organizer": "Direction des sports",
+    "date_range": "02/12/2025 - 05/03/2026",
+    "time_range": "08:30 - 11:30",
+    "activity": "EPS / TRAMONTANE"
+  }
+]

@@ -278,8 +278,8 @@ td.prog-creneau-cell > * {
 }
 
 /* ---- Status cells ---- */
-.prog-status-ok   { background: #F0FDF4; }
-.prog-status-warn { background: #FFFBEB; }
+.prog-status-ok   { background: var(--c-success-bg); }
+.prog-status-warn { background: var(--c-warning-bg); }
 
 /* ---- Action cell ---- */
 .prog-action-cell {
@@ -388,22 +388,22 @@ td.prog-creneau-cell > * {
 .entry-status { font-size: 0.7rem; }
 
 /* ---- Status entry colors ---- */
-.entry-ok      { background: #F0FDF4; border-left-color: #86EFAC; }
-.entry-warn    { background: #FEFCE8; border-left-color: #FDE047; }
+.entry-ok      { background: var(--c-success-bg); border-left-color: var(--c-success-border); }
+.entry-warn    { background: var(--c-warning-bg); border-left-color: var(--c-warning-border); }
 .entry-conflict {
-  background: #FFF1F2 !important;
-  border: 1px solid #FECACA !important;
-  border-left: 2px solid #EF4444 !important;
+  background: var(--c-danger-bg) !important;
+  border: 1px solid var(--c-danger-border) !important;
+  border-left: 2px solid var(--c-danger) !important;
 }
 
-.prog-cell-conflict { background: #FFF1F2 !important; }
+.prog-cell-conflict { background: var(--c-danger-bg) !important; }
 
 /* ---- Conflict summary ---- */
 .prog-conflict-summary {
   margin-top: var(--sp-4);
   padding: var(--sp-4);
-  background: #FFF1F2;
-  border: 1px solid #FECACA;
+  background: var(--c-danger-bg);
+  border: 1px solid var(--c-danger-border);
   border-radius: var(--radius-lg);
   font-size: var(--fs-sm);
 }
@@ -498,7 +498,7 @@ td.prog-creneau-cell > * {
 .prog-status-arrow { color: var(--c-text-muted); font-size: 0.9rem; }
 
 /* ---- Chevauchement de périodes ---- */
-.prog-cell-ghost { background: #F8FAFC; cursor: default; }
+.prog-cell-ghost { background: var(--c-surface-alt); cursor: default; }
 
 .prog-ghost-assignment {
   padding: var(--sp-1) var(--sp-2);
@@ -530,8 +530,8 @@ td.prog-creneau-cell > * {
   white-space: nowrap;
 }
 
-.ghost-full-cover { background: #F8FAFC; cursor: default; opacity: 0.55; }
-.ghost-partial    { background: #F8FAFC; cursor: default; opacity: 0.45; }
+.ghost-full-cover { background: var(--c-surface-alt); cursor: default; opacity: 0.55; }
+.ghost-partial    { background: var(--c-surface-alt); cursor: default; opacity: 0.45; }
 
 .entry-ghost-badge {
   font-size: 0.6rem;

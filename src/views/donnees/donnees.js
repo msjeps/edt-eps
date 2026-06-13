@@ -3,6 +3,7 @@
  * Onglets : Enseignants | Classes | Activités | Installations | Périodes
  */
 import db from '../../db/schema.js';
+import reservationsBuiltin from '../../data/reservations-builtin.json';
 import { toast } from '../../components/toast.js';
 import { openModal, confirmModal } from '../../components/modal.js';
 import { escapeHtml, h } from '../../utils/escape.js';
@@ -125,7 +126,7 @@ async function renderEnseignantsTab(container) {
                   <td>
                     ${nbIndispos > 0
                       ? `<span class="tag tag-warning" title="${nbIndispos} jour(s) bloqué(s)">${nbIndispos} jour(s)</span>`
-                      : '<span style="color:var(--c-text-muted);font-size:var(--fs-xs);">—</span>'}
+                      : '<span class="u-hint">—</span>'}
                   </td>
                   <td>
                     <button class="btn btn-sm btn-outline btn-vue-ens" data-id="${e.id}" title="Voir l'emploi du temps hebdomadaire">Semaine type</button>
@@ -361,7 +362,7 @@ async function renderContraintesTab(container) {
                       background:var(--c-surface);">
             <div>
               <div style="font-weight:600;margin-bottom:4px;">${r.titre}</div>
-              <div style="font-size:var(--fs-sm);color:var(--c-text-secondary);">${r.desc}</div>
+              <div class="u-desc">${r.desc}</div>
             </div>
             <label class="toggle-switch" style="flex-shrink:0;margin-top:2px;">
               <input type="checkbox" class="contrainte-toggle" data-cle="${r.cle}" ${r.val ? 'checked' : ''}>
@@ -410,7 +411,7 @@ async function renderClassesTab(container) {
       <div class="card-header">
         <span class="card-title">Niveaux de classes</span>
       </div>
-      <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
+      <p class="u-desc u-mb-3">
         Sélectionnez les niveaux présents dans votre établissement :
       </p>
       <div style="display:flex;flex-wrap:wrap;gap:var(--sp-3);">
@@ -422,7 +423,7 @@ async function renderClassesTab(container) {
                           border-radius:var(--radius-md);background:${actif ? '#dbeafe' : 'var(--c-surface)'};">
               <input type="checkbox" class="niv-check" data-niveau="${niv}" ${actif ? 'checked' : ''}>
               <strong>${niv}</strong>
-              <span style="font-size:var(--fs-xs);color:var(--c-text-muted);">${parNiveau[niv].length} classe(s)</span>
+              <span class="u-hint">${parNiveau[niv].length} classe(s)</span>
             </label>
           `;
         }).join('')}
@@ -453,9 +454,9 @@ async function renderClassesTab(container) {
                 const ens = enseignants.find(e => e.id === c.enseignantId);
                 return `
                   <tr>
-                    <td><strong>${h(c.nom) || '<em style="color:var(--c-text-muted)">sans nom</em>'}</strong></td>
+                    <td><strong>${h(c.nom) || '<em class="u-muted">sans nom</em>'}</strong></td>
                     <td>${c.effectif}</td>
-                    <td>${ens ? `${h(ens.prenom)} ${h(ens.nom)}` : '<span style="color:var(--c-text-muted)">-</span>'}</td>
+                    <td>${ens ? `${h(ens.prenom)} ${h(ens.nom)}` : '<span class="u-muted">-</span>'}</td>
                     <td>
                       <button class="btn btn-sm btn-outline btn-edit-cls" data-id="${c.id}">Modifier</button>
                       <button class="btn btn-sm btn-danger btn-del-cls" data-id="${c.id}">Suppr.</button>
@@ -635,10 +636,10 @@ async function renderActivitesTab(container) {
                   ${acts.map(a => {
                     const niveauxAct = Array.isArray(a.niveaux) && a.niveaux.length > 0
                       ? a.niveaux.map(n => `<span class="tag tag-info" style="font-size:var(--fs-xs);padding:1px 6px;">${h(n)}</span>`).join(' ')
-                      : '<span style="color:var(--c-text-muted);font-size:var(--fs-xs);">Tous</span>';
+                      : '<span class="u-hint">Tous</span>';
                     return `
                       <tr>
-                        <td><strong>${h(a.nom) || '<em style="color:var(--c-text-muted)">sans nom</em>'}</strong></td>
+                        <td><strong>${h(a.nom) || '<em class="u-muted">sans nom</em>'}</strong></td>
                         <td>${niveauxAct}</td>
                         <td>
                           <button class="btn btn-sm btn-outline btn-edit-act" data-id="${a.id}">Modifier</button>
@@ -772,10 +773,10 @@ function buildIndispoRowHtml(existingIndispos, labelAbsent = 'Absent') {
           <span style="font-size:var(--fs-sm);">${labelAbsent}</span>
         </label>
         <div class="indispo-plage" style="display:flex;align-items:center;gap:var(--sp-2);${absentJour ? 'opacity:0.35;pointer-events:none;' : ''}">
-          <span style="font-size:var(--fs-xs);color:var(--c-text-muted);">Indispo&nbsp;de</span>
+          <span class="u-hint">Indispo&nbsp;de</span>
           <input type="time" class="form-input indispo-debut" data-jour="${jour}" value="${heureDebut}"
                  style="width:88px;padding:3px 6px;font-size:var(--fs-sm);">
-          <span style="font-size:var(--fs-xs);color:var(--c-text-muted);">à</span>
+          <span class="u-hint">à</span>
           <input type="time" class="form-input indispo-fin" data-jour="${jour}" value="${heureFin}"
                  style="width:88px;padding:3px 6px;font-size:var(--fs-sm);">
         </div>
@@ -845,7 +846,7 @@ async function renderInstallationsTab(container) {
           return `
             <div style="margin-bottom:var(--sp-4);border:1px solid var(--c-border);border-radius:var(--radius-md);overflow:hidden;">
               <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);background:var(--c-surface-alt);">
-                <span style="font-size:1.2rem;">${l.necessiteBus ? '&#128652;' : '&#127939;'}</span>
+                <span style="font-size:var(--fs-lg);">${l.necessiteBus ? '&#128652;' : '&#127939;'}</span>
                 <strong>${h(l.nom)}</strong>
                 <span class="tag ${l.type === 'intra' ? 'tag-success' : 'tag-warning'}">${h(l.type)}</span>
                 ${l.necessiteBus ? '<span class="tag tag-info">Bus</span>' : ''}
@@ -864,7 +865,7 @@ async function renderInstallationsTab(container) {
                             const a = activites.find(x => x.id === aId);
                             return a ? `<span class="tag tag-primary" style="font-size:var(--fs-xs);padding:1px 6px;">${h(a.nom)}</span>` : '';
                           }).filter(Boolean).join(' ')
-                        : '<span style="color:var(--c-text-muted);font-size:var(--fs-xs);">Toutes</span>';
+                        : '<span class="u-hint">Toutes</span>';
                       const nbIndispos = indisposParInst[inst.id] || 0;
                       return `
                         <tr>
@@ -994,20 +995,12 @@ async function openImportMairieModal(installations, parentContainer) {
   const btnCancel = modal.querySelector('#md-import-cancel');
   btnCancel.addEventListener('click', close);
 
-  // Source : données intégrées
-  modal.querySelector('#import-src-builtin')?.addEventListener('change', async (e) => {
+  // Source : données intégrées (bundlées dans le JS, pas de fetch externe)
+  modal.querySelector('#import-src-builtin')?.addEventListener('change', (e) => {
     if (e.target.checked) {
-      try {
-        const resp = await fetch('/extracted_eps_reservations.json');
-        if (!resp.ok) throw new Error('Fichier non trouvé');
-        jsonData = await resp.json();
-        updateStep1Status(modal, `${jsonData.length} entrée(s) chargée(s) depuis les données intégrées.`);
-        btnNext.disabled = false;
-      } catch {
-        toast.error('Impossible de charger les données intégrées.');
-        jsonData = null;
-        btnNext.disabled = true;
-      }
+      jsonData = reservationsBuiltin;
+      updateStep1Status(modal, `${jsonData.length} entrée(s) chargée(s) depuis les données intégrées.`);
+      btnNext.disabled = false;
     }
   });
 
@@ -1106,7 +1099,7 @@ function buildImportStep1Html(periodes = []) {
         <input type="radio" name="import-src" id="import-src-builtin" value="builtin">
         <div>
           <strong>Utiliser les données intégrées</strong>
-          <div style="font-size:var(--fs-sm);color:var(--c-text-secondary);">
+          <div class="u-desc">
             Réservations EPS 2025-2026 extraites du PDF Direction des Sports Antibes
           </div>
         </div>
@@ -1117,7 +1110,7 @@ function buildImportStep1Html(periodes = []) {
         <input type="radio" name="import-src" id="import-src-json" value="json">
         <div style="flex:1;">
           <strong>Fichier JSON</strong>
-          <div style="font-size:var(--fs-sm);color:var(--c-text-secondary);">
+          <div class="u-desc">
             JSON exporté depuis le script d'extraction PDF
           </div>
           <input type="file" id="import-file-json" accept=".json" style="margin-top:var(--sp-2);display:none;">
@@ -1187,7 +1180,7 @@ function buildImportStep2Html(spaces, installations) {
       <tr>
         <td style="font-size:var(--fs-sm);">
           <div style="font-weight:600;">${h(space)}</div>
-          <div style="color:var(--c-text-muted);font-size:var(--fs-xs);">${h(facility)} · ${count} créneau(x)</div>
+          <div class="u-hint">${h(facility)} · ${count} créneau(x)</div>
         </td>
         <td>
           <select class="form-select form-select-sm mapping-select" data-key="${safeKey}" style="min-width:180px;">
@@ -1201,7 +1194,7 @@ function buildImportStep2Html(spaces, installations) {
 
   return `
     <div style="margin-bottom:var(--sp-3);">
-      <div style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
+      <div class="u-desc u-mb-3">
         Associez chaque espace de la Direction des Sports à une de vos installations locales.
         Laissez sur <em>Ignorer</em> pour ne pas importer cet espace.
       </div>
@@ -1266,7 +1259,7 @@ async function openInstallationIndispoModal(inst, parentContainer) {
   const { close, modal } = openModal({
     title: `Indisponibilités — ${inst.nom}`,
     content: `
-      <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
+      <p class="u-desc u-mb-3">
         Créneaux récurrents bloqués chaque semaine (ex : maintenance, fermeture hebdomadaire).
       </p>
       <div style="border:1px solid var(--c-border);border-radius:var(--radius-md);overflow:hidden;">
@@ -1494,7 +1487,7 @@ function openPeriodeModal(per, parentContainer) {
         <option value="custom" ${per?.type === 'custom' ? 'selected' : ''}>Personnalisé</option>
       </select>
     </div>
-    <div style="display: flex; gap: 1rem;">
+    <div style="display: flex; gap: var(--sp-4);">
       <div class="form-group" style="flex:1;">
         <label>Date de début</label>
         <input type="date" id="per-debut" class="form-input" value="${per?.dateDebut || ''}">

@@ -5,6 +5,7 @@
 import db from '../../db/schema.js';
 import { getInstallationColors } from '../../utils/colors.js';
 import { slugify } from '../../utils/helpers.js';
+import { getPeriodeGlobale, getPeriodeGlobaleId, setPeriodeGlobale } from '../../utils/period-store.js';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
 const JOURS_COURTS = { lundi: 'Lun', mardi: 'Mar', mercredi: 'Mer', jeudi: 'Jeu', vendredi: 'Ven' };
@@ -353,23 +354,23 @@ export async function renderVues(container) {
         <!-- Tabs -->
         <div style="display:flex;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius);padding:2px;gap:2px;">
           <button class="vue-tab-btn ${currentTab==='enseignant'?'vue-tab-active':''}" data-tab="enseignant"
-            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='enseignant'?'white':'transparent'};color:${currentTab==='enseignant'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='enseignant'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
+            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='enseignant'?'var(--c-surface-alt)':'transparent'};color:${currentTab==='enseignant'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='enseignant'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
             &#128100; Par enseignant
           </button>
           <button class="vue-tab-btn ${currentTab==='classe'?'vue-tab-active':''}" data-tab="classe"
-            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='classe'?'white':'transparent'};color:${currentTab==='classe'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='classe'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
+            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='classe'?'var(--c-surface-alt)':'transparent'};color:${currentTab==='classe'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='classe'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
             &#127979; Par classe
           </button>
           <button class="vue-tab-btn ${currentTab==='installation'?'vue-tab-active':''}" data-tab="installation"
-            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='installation'?'white':'transparent'};color:${currentTab==='installation'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='installation'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
+            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='installation'?'var(--c-surface-alt)':'transparent'};color:${currentTab==='installation'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='installation'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
             &#127968; Par installation
           </button>
         </div>
 
-        <!-- Filtre période -->
-        <select class="form-select" id="vue-periode" style="width:auto;min-width:180px;">
-          <option value="">Toutes les périodes</option>
-          ${periodesPrincipales.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+        <!-- Filtre période (synchronisé avec le sélecteur global du header) -->
+        <select class="form-select" id="vue-periode" aria-label="Période" style="width:auto;min-width:180px;">
+          <option value="" ${getPeriodeGlobale() === 'all' ? 'selected' : ''}>Toutes les périodes</option>
+          ${periodesPrincipales.map(p => `<option value="${p.id}" ${getPeriodeGlobale() === String(p.id) ? 'selected' : ''}>${p.nom}</option>`).join('')}
         </select>
 
         <!-- Bouton Imprimer -->
@@ -396,9 +397,9 @@ export async function renderVues(container) {
   `;
 
   function getSeancesFiltrees() {
-    const val = container.querySelector('#vue-periode')?.value;
-    if (!val) return seances;
-    return seances.filter(s => s.periodeId === parseInt(val));
+    const id = getPeriodeGlobaleId();
+    if (id == null) return seances;
+    return seances.filter(s => s.periodeId === id);
   }
 
   const TAB_LABELS = { enseignant: 'Par enseignant', classe: 'Par classe', installation: 'Par installation' };
@@ -408,9 +409,9 @@ export async function renderVues(container) {
     const subtitleEl = container.querySelector('#vues-print-subtitle');
     if (titleEl) titleEl.textContent = `EDT EPS — ${TAB_LABELS[currentTab] || currentTab}`;
     if (subtitleEl) {
-      const val = container.querySelector('#vue-periode')?.value;
-      subtitleEl.textContent = val
-        ? (periodesPrincipales.find(p => p.id === parseInt(val))?.nom || '')
+      const id = getPeriodeGlobaleId();
+      subtitleEl.textContent = id != null
+        ? (periodesPrincipales.find(p => p.id === id)?.nom || '')
         : 'Toutes les périodes';
     }
   }
@@ -433,7 +434,10 @@ export async function renderVues(container) {
     });
   });
 
-  container.querySelector('#vue-periode')?.addEventListener('change', renderContent);
+  // Changement de période → on met à jour le store global (le re-render est piloté par app.js)
+  container.querySelector('#vue-periode')?.addEventListener('change', (e) => {
+    setPeriodeGlobale(e.target.value);
+  });
 
   renderContent();
 }

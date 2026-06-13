@@ -7,3 +7,4 @@ dist/
 extracted_*.json
 extracted_*.txt
 .claude/worktrees/
+SECURITY_TODO.md

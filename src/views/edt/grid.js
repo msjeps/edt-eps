@@ -14,6 +14,7 @@ import { validerSeance, heureToMinutes, conflitIndisponibilite } from '../../eng
 import { updateConflictBadge } from '../../app.js';
 import { JOURS_COURTS } from '../../utils/helpers.js';
 import { slugify } from '../../utils/helpers.js';
+import { getPeriodeGlobale, setPeriodeGlobale } from '../../utils/period-store.js';
 
 // État local
 let state = {
@@ -22,7 +23,22 @@ let state = {
   filtreEnseignant: null,
   filtreClasse: null,
   dragSeance: null,
+  density: (typeof localStorage !== 'undefined' && localStorage.getItem('edt-density')) || 'confort',
+  // Second canal d'information (motifs/textures) pour distinguer les installations
+  // sans dépendre de la seule couleur — accessibilité daltonisme.
+  patterns: (typeof localStorage !== 'undefined' && localStorage.getItem('edt-patterns')) === '1',
 };
+
+// Géométrie des blocs selon la densité d'affichage.
+// pitch = pas de pile (px entre 2 niveaux), blocH = hauteur du bloc,
+// rowMin* = hauteur minimale d'une ligne (vue 1 période / vue toutes).
+const DENSITES = {
+  confort: { pitch: 46, blocH: 44, rowMinSingle: 58, rowMinAll: 52 },
+  compact: { pitch: 34, blocH: 32, rowMinSingle: 52, rowMinAll: 40 },
+};
+function densite() {
+  return DENSITES[state.density] || DENSITES.confort;
+}
 
 // ============================
 // AUTO-SYNC DEPUIS PROGRAMMATION
@@ -139,9 +155,20 @@ export async function renderEdt(container) {
   const PAS = 30; // 30-minute slots
   const slots = genererSlots(hStart, hEnd, PAS);
 
-  // Période par défaut
-  if (!state.periodeId && !state.showAllPeriodes && periodes.length > 0) {
-    state.periodeId = periodes[0].id;
+  // Période pilotée par le sélecteur global (header) — source de vérité partagée
+  const pgVal = getPeriodeGlobale();
+  if (pgVal === 'all') {
+    state.showAllPeriodes = true;
+    state.periodeId = null;
+  } else {
+    const pid = parseInt(pgVal, 10);
+    if (periodes.some(p => p.id === pid)) {
+      state.showAllPeriodes = false;
+      state.periodeId = pid;
+    } else {
+      state.showAllPeriodes = true;
+      state.periodeId = null;
+    }
   }
 
   // Filtrer séances
@@ -174,6 +201,15 @@ export async function renderEdt(container) {
     return inst ? { inst, slug } : null;
   }).filter(Boolean);
 
+  // Motif (texture) par installation = second canal d'information indépendant
+  // de la couleur (accessibilité daltonisme). Index stable par installation
+  // (ordre alphabétique), 9 motifs distincts en rotation — fonctionne pour
+  // n'importe quel jeu d'installations, pas seulement la palette codée en dur.
+  const instPatternMap = new Map();
+  [...installations]
+    .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr'))
+    .forEach((inst, i) => instPatternMap.set(inst.id, i % 9));
+
   // Couleurs résolues inline pour la légende print (les CSS vars ne sont pas utilisables en inline)
   const INSTALL_COLORS = {
     'fort-carre': '#E91E63', 'beach-fc': '#D32F2F', 'auvergne': '#F59E0B',
@@ -182,7 +218,7 @@ export async function renderEdt(container) {
   };
 
   container.innerHTML = `
-    <div class="edt-container">
+    <div class="edt-container ${state.patterns ? 'edt-patterns' : ''}">
 
       <!-- Header visible uniquement à l'impression -->
       <div class="print-header" style="display:none;">
@@ -243,6 +279,20 @@ export async function renderEdt(container) {
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group">
+          <button class="btn btn-sm btn-ghost" id="edt-btn-density"
+                  title="Basculer l'affichage Confort / Compact"
+                  aria-pressed="${state.density === 'compact'}">
+            ${state.density === 'compact' ? '&#9636; Compact' : '&#9638; Confort'}
+          </button>
+          <button class="btn btn-sm btn-ghost ${state.patterns ? 'is-active' : ''}" id="edt-btn-patterns"
+                  title="Ajouter des motifs aux installations (lisibilité daltonisme)"
+                  aria-pressed="${state.patterns}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/>
+              <line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
+            </svg>
+            Motifs
+          </button>
           <button class="btn btn-sm btn-primary" id="edt-btn-add">+ Séance</button>
           <button class="btn btn-sm btn-ghost btn-print-trigger" id="edt-btn-print" title="Imprimer l'EDT (Ctrl+P)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -258,7 +308,7 @@ export async function renderEdt(container) {
       <div class="edt-legend" id="edt-legend">
         ${legendeItems.map(({ inst, slug }) => `
           <div class="edt-legend-item">
-            <div class="edt-legend-color" style="background:var(--c-${slug}, #93C5FD);"></div>
+            <div class="edt-legend-color" data-install="${slug}" data-pattern="${instPatternMap.get(inst.id) ?? ''}" style="--sw:var(--c-${slug}, #93C5FD);"></div>
             <span>${inst.nom}</span>
           </div>
         `).join('')}
@@ -266,7 +316,7 @@ export async function renderEdt(container) {
 
       <!-- Grille EDT -->
       <div class="edt-grid-wrapper">
-        <div class="edt-grid" style="grid-template-columns: ${state.showAllPeriodes && periodes.length > 1 ? '40px ' : ''}repeat(${slots.length}, 1fr);">
+        <div class="edt-grid ${state.density === 'compact' ? 'edt-compact' : ''}" style="grid-template-columns: ${state.showAllPeriodes && periodes.length > 1 ? '40px ' : ''}repeat(${slots.length}, 1fr);">
           <!-- En-têtes temps -->
           ${state.showAllPeriodes && periodes.length > 1 ? '<div class="edt-header-cell" style="font-size:9px;">Pér.</div>' : ''}
           ${slots.map(s => `
@@ -275,8 +325,8 @@ export async function renderEdt(container) {
 
           <!-- Lignes par jour -->
           ${state.showAllPeriodes && periodes.length > 1
-            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux })
-            : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes })
+            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap })
+            : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes, instPatternMap })
           }
         </div>
       </div>
@@ -343,7 +393,7 @@ function renderSinglePeriodeRows(jours, slots, seances, hStart, pas, ctx) {
     const maxLevel = jourSeances.length > 0
       ? Math.max(0, ...jourSeances.map(s => stackLevels.get(s.id) || 0))
       : 0;
-    const rowHeight = Math.max(52, (maxLevel + 1) * 36 + 4);
+    const rowHeight = Math.max(densite().rowMinSingle, (maxLevel + 1) * densite().pitch + 6);
 
     // Indexer les séances par slot de départ pour l'affichage
     const bySlot = {};
@@ -407,7 +457,7 @@ function renderAllPeriodesRows(jours, periodes, slots, seances, hStart, pas, ctx
       const maxLevel = perSeances.length > 0
         ? Math.max(0, ...perSeances.map(s => stackLevels.get(s.id) || 0))
         : 0;
-      const rowHeight = Math.max(40, (maxLevel + 1) * 34 + 4);
+      const rowHeight = Math.max(densite().rowMinAll, (maxLevel + 1) * densite().pitch + 6);
 
       // Indexer par slot de départ
       const bySlot = {};
@@ -457,20 +507,21 @@ function renderAllPeriodesRows(jours, periodes, slots, seances, hStart, pas, ctx
 // ============================
 
 function renderBloc(seance, stackIndex, hStart, pas, ctx) {
-  const { enseignants, classes, activites, installations, lieux } = ctx;
+  const { enseignants, classes, activites, installations, lieux, instPatternMap } = ctx;
   const ens = enseignants.find(e => e.id === seance.enseignantId);
   const cls = classes.find(c => c.id === seance.classeId);
   const act = activites.find(a => a.id === seance.activiteId);
   const inst = installations.find(i => i.id === seance.installationId);
   const lieu = inst ? lieux.find(l => l.id === inst.lieuId) : null;
   const slug = lieu ? slugify(lieu.nom) : 'default';
+  const patternIdx = instPatternMap?.get(seance.installationId);
 
   // Calculate spanning
   const startMin = heureToMinutes(seance.heureDebut);
   const endMin = heureToMinutes(seance.heureFin);
   const durationSlots = Math.max(1, (endMin - startMin) / pas);
   const widthPct = durationSlots * 100;
-  const topOffset = stackIndex * 34 + 2;
+  const topOffset = stackIndex * densite().pitch + 2;
 
   const isFromProg = !!seance.programmationId;
 
@@ -478,14 +529,19 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
     <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''}"
          data-seance-id="${seance.id}"
          data-install="${slug}"
+         ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
          draggable="${seance.verrouille ? 'false' : 'true'}"
-         style="width:${widthPct}%; top:${topOffset}px; position:absolute; left:0; height:32px;"
+         style="width:${widthPct}%; top:${topOffset}px; position:absolute; left:0; height:${densite().blocH}px;"
          title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${inst?.nom || ''}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}">
-      <span class="bloc-class">${cls?.nom || '?'}</span>
-      <span class="bloc-activity">${act?.nom || ''}</span>
-      <span class="bloc-install">${inst?.nom || ''}</span>
-      <span class="bloc-prof">${ens?.initiales || (ens ? ens.prenom?.[0] + '.' + ens.nom?.[0] : '')}</span>
-      ${seance.verrouille ? '<span class="bloc-lock-icon">&#128274;</span>' : ''}
+      <div class="bloc-line bloc-line-top">
+        <span class="bloc-class">${cls?.nom || '?'}</span>
+        <span class="bloc-activity">${act?.nom || ''}</span>
+        ${seance.verrouille ? '<span class="bloc-lock-icon">&#128274;</span>' : ''}
+      </div>
+      <div class="bloc-line bloc-line-bot">
+        <span class="bloc-install">${inst?.nom || ''}</span>
+        <span class="bloc-prof">${ens?.initiales || (ens ? ens.prenom?.[0] + '.' + ens.nom?.[0] : '')}</span>
+      </div>
     </div>
   `;
 }
@@ -497,18 +553,10 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
 function bindEdtEvents(container, seancesFiltrees, ctx) {
   const { enseignants, classes, activites, installations, lieux, periodes } = ctx;
 
-  // Sélection période
+  // Sélection période → met à jour le sélecteur global (le store déclenche le re-render)
   container.querySelectorAll('.period-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const val = btn.dataset.periode;
-      if (val === 'all') {
-        state.showAllPeriodes = true;
-        state.periodeId = null;
-      } else {
-        state.showAllPeriodes = false;
-        state.periodeId = parseInt(val);
-      }
-      renderEdt(container);
+      setPeriodeGlobale(btn.dataset.periode); // 'all' ou id
     });
   });
 
@@ -525,6 +573,20 @@ function bindEdtEvents(container, seancesFiltrees, ctx) {
   // Ajout séance
   container.querySelector('#edt-btn-add')?.addEventListener('click', () => {
     openSeanceModal(null, ctx, container);
+  });
+
+  // Bascule densité Confort / Compact (mémorisée)
+  container.querySelector('#edt-btn-density')?.addEventListener('click', () => {
+    state.density = state.density === 'compact' ? 'confort' : 'compact';
+    try { localStorage.setItem('edt-density', state.density); } catch { /* mode privé */ }
+    renderEdt(container);
+  });
+
+  // Bascule motifs daltonisme (second canal couleur, mémorisée)
+  container.querySelector('#edt-btn-patterns')?.addEventListener('click', () => {
+    state.patterns = !state.patterns;
+    try { localStorage.setItem('edt-patterns', state.patterns ? '1' : '0'); } catch { /* mode privé */ }
+    renderEdt(container);
   });
 
   // Impression

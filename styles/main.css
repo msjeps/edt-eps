@@ -12,15 +12,23 @@
   --c-primary-bg:       #EFF6FF;
   --c-primary-bg-strong:#DBEAFE;
 
-  /* Semantic */
-  --c-success:    #059669;
-  --c-success-bg: #D1FAE5;
-  --c-warning:    #D97706;
-  --c-warning-bg: #FEF3C7;
-  --c-danger:     #DC2626;
-  --c-danger-bg:  #FEE2E2;
-  --c-info:       #0891B2;
-  --c-info-bg:    #CFFAFE;
+  /* Semantic — fond (-bg), texte (-text), bordure (-border) */
+  --c-success:        #059669;
+  --c-success-bg:     #D1FAE5;
+  --c-success-text:   #065F46;
+  --c-success-border: #A7F3D0;
+  --c-warning:        #D97706;
+  --c-warning-bg:     #FEF3C7;
+  --c-warning-text:   #92400E;
+  --c-warning-border: #FDE68A;
+  --c-danger:         #DC2626;
+  --c-danger-bg:      #FEE2E2;
+  --c-danger-text:    #991B1B;
+  --c-danger-border:  #FECACA;
+  --c-info:           #0891B2;
+  --c-info-bg:        #CFFAFE;
+  --c-info-text:      #155E75;
+  --c-info-border:    #A5F3FC;
 
   /* Surfaces */
   --c-bg:           #F1F5F9;
@@ -33,7 +41,8 @@
   /* Texte */
   --c-text:           #0F172A;
   --c-text-secondary: #475569;
-  --c-text-muted:     #94A3B8;
+  --c-text-muted:     #64748B;  /* ≈4.6:1 sur blanc — WCAG AA */
+  --c-text-faint:     #94A3B8;  /* décoratif uniquement (chevrons, séparateurs) */
   --c-text-inverse:   #FFFFFF;
 
   /* Installations — couleurs marquées, cohérentes EDT↔Programmation */
@@ -69,13 +78,14 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 
-  --fs-xs:   0.75rem;
-  --fs-sm:   0.8125rem;
-  --fs-base: 0.9375rem;
-  --fs-md:   1rem;
-  --fs-lg:   1.125rem;
-  --fs-xl:   1.375rem;
-  --fs-2xl:  1.625rem;
+  /* Échelle typographique — relevée pour le confort de lecture sur longues sessions */
+  --fs-xs:   0.8125rem;  /* 13px */
+  --fs-sm:   0.875rem;   /* 14px */
+  --fs-base: 1rem;       /* 16px */
+  --fs-md:   1.0625rem;  /* 17px */
+  --fs-lg:   1.1875rem;  /* 19px */
+  --fs-xl:   1.4375rem;  /* 23px */
+  --fs-2xl:  1.75rem;    /* 28px */
 
   /* Espacement */
   --sp-1: 0.25rem;
@@ -104,6 +114,74 @@
   /* Transitions */
   --transition:    150ms ease;
   --transition-md: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   THÈME SOMBRE — redéfinition des tokens (le reste de l'app lit
+   ces variables, donc l'essentiel bascule sans toucher aux règles).
+   Teintes de marque/installations conservées ; surfaces, textes,
+   bordures, fonds sémantiques et ombres adaptés au fond sombre.
+   ============================================================ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces — du plus profond (fond) au plus clair (cartes) */
+  --c-bg:           #0B1220;
+  --c-surface:      #141E33;
+  --c-surface-alt:  #1C2740;
+  --c-border:       #2A3A57;
+  --c-border-dark:  #3C4F72;
+  --c-border-light: #223150;
+
+  /* Texte — clair sur fond sombre */
+  --c-text:           #E7EDF7;
+  --c-text-secondary: #AFBCD2;
+  --c-text-muted:     #8A99B3;  /* ≈4.7:1 sur --c-surface — WCAG AA */
+  --c-text-faint:     #5E6E8C;
+  --c-text-inverse:   #0B1220;
+
+  /* Marque — un peu plus claires pour ressortir sur sombre */
+  --c-primary:          #4C8DFF;
+  --c-primary-light:    #6BA5FF;
+  --c-primary-dark:     #3B82F6;
+  --c-primary-bg:       #15233E;
+  --c-primary-bg-strong:#1B2E50;
+
+  /* Sémantique — fonds sombres teintés, textes clairs lisibles */
+  --c-success:        #34D399;
+  --c-success-bg:     #0E2A22;
+  --c-success-text:   #6EE7B7;
+  --c-success-border: #1F5142;
+  --c-warning:        #FBBF24;
+  --c-warning-bg:     #2C2410;
+  --c-warning-text:   #FCD34D;
+  --c-warning-border: #4D3D17;
+  --c-danger:         #F87171;
+  --c-danger-bg:      #2E1416;
+  --c-danger-text:    #FCA5A5;
+  --c-danger-border:  #4D1F22;
+  --c-info:           #38BDF8;
+  --c-info-bg:        #0C2531;
+  --c-info-text:      #7DD3FC;
+  --c-info-border:    #164B5B;
+
+  /* Sidebar — plus sombre que le main pour le détacher */
+  --sidebar-bg:           #080E1A;
+  --sidebar-text:         #8A99B3;
+  --sidebar-text-active:  #E7EDF7;
+  --sidebar-active-bg:    rgba(76, 141, 255, 0.16);
+  --sidebar-active-ind:   #4C8DFF;
+  --sidebar-hover-bg:     rgba(255, 255, 255, 0.04);
+  --sidebar-border:       rgba(255, 255, 255, 0.06);
+
+  /* Ombres — plus profondes sur fond sombre */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.50), 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.50), 0 2px 4px rgba(0, 0, 0, 0.40);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.55), 0 4px 8px rgba(0, 0, 0, 0.40);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.60), 0 8px 16px rgba(0, 0, 0, 0.45);
 }
 
 /* ---- Reset ---- */
@@ -481,6 +559,45 @@ body {
 
 .header-project:empty { display: none; }
 
+/* Bouton bascule thème clair / sombre */
+.header-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  color: var(--c-text-secondary);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.header-theme-btn:hover {
+  background: var(--c-surface-alt);
+  color: var(--c-text);
+  border-color: var(--c-border-dark);
+}
+/* Icône affichée = action à venir : lune en clair (→ sombre), soleil en sombre (→ clair) */
+.header-theme-btn .icon-sun { display: none; }
+.header-theme-btn .icon-moon { display: block; }
+[data-theme="dark"] .header-theme-btn .icon-sun { display: block; }
+[data-theme="dark"] .header-theme-btn .icon-moon { display: none; }
+
+/* Sélecteur de période global dans le header */
+.header-periode-wrap {
+  display: flex;
+  align-items: center;
+}
+.header-periode-wrap[hidden] { display: none; }
+.header-periode {
+  height: 34px;
+  min-width: 170px;
+  padding: 0 30px 0 12px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
 /* --- Main content --- */
 #app-main {
   flex: 1;
@@ -508,16 +625,50 @@ body {
 
 .hidden { display: none !important; }
 
+/* Masqué visuellement mais lu par les technologies d'assistance */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================
+   ACCESSIBILITÉ — focus clavier global + mouvement réduit
+   ============================================================ */
+
+/* Focus visible homogène sur tout élément interactif (clavier) */
+:where(a, button, [tabindex], input, select, textarea,
+       .nav-btn, .dashboard-card, .export-card-icon,
+       .tab-btn, .chip, .sidebar-action-btn):focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Respect de la préférence système « réduire les animations » */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ============================================================
    CARDS
    ============================================================ */
 
 .card {
   background: var(--c-surface);
-  border: 1px solid var(--c-border);
+  border: 1px solid var(--c-border-dark);
   border-radius: var(--radius-lg);
   padding: var(--sp-5);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--shadow-sm);
 }
 
 .card-header {
@@ -613,9 +764,9 @@ body {
 }
 
 .btn-sm {
-  height: 30px;
-  padding: 0 var(--sp-3);
-  font-size: var(--fs-xs);
+  height: 34px;
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-sm);
 }
 
 .btn-lg {
@@ -913,10 +1064,10 @@ body {
 }
 
 .tag-primary { background: var(--c-primary-bg-strong); color: var(--c-primary-dark); }
-.tag-success { background: var(--c-success-bg); color: #065F46; }
-.tag-warning { background: var(--c-warning-bg); color: #92400E; }
-.tag-danger  { background: var(--c-danger-bg);  color: #991B1B; }
-.tag-info    { background: var(--c-info-bg);    color: #155E75; }
+.tag-success { background: var(--c-success-bg); color: var(--c-success-text); }
+.tag-warning { background: var(--c-warning-bg); color: var(--c-warning-text); }
+.tag-danger  { background: var(--c-danger-bg);  color: var(--c-danger-text); }
+.tag-info    { background: var(--c-info-bg);    color: var(--c-info-text); }
 
 .project-badge {
   font-size: var(--fs-xs);
@@ -1062,15 +1213,174 @@ body {
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--sp-4);
+  gap: var(--sp-5);
+  align-items: stretch;
 }
 
-.dashboard-card {
-  background: var(--c-surface);
+/* ============================================================
+   CARTES D'EXPORT — containers uniformes (page Exports)
+   Structure attendue : icône, <h3>, <p> (description), .export-card-actions
+   ============================================================ */
+.export-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: box-shadow var(--transition-md), border-color var(--transition-md), transform var(--transition-md);
+}
+.export-card:hover {
+  border-color: var(--c-border-dark);
+  box-shadow: var(--shadow-md);
+}
+/* L'icône reçoit une pastille pour mieux marquer le container */
+.export-card > .export-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--c-surface-alt);
   border: 1px solid var(--c-border);
+  font-size: 1.6rem;
+  line-height: 1;
+  margin-bottom: var(--sp-3);
+}
+.export-card > h3 {
+  font-size: var(--fs-md);
+  margin-bottom: var(--sp-2);
+}
+.export-card > p {
+  font-size: var(--fs-sm);
+  color: var(--c-text-secondary);
+  line-height: 1.55;
+  margin-bottom: var(--sp-4);
+}
+/* Barre d'actions homogène : un select extensible + un bouton.
+   margin-top:auto colle la barre au bas de la carte → toutes les cartes
+   d'une même rangée alignent leurs contrôles. */
+.export-card-actions {
+  margin-top: auto;
+  display: flex;
+  gap: var(--sp-2);
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.export-card-actions .form-select {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.export-card-actions .btn {
+  flex: 0 0 auto;
+  height: 38px;
+}
+/* Cartes pleine largeur (grid-column:1/-1) : actions à gauche, pas étirées */
+.export-card.export-card-wide .export-card-actions .form-select {
+  flex: 0 1 280px;
+}
+
+/* En-tête horizontal pour cartes wide — conserve la pastille d'icône */
+.export-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.export-card-head .export-card-icon {
+  margin-bottom: 0;
+  width: 40px;
+  height: 40px;
+  font-size: 1.3rem;
+}
+.export-card-head h3 { margin: 0; }
+.export-card-head .export-card-meta {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  color: var(--c-text-secondary);
+}
+
+/* ============================================================
+   TITRES DE SECTION — bandeau réutilisable (remplace les h3 inline)
+   ============================================================ */
+.section-title {
+  grid-column: 1 / -1;
+  margin: var(--sp-5) 0 calc(-1 * var(--sp-2));
+  padding-bottom: var(--sp-2);
+  border-bottom: 2px solid var(--c-border);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--c-text-secondary);
+}
+.dashboard-grid > .section-title:first-child { margin-top: 0; }
+
+/* ============================================================
+   CALLOUT — bandeaux d'information sémantiques
+   ============================================================ */
+.callout {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-alt);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}
+.callout > .callout-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+.callout-body { min-width: 0; flex: 1; }
+.callout-title { display: block; font-weight: 600; margin-bottom: 2px; color: var(--c-text); }
+.callout--info    { background: var(--c-info-bg);    border-color: var(--c-info);           color: var(--c-info-text); }
+.callout--success { background: var(--c-success-bg); border-color: var(--c-success-border); color: var(--c-success-text); }
+.callout--warning { background: var(--c-warning-bg); border-color: var(--c-warning-border); color: var(--c-warning-text); }
+.callout--danger  { background: var(--c-danger-bg);  border-color: var(--c-danger-border);  color: var(--c-danger-text); }
+.callout--info .callout-title,
+.callout--success .callout-title,
+.callout--warning .callout-title,
+.callout--danger .callout-title { color: inherit; }
+
+/* ============================================================
+   BADGE « Nouveau » et variantes pastilles
+   ============================================================ */
+.badge-new {
+  display: inline-block;
+  background: var(--c-primary-bg);
+  color: var(--c-primary-dark);
+  border: 1px solid var(--c-primary-bg-strong);
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* Liste d'items dans un callout (panneau de validation du dashboard) */
+.validation-list { list-style: none; margin: var(--sp-2) 0 0; padding: 0; }
+.validation-list li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+.validation-list li:last-child { border-bottom: 0; }
+.validation-list .vi-msg { flex: 1; min-width: 0; }
+.validation-list .vi-detail { margin-left: 6px; opacity: .75; font-size: .9em; }
+
+.dashboard-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-dark);
   border-radius: var(--radius-lg);
   padding: var(--sp-5);
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition: box-shadow var(--transition-md), border-color var(--transition-md), transform var(--transition-md);
 }
 
@@ -1145,6 +1455,34 @@ body {
   font-weight: 600;
   box-shadow: var(--shadow-xs);
 }
+
+/* ============================================================
+   UTILITAIRES ANTI-INLINE
+   Classes extraites des styles inline répétés (donnees/wizard/programmation).
+   Préfixe `u-` = utilitaire purement présentationnel, sans logique métier.
+   ============================================================ */
+
+/* Texte d'aide discret (xs, atténué) — ex. légendes, compteurs */
+.u-hint        { font-size: var(--fs-xs); color: var(--c-text-muted); }
+/* Indice sous un champ de formulaire (bloc, italique) */
+.u-field-hint  { display: block; margin-top: 6px; color: var(--c-text-muted); font-style: italic; }
+/* Libellé d'unité à droite d'un input (« minutes »…) */
+.u-unit        { color: var(--c-text-muted); font-size: var(--fs-sm); min-width: 60px; }
+/* Pastille de code inline (formules d'exemple) */
+.u-code-chip   { background: var(--c-surface); padding: 2px 4px; border-radius: 3px; }
+/* Texte descriptif d'une section (sm, secondaire) */
+.u-desc        { font-size: var(--fs-sm); color: var(--c-text-secondary); }
+/* Texte de taille réduite */
+.u-text-sm     { font-size: var(--fs-sm); }
+/* Texte atténué simple */
+.u-muted       { color: var(--c-text-muted); }
+/* Rangée flex alignée centrée */
+.u-row         { display: flex; align-items: center; gap: var(--sp-2); }
+.u-row-tight   { display: flex; align-items: center; gap: 4px; }
+/* Marges de bas (titres/paragraphes) */
+.u-mb-3        { margin-bottom: var(--sp-3); }
+.u-mb-4        { margin-bottom: var(--sp-4); }
+.u-mb-2-0      { margin: 0 0 var(--sp-2) 0; }
 
 /* ============================================================
    PRINT

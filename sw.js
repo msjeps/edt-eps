@@ -2,7 +2,7 @@
  * Service Worker — EDT EPS PWA
  * Cache statique pour usage hors-ligne
  */
-const CACHE_NAME = 'edt-eps-v1';
+const CACHE_NAME = 'edt-eps-v2';
 
 const PRECACHE_URLS = [
   '/',

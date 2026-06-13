@@ -109,43 +109,44 @@ export async function renderDashboard(container) {
               <div class="stat-label">Classes placées</div>
             </div>
             <div style="width:1px;background:var(--c-border);margin:var(--sp-3) 0;"></div>
-            <div style="flex:1;padding:var(--sp-4);cursor:pointer;" id="stat-conflits">
+            <button type="button" id="stat-conflits" aria-label="Voir les conflits"
+                    style="flex:1;padding:var(--sp-4);cursor:pointer;background:none;border:none;font:inherit;color:inherit;text-align:left;">
               <div class="stat-value" style="color:${nbConflits > 0 ? 'var(--c-danger)' : 'var(--c-success)'}">
                 ${nbConflits}
               </div>
               <div class="stat-label">Conflits</div>
-            </div>
+            </button>
           </div>
         </div>
 
         ${renderValidationPanel(validation)}
 
         <div class="dashboard-grid">
-          <div class="dashboard-card" data-goto="donnees">
-            <div class="dashboard-card-icon">&#128218;</div>
+          <button type="button" class="dashboard-card" data-goto="donnees">
+            <div class="dashboard-card-icon" aria-hidden="true">&#128218;</div>
             <div class="dashboard-card-title">Données</div>
             <div class="dashboard-card-desc">Gérer enseignants, classes, activités, installations</div>
-          </div>
-          <div class="dashboard-card" data-goto="programmation">
-            <div class="dashboard-card-icon">&#128203;</div>
+          </button>
+          <button type="button" class="dashboard-card" data-goto="programmation">
+            <div class="dashboard-card-icon" aria-hidden="true">&#128203;</div>
             <div class="dashboard-card-title">Programmation</div>
             <div class="dashboard-card-desc">Planifier activités et installations par classe et période</div>
-          </div>
-          <div class="dashboard-card" data-goto="edt">
-            <div class="dashboard-card-icon">&#128197;</div>
+          </button>
+          <button type="button" class="dashboard-card" data-goto="edt">
+            <div class="dashboard-card-icon" aria-hidden="true">&#128197;</div>
             <div class="dashboard-card-title">Emploi du temps</div>
             <div class="dashboard-card-desc">Visualiser et modifier l'EDT par glisser-déposer</div>
-          </div>
-          <div class="dashboard-card" data-goto="reservations">
-            <div class="dashboard-card-icon">&#128203;</div>
+          </button>
+          <button type="button" class="dashboard-card" data-goto="reservations">
+            <div class="dashboard-card-icon" aria-hidden="true">&#128203;</div>
             <div class="dashboard-card-title">Réservations</div>
             <div class="dashboard-card-desc">Gérer les demandes de réservation d'installations</div>
-          </div>
-          <div class="dashboard-card" data-goto="exports">
-            <div class="dashboard-card-icon">&#128228;</div>
+          </button>
+          <button type="button" class="dashboard-card" data-goto="exports">
+            <div class="dashboard-card-icon" aria-hidden="true">&#128228;</div>
             <div class="dashboard-card-title">Exports</div>
             <div class="dashboard-card-desc">CSV mairie, transport, PDF EDT, synthèses</div>
-          </div>
+          </button>
         </div>
 
         <div style="margin-top: var(--sp-6);">
@@ -203,49 +204,42 @@ export async function renderDashboard(container) {
 function renderValidationPanel({ errors, warnings }) {
   if (errors.length === 0 && warnings.length === 0) {
     return `
-      <div class="validation-panel validation-ok" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:8px;background:var(--c-success-bg,#f0fdf4);border:1px solid var(--c-success-border,#bbf7d0);margin-bottom:var(--sp-4);color:var(--c-success-text,#166534);">
-        <span style="font-size:1.2rem;">&#10003;</span>
-        <span style="font-weight:500;">Configuration complète — l'EDT est prêt à l'emploi.</span>
+      <div class="callout callout--success validation-panel" style="margin-bottom:var(--sp-4);">
+        <span class="callout-icon" aria-hidden="true">&#10003;</span>
+        <span class="callout-body"><strong>Configuration complète — l'EDT est prêt à l'emploi.</strong></span>
       </div>`;
   }
 
   const renderItem = (item, isError) => {
     const icon = isError ? '&#9888;' : '&#9432;';
-    const color = isError ? 'var(--c-danger,#dc2626)' : 'var(--c-warning-text,#92400e)';
     return `
-      <li style="display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06);">
-        <span style="color:${color};font-size:1rem;flex-shrink:0;">${icon}</span>
-        <span style="flex:1;">
+      <li>
+        <span class="vi-icon" aria-hidden="true">${icon}</span>
+        <span class="vi-msg">
           <strong>${item.message}</strong>
-          ${item.detail ? `<span style="margin-left:6px;opacity:.75;font-size:.85em;">${item.detail}</span>` : ''}
+          ${item.detail ? `<span class="vi-detail">${item.detail}</span>` : ''}
         </span>
         <button class="btn btn-xs validation-goto" data-goto="${item.goto}"
-          style="flex-shrink:0;font-size:.8em;padding:2px 10px;">${item.gotoLabel}</button>
+          style="flex-shrink:0;">${item.gotoLabel}</button>
       </li>`;
   };
 
-  const errorsBg = errors.length > 0
-    ? 'var(--c-danger-bg,#fef2f2)'
-    : 'var(--c-warning-bg,#fffbeb)';
-  const errorsBorder = errors.length > 0
-    ? 'var(--c-danger-border,#fecaca)'
-    : 'var(--c-warning-border,#fde68a)';
-  const headerColor = errors.length > 0 ? 'var(--c-danger,#dc2626)' : 'var(--c-warning-text,#92400e)';
+  const variant = errors.length > 0 ? 'danger' : 'warning';
   const headerIcon = errors.length > 0 ? '&#9888;' : '&#9432;';
   const headerText = errors.length > 0
     ? `${errors.length} problème${errors.length > 1 ? 's' : ''} bloquant${errors.length > 1 ? 's' : ''} — certaines vues sont inaccessibles`
     : `${warnings.length} avertissement${warnings.length > 1 ? 's' : ''} — vérifiez la configuration`;
 
   return `
-    <div class="validation-panel" style="margin-bottom:var(--sp-4);border-radius:8px;border:1px solid ${errorsBorder};background:${errorsBg};overflow:hidden;">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid ${errorsBorder};">
-        <span style="color:${headerColor};font-size:1.1rem;">${headerIcon}</span>
-        <strong style="color:${headerColor};">${headerText}</strong>
+    <div class="callout callout--${variant} validation-panel" style="margin-bottom:var(--sp-4);">
+      <span class="callout-icon" aria-hidden="true">${headerIcon}</span>
+      <div class="callout-body">
+        <strong class="callout-title">${headerText}</strong>
+        <ul class="validation-list">
+          ${errors.map(e => renderItem(e, true)).join('')}
+          ${warnings.map(w => renderItem(w, false)).join('')}
+        </ul>
       </div>
-      <ul style="margin:0;padding:4px 16px 8px;list-style:none;">
-        ${errors.map(e => renderItem(e, true)).join('')}
-        ${warnings.map(w => renderItem(w, false)).join('')}
-      </ul>
     </div>`;
 }
 

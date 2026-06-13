@@ -39,7 +39,7 @@ export async function renderProgrammation(container) {
     <div class="prog-container">
       <div class="prog-header">
         <h2 style="margin-bottom: var(--sp-1);">Programmation Annuelle</h2>
-        <p style="color: var(--c-text-muted); margin-bottom: var(--sp-4);">
+        <p class="u-muted u-mb-4">
           Configurez les créneaux de chaque classe puis assignez activités et installations par période
         </p>
       </div>
@@ -184,7 +184,7 @@ function renderClassesPeriodeMatrix(content, data) {
       <div class="prog-empty">
         <div class="prog-empty-icon">&#128197;</div>
         <p><strong>Aucune période configurée</strong></p>
-        <p style="color: var(--c-text-muted);">Configurez vos trimestres ou semestres dans Données &#8594; Périodes</p>
+        <p class="u-muted">Configurez vos trimestres ou semestres dans Données &#8594; Périodes</p>
       </div>
     `;
     return;
@@ -195,7 +195,7 @@ function renderClassesPeriodeMatrix(content, data) {
       <div class="prog-empty">
         <div class="prog-empty-icon">&#128218;</div>
         <p><strong>Aucune classe trouvée</strong></p>
-        <p style="color: var(--c-text-muted);">Vérifiez vos filtres ou ajoutez des classes dans Données &#8594; Classes</p>
+        <p class="u-muted">Vérifiez vos filtres ou ajoutez des classes dans Données &#8594; Classes</p>
       </div>
     `;
     return;
@@ -438,8 +438,8 @@ function renderClassesPeriodeMatrix(content, data) {
       return `<li><strong>${c.ens ? c.ens.prenom + ' ' + c.ens.nom : 'Prof inconnu'}</strong> — ${jourLabel} : ${formatHeure(c.crA.heureDebut)}–${formatHeure(c.crA.heureFin)} ET ${formatHeure(c.crB.heureDebut)}–${formatHeure(c.crB.heureFin)} se chevauchent</li>`;
     }).join('');
     html = `
-      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius);padding:12px 16px;margin-bottom:var(--sp-4);display:flex;gap:12px;align-items:flex-start;">
-        <span style="font-size:1.2rem;">🔴</span>
+      <div style="background:var(--c-danger-bg);border:1px solid var(--c-danger-border);border-radius:var(--radius);padding:12px 16px;margin-bottom:var(--sp-4);display:flex;gap:12px;align-items:flex-start;">
+        <span style="font-size:var(--fs-lg);">🔴</span>
         <div>
           <strong style="color:var(--c-danger);">${profConflicts.length} conflit(s) d'enseignant détecté(s)</strong>
           <ul style="margin:6px 0 0 16px;font-size:var(--fs-sm);color:var(--c-danger);">${banner}</ul>
@@ -536,7 +536,7 @@ function renderInstallationMatrix(content, data) {
       <div class="prog-empty">
         <div class="prog-empty-icon">&#127959;</div>
         <p><strong>${periodes.length === 0 ? 'Aucune période configurée' : 'Aucune installation configurée'}</strong></p>
-        <p style="color: var(--c-text-muted);">Configurez les données dans l'onglet Données</p>
+        <p class="u-muted">Configurez les données dans l'onglet Données</p>
       </div>
     `;
     return;
@@ -823,14 +823,14 @@ function getCreneauWarnings(jour, heureDebut, heureFin, enseignantId, creneauxCl
 function renderWarningBanner(warnings) {
   if (!warnings.length) return '<div id="cr-conflicts"></div>';
   const html = warnings.map(w => `
-    <div style="display:flex;align-items:center;gap:6px;padding:4px 0;color:${w.level === 'error' ? 'var(--c-danger)' : '#b45309'};">
+    <div style="display:flex;align-items:center;gap:6px;padding:4px 0;color:${w.level === 'error' ? 'var(--c-danger)' : 'var(--c-warning-text)'};">
       <span>${w.level === 'error' ? '🔴' : '⚠️'}</span>
       <span style="font-size:var(--fs-sm);">${w.msg}</span>
     </div>
   `).join('');
   return `
-    <div id="cr-conflicts" style="background:${warnings.some(w => w.level === 'error') ? '#fef2f2' : '#fffbeb'};
-         border:1px solid ${warnings.some(w => w.level === 'error') ? '#fecaca' : '#fde68a'};
+    <div id="cr-conflicts" style="background:${warnings.some(w => w.level === 'error') ? 'var(--c-danger-bg)' : 'var(--c-warning-bg)'};
+         border:1px solid ${warnings.some(w => w.level === 'error') ? 'var(--c-danger-border)' : 'var(--c-warning-border)'};
          border-radius:var(--radius-sm);padding:8px 12px;margin-top:8px;">
       ${html}
     </div>
@@ -903,32 +903,32 @@ function openModelModal(classe, modelCode, data, rootContainer) {
     const defaultFin = addMinutesToTime(defaultDebut, cr.duree);
 
     creneauxHtml += `
-      <div class="card" style="padding: var(--sp-3); margin-bottom: var(--sp-2); border: 1px solid var(--c-border-light, #e5e7eb);">
+      <div class="card" style="padding: var(--sp-3); margin-bottom: var(--sp-2); border: 1px solid var(--c-border-light);">
         <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
           <strong>Créneau ${i + 1}</strong>
-          <span style="color: var(--c-primary); font-weight: 600; background: var(--c-primary-bg, #eff6ff); padding: 2px 8px; border-radius: var(--radius-sm); font-size: 0.8rem;">${dureeLabel}</span>
+          <span style="color: var(--c-primary); font-weight: 600; background: var(--c-primary-bg); padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--fs-xs);">${dureeLabel}</span>
         </div>
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: var(--sp-3); flex-wrap: wrap;">
           <div class="form-group" style="flex: 1; min-width: 110px; margin-bottom: 0;">
-            <label style="font-size: var(--fs-sm);">Jour</label>
+            <label class="u-text-sm">Jour</label>
             <select class="form-select model-jour" data-index="${i}">
               ${JOURS_OUVRES.map(j => `<option value="${j}" ${j === defaultJours[i] ? 'selected' : ''}>${j.charAt(0).toUpperCase() + j.slice(1)}</option>`).join('')}
             </select>
           </div>
           <div class="form-group" style="flex: 1; min-width: 90px; margin-bottom: 0;">
-            <label style="font-size: var(--fs-sm);">Début</label>
+            <label class="u-text-sm">Début</label>
             <select class="form-select model-debut" data-index="${i}" data-duree="${cr.duree}">
               ${genTimeOptions(defaultDebut)}
             </select>
           </div>
           <div class="form-group" style="flex: 0 0 70px; margin-bottom: 0;">
-            <label style="font-size: var(--fs-sm);">Fin</label>
+            <label class="u-text-sm">Fin</label>
             <input type="text" class="form-input model-fin" data-index="${i}" readonly
                    value="${formatHeure(defaultFin)}"
-                   style="background: var(--c-bg-subtle, #f8fafc); text-align: center; font-weight: 600;">
+                   style="background: var(--c-surface-alt); text-align: center; font-weight: 600;">
           </div>
           <div class="form-group" style="flex: 1.5; min-width: 140px; margin-bottom: 0;">
-            <label style="font-size: var(--fs-sm);">Enseignant</label>
+            <label class="u-text-sm">Enseignant</label>
             <select class="form-select model-ens" data-index="${i}">
               <option value="">— Non assigné —</option>
               ${data.enseignants.map(e => `<option value="${e.id}" ${classe.enseignantId === e.id ? 'selected' : ''}>${e.prenom} ${e.nom}</option>`).join('')}
@@ -944,7 +944,7 @@ function openModelModal(classe, modelCode, data, rootContainer) {
     <div class="prog-assign-context" style="margin-bottom: var(--sp-3);">
       <span class="prog-assign-badge">${classe.nom}</span>
       <span class="prog-assign-badge prog-assign-periode">${model.label}</span>
-      <span class="prog-assign-badge" style="background: #f0fdf4; color: #166534;">${model.desc}</span>
+      <span class="prog-assign-badge" style="background: var(--c-success-bg); color: var(--c-success-text);">${model.desc}</span>
     </div>
     ${creneauxHtml}
     <p style="color: var(--c-text-muted); font-size: var(--fs-sm); margin-top: var(--sp-2);">
@@ -986,7 +986,7 @@ function openModelModal(classe, modelCode, data, rootContainer) {
   }, 0);
 
   const footer = document.createElement('div');
-  footer.style.cssText = 'display:flex;gap:0.75rem;justify-content:flex-end;';
+  footer.style.cssText = 'display:flex;gap:var(--sp-3);justify-content:flex-end;';
 
   const btnCancel = document.createElement('button');
   btnCancel.className = 'btn btn-outline';
@@ -1065,7 +1065,7 @@ function openCreneauModal(creneau, classeId, data, rootContainer) {
         ${JOURS_OUVRES.map(j => `<option value="${j}" ${creneau?.jour === j ? 'selected' : ''}>${j.charAt(0).toUpperCase() + j.slice(1)}</option>`).join('')}
       </select>
     </div>
-    <div style="display: flex; gap: 1rem;">
+    <div style="display: flex; gap: var(--sp-4);">
       <div class="form-group" style="flex:1;">
         <label>Début</label>
         <select id="cr-debut" class="form-select">
@@ -1108,7 +1108,7 @@ function openCreneauModal(creneau, classeId, data, rootContainer) {
   }, 0);
 
   const footer = document.createElement('div');
-  footer.style.cssText = 'display:flex;gap:0.75rem;justify-content:flex-end;';
+  footer.style.cssText = 'display:flex;gap:var(--sp-3);justify-content:flex-end;';
 
   if (isEdit) {
     const btnDel = document.createElement('button');
@@ -1272,7 +1272,7 @@ function openAssignmentModal(creneauId, periodeId, existingProg, data, rootConta
       <span class="prog-assign-badge">${jourLabel}</span>
       <span class="prog-assign-badge prog-assign-periode">${periode?.nom || '?'}</span>
     </div>
-    <div style="display:flex;gap:1rem;">
+    <div style="display:flex;gap:var(--sp-4);">
       <div class="form-group" style="flex:1;">
         <label>Début <span style="font-weight:400;color:var(--c-text-muted);font-size:var(--fs-xs);">(cette période)</span></label>
         <select id="assign-hdeb" class="form-select">${genTimeOptions(defaultHDeb)}</select>
@@ -1320,7 +1320,7 @@ function openAssignmentModal(creneauId, periodeId, existingProg, data, rootConta
   `;
 
   const footer = document.createElement('div');
-  footer.style.cssText = 'display:flex;gap:0.75rem;justify-content:flex-end;';
+  footer.style.cssText = 'display:flex;gap:var(--sp-3);justify-content:flex-end;';
 
   if (isEdit) {
     const btnDel = document.createElement('button');
@@ -1497,7 +1497,7 @@ function openBulkCreneauModal(container, data) {
 
   const contentEl = document.createElement('div');
   contentEl.innerHTML = `
-    <p style="color: var(--c-text-muted); margin-bottom: var(--sp-4);">
+    <p class="u-muted u-mb-4">
       Configurez les créneaux pour <strong>toutes</strong> les classes d'un même niveau
       (idéal pour les classes alignées, ex: 1ères/Terminales).
     </p>
@@ -1535,29 +1535,29 @@ function openBulkCreneauModal(container, data) {
       const defaultFin = addMinutesToTime(defaultDebut, cr.duree);
 
       html += `
-        <div class="card" style="padding: var(--sp-3); margin-bottom: var(--sp-2); border: 1px solid var(--c-border-light, #e5e7eb);">
+        <div class="card" style="padding: var(--sp-3); margin-bottom: var(--sp-2); border: 1px solid var(--c-border-light);">
           <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
             <strong>Créneau ${i + 1}</strong>
-            <span style="color: var(--c-primary); font-weight: 600; font-size: 0.8rem;">${dureeLabel}</span>
+            <span style="color: var(--c-primary); font-weight: 600; font-size: var(--fs-xs);">${dureeLabel}</span>
           </div>
-          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <div style="display: flex; gap: var(--sp-3); flex-wrap: wrap;">
             <div class="form-group" style="flex:1; min-width: 110px; margin-bottom: 0;">
-              <label style="font-size: var(--fs-sm);">Jour</label>
+              <label class="u-text-sm">Jour</label>
               <select class="form-select bulk-jour" data-index="${i}">
                 ${JOURS_OUVRES.map(j => `<option value="${j}" ${j === defaultJours[i] ? 'selected' : ''}>${j.charAt(0).toUpperCase() + j.slice(1)}</option>`).join('')}
               </select>
             </div>
             <div class="form-group" style="flex:1; min-width: 90px; margin-bottom: 0;">
-              <label style="font-size: var(--fs-sm);">Début</label>
+              <label class="u-text-sm">Début</label>
               <select class="form-select bulk-debut" data-index="${i}" data-duree="${cr.duree}">
                 ${genTimeOptions(defaultDebut)}
               </select>
             </div>
             <div class="form-group" style="flex: 0 0 70px; margin-bottom: 0;">
-              <label style="font-size: var(--fs-sm);">Fin</label>
+              <label class="u-text-sm">Fin</label>
               <input type="text" class="form-input bulk-fin" data-index="${i}" readonly
                      value="${formatHeure(defaultFin)}"
-                     style="background: var(--c-bg-subtle, #f8fafc); text-align: center; font-weight: 600;">
+                     style="background: var(--c-surface-alt); text-align: center; font-weight: 600;">
             </div>
           </div>
         </div>
@@ -1581,7 +1581,7 @@ function openBulkCreneauModal(container, data) {
   setTimeout(updateCreneauxConfig, 0);
 
   const footer = document.createElement('div');
-  footer.style.cssText = 'display:flex;gap:0.75rem;justify-content:flex-end;';
+  footer.style.cssText = 'display:flex;gap:var(--sp-3);justify-content:flex-end;';
 
   const btnCancel = document.createElement('button');
   btnCancel.className = 'btn btn-outline';
