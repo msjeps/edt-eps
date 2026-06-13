@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Enregistrement Service Worker (PWA)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+    navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js').catch(() => {
       // Service worker non disponible (dev mode)
     });
   });

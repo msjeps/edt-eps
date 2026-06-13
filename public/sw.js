@@ -1,17 +1,17 @@
 /**
  * Service Worker — EDT EPS PWA
  * Cache statique pour usage hors-ligne
+ * Base : /edt-eps/ (GitHub Pages)
  */
 const CACHE_NAME = 'edt-eps-v2';
+const BASE = '/edt-eps/';
 
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/styles/main.css',
-  '/styles/grid.css',
-  '/styles/wizard.css',
-  '/styles/components.css',
-  '/manifest.json',
+  BASE,
+  BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'assets/icons/icon-192.png',
+  BASE + 'assets/icons/icon-512.png',
 ];
 
 // Install — précacher les fichiers statiques
@@ -38,13 +38,11 @@ self.addEventListener('activate', (event) => {
 
 // Fetch — stratégie Network First, fallback Cache
 self.addEventListener('fetch', (event) => {
-  // Ignorer les requêtes non-GET
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Mettre en cache la réponse réseau
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseClone);
@@ -52,7 +50,6 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback sur le cache si offline
         return caches.match(event.request).then((cachedResponse) => {
           return cachedResponse || new Response('Offline', { status: 503 });
         });
