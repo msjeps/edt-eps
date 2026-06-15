@@ -70,6 +70,86 @@ function buildMergeExtents(ws) {
   return ext;
 }
 
+// ── Détection des cellules colorées ─────────────────────────────────────────
+
+function getCellFill(ws, rowNumber, cn) {
+  try {
+    return ws.getRow(rowNumber).getCell(cn)?.fill || null;
+  } catch { return null; }
+}
+
+// FFFFFFFF=blanc, 00000000=transparent, FFFFFF00=jaune (séparateur jour)
+// FF000000 (noir opaque) = nettoyage = indisponibilité réelle → PAS dans la liste
+const SKIP_ARGB = new Set(['FFFFFFFF', '00000000', 'FFFFFF00']);
+
+/**
+ * Retourne true si la cellule a un fond coloré réel.
+ * Gère deux cas :
+ *  - fgColor.argb  : couleur hexadécimale explicite (ex. FF000000)
+ *  - fgColor.theme : couleur de thème (theme:0 = blanc/fond, theme:1+ = coloré)
+ */
+function isCellFillColored(fill) {
+  if (!fill || fill.pattern === 'none') return false;
+  const fg = fill.fgColor;
+  if (!fg) return false;
+  if (fg.argb) return !SKIP_ARGB.has(fg.argb);
+  // Couleur de thème : theme 0 = fond clair (blanc), 1+ = couleur réelle
+  if (fg.theme != null) return fg.theme !== 0;
+  return false;
+}
+
+/**
+ * Retourne toutes les fusions (merges) colorées d'une feuille.
+ * Une fusion colorée = la cellule maître (top-left) a un fond non-blanc/non-jaune.
+ * Inclut les fusions multi-lignes (qui couvrent plusieurs espaces à la fois).
+ */
+function buildColoredMerges(ws) {
+  const result = [];
+  try {
+    const merges = ws.model?.merges || [];
+    for (const s of merges) {
+      const m = s.match(/([A-Z]+)(\d+):([A-Z]+)(\d+)/);
+      if (!m) continue;
+      const top = +m[2], bottom = +m[4];
+      const left = colLetterToIndex(m[1]), right = colLetterToIndex(m[3]);
+      if (!isCellFillColored(getCellFill(ws, top, left))) continue;
+      const masterVal = strVal(ws.getRow(top).getCell(left).value);
+      result.push({ top, bottom, left, right, activity: masterVal });
+    }
+  } catch {}
+  return result;
+}
+
+/**
+ * Groupe les entrées 30-min consécutives (même espace/jour/période/activité)
+ * en un seul bloc horaire.
+ */
+function groupConsecutiveEntries(entries) {
+  const key = e => `${e.facility}|${e.space}|${e.day}|${e.date_range}|${e.activity || ''}`;
+  const byKey = new Map();
+  for (const e of entries) {
+    const k = key(e);
+    if (!byKey.has(k)) byKey.set(k, []);
+    byKey.get(k).push(e);
+  }
+  const result = [];
+  for (const arr of byKey.values()) {
+    arr.sort((a, b) => a.time_range.localeCompare(b.time_range));
+    const uniq = arr.filter((e, i) => i === 0 || e.time_range !== arr[i - 1].time_range);
+    let cur = null;
+    for (const e of uniq) {
+      const [start, end] = e.time_range.split(' - ');
+      if (!cur) { cur = { ...e }; continue; }
+      const curEnd = cur.time_range.split(' - ')[1];
+      if (curEnd === start) { cur = { ...cur, time_range: cur.time_range.split(' - ')[0] + ' - ' + end }; continue; }
+      result.push(cur);
+      cur = { ...e };
+    }
+    if (cur) result.push(cur);
+  }
+  return result;
+}
+
 // ── Détection du format ──────────────────────────────────────────────────────
 
 /**
@@ -91,6 +171,7 @@ export function guessLieuFromFilename(filename) {
     .replace(/[_\s]?du[_\s].*/i, '')       // "_du_2dec…"
     .replace(/[_\s]?modifie.*/i, '')
     .replace(/[_\s]?inchange.*/i, '')
+    .replace(/[_\s]+v\d+$/i, '')           // " V1", " V2"… en fin de nom
     .replace(/_/g, ' ')
     .trim()
     .toUpperCase() || stem.toUpperCase();
@@ -123,7 +204,7 @@ export async function parseExcelMairie(file, facilityName, periodeLabel) {
 // ── Format A : onglets = périodes ────────────────────────────────────────────
 
 function parseFormatA(wb, facilityName) {
-  const entries = [];
+  const rawEntries = [];
 
   for (const ws of wb.worksheets) {
     if (SKIP_SHEETS.includes(ws.name.trim().toLowerCase())) continue;
@@ -131,63 +212,103 @@ function parseFormatA(wb, facilityName) {
 
     const allRows = [];
     ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-      allRows.push({ rowNumber, vals: row.values }); // vals[1] = col A (ExcelJS 1-based)
+      allRows.push({ rowNumber, vals: row.values });
     });
     if (allRows.length < 2) continue;
 
-    // Ligne 1 = header horaires : "Jours | 8h/9h | None | 9h/10h | …"
-    // Trouver la première colonne avec un label "Xh/Yh"
+    // Ligne 1 = header horaires.
+    // Supporte "8h/9h", "8H", "8H30" (insensible à la casse)
     const headerVals = allRows[0].vals;
     let firstSlotCol = -1, firstSlotMin = -1;
-    for (let c = 2; c <= (headerVals.length ?? 0); c++) {
-      const v = headerVals[c];
-      const m = strVal(v)?.match(/^(\d+)h/);
+    for (let c = 2; c <= (headerVals?.length ?? 0); c++) {
+      const m = strVal(headerVals[c])?.match(/^(\d+)[Hh]/i);
       if (m) { firstSlotCol = c; firstSlotMin = +m[1] * 60; break; }
     }
     if (firstSlotCol < 0) continue;
 
-    // Chaque colonne = 30 minutes à partir de firstSlotCol
+    // Nombre de colonnes de créneaux (depuis le header — fixe même si la ligne de données est vide)
+    let lastSlotCol = firstSlotCol;
+    for (let c = firstSlotCol + 1; c <= (headerVals?.length ?? 0); c++) {
+      if (strVal(headerVals[c])?.match(/^(\d+)[Hh]/i)) lastSlotCol = c;
+    }
+
     const colToMin = (c) => firstSlotMin + (c - firstSlotCol) * 30;
-
     const mergeExt = buildMergeExtents(ws);
+    const coloredMerges = buildColoredMerges(ws);
+
+    // Map rowNumber → { day, space } pour tous les rangs "installation"
     let currentDay = null;
-
+    const rowToSpace = {};
     for (const { rowNumber, vals } of allRows.slice(1)) {
-      const cellA = vals[1];
-      if (cellA == null) continue;
-      const strA = strVal(cellA);
+      const strA = strVal(vals?.[1]);
       if (!strA) continue;
+      if (isJourName(strA)) { currentDay = strA.toLowerCase(); continue; }
+      // Ignorer les lignes dont col A est un commentaire administratif (> 60 car.)
+      if (strA.length > 60) continue;
+      if (currentDay) rowToSpace[rowNumber] = { day: currentDay, space: strA };
+    }
 
-      if (isJourName(strA)) {
-        currentDay = strA.toLowerCase();
-        continue;
-      }
-      if (!currentDay) continue;
-      const spaceName = strA;
-
-      for (let c = firstSlotCol; c <= (vals.length ?? 0); c++) {
-        const v = vals[c];
-        if (v == null) continue;
-        const activity = strVal(v);
-        if (!activity) continue;
-
-        // Étendue de la fusion pour déterminer l'heure de fin
-        const endCol = mergeExt[`${rowNumber},${c}`] ?? c;
-        const startMin = colToMin(c);
-        const endMin   = colToMin(endCol + 1); // colonne suivant la fusion = fin
-
-        entries.push({
-          facility: facilityName,
-          space:    spaceName,
-          day:      currentDay,
+    // Passe 1 : fusions colorées (peuvent couvrir plusieurs lignes/espaces)
+    for (const mg of coloredMerges) {
+      // Ignorer les merges qui commencent avant la zone des créneaux (notes, titres…)
+      if (mg.left < firstSlotCol) continue;
+      // Ignorer les fusions dont le texte est clairement une note administrative (> 60 car.)
+      if (mg.activity && mg.activity.length > 60) continue;
+      const startMin = colToMin(mg.left);
+      const endMin   = colToMin(mg.right + 1);
+      for (let r = mg.top; r <= mg.bottom; r++) {
+        const info = rowToSpace[r];
+        if (!info) continue;
+        rawEntries.push({
+          facility: facilityName, space: info.space, day: info.day,
           date_range: periodeName,
           time_range: `${minutesToHHMM(startMin)} - ${minutesToHHMM(endMin)}`,
-          activity,
+          activity: mg.activity,
+        });
+      }
+    }
+
+    // Passe 2 : cellules texte et cellules colorées non-fusionnées
+    for (const { rowNumber, vals } of allRows.slice(1)) {
+      const info = rowToSpace[rowNumber];
+      if (!info) continue;
+
+      for (let c = firstSlotCol; c <= lastSlotCol; c++) {
+        const activity = strVal(vals?.[c]);
+
+        if (activity) {
+          // Cellule avec texte (fusionnée ou non)
+          const endCol = mergeExt[`${rowNumber},${c}`] ?? c;
+          rawEntries.push({
+            facility: facilityName, space: info.space, day: info.day,
+            date_range: periodeName,
+            time_range: `${minutesToHHMM(colToMin(c))} - ${minutesToHHMM(colToMin(endCol + 1))}`,
+            activity,
+          });
+          c = endCol;
+          continue;
+        }
+
+        // Cellule colorée sans texte (non-fusionnée — les fusionnées sont en passe 1)
+        if (!isCellFillColored(getCellFill(ws, rowNumber, c))) continue;
+
+        // Ignorer si déjà couverte par une fusion colorée
+        const coveredByMerge = coloredMerges.some(
+          mg => rowNumber >= mg.top && rowNumber <= mg.bottom && c >= mg.left && c <= mg.right
+        );
+        if (coveredByMerge) continue;
+
+        rawEntries.push({
+          facility: facilityName, space: info.space, day: info.day,
+          date_range: periodeName,
+          time_range: `${minutesToHHMM(colToMin(c))} - ${minutesToHHMM(colToMin(c + 1))}`,
+          activity: null,
         });
       }
     }
   }
-  return entries;
+
+  return groupConsecutiveEntries(rawEntries);
 }
 
 // ── Format B : onglets = jours ───────────────────────────────────────────────

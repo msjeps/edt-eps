@@ -1,0 +1,2450 @@
+[
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "PISTE COULOIRS 7 et 8",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "BEACH 1,2,3",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "12:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "PISTE COULOIRS 7 et 8",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "BEACH 1,2,3",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "12:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "PISTE COULOIRS 7 et 8",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "SAUTOIR LONGUEUR 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "1/2 SYNTHÉ FOOT",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FORT CARRÉ",
+    "space": "BEACH 1,2,3",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "12:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:30",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "lundi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T1",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 HOCKEY",
+    "day": "lundi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T1",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "mardi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T1",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "mercredi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T1",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 HOCKEY",
+    "day": "mercredi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T1",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "jeudi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T1",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:30 - 10:30",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "10:30 - 12:30",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "lundi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T2",
+    "time_range": "08:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:30",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "mercredi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T2",
+    "time_range": "08:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "jeudi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T2",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "jeudi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "vendredi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:30 - 10:30",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "10:30 - 12:30",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "mercredi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T3",
+    "time_range": "08:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 HOCKEY",
+    "day": "mercredi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T3",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "jeudi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T3",
+    "time_range": "12:30 - 14:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "10:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:30",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "lundi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T3",
+    "time_range": "08:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:30",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 HOCKEY",
+    "day": "lundi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T3",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "mardi",
+    "organizer": "COLLEGE FONTONNE",
+    "date_range": "T3",
+    "time_range": "10:30 - 12:30",
+    "activity": "COLLEGE FONTONNE"
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FONTONNE",
+    "space": "1/2 SYNTE T1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT B",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ RUGBY A",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/4 SYNTHÉ RUGBY B1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/4 SYNTHÉ RUGBY B2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ RUGBY A",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT B",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ RUGBY A",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/4 SYNTHÉ RUGBY B1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/4 SYNTHÉ RUGBY B2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT B",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ RUGBY A",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/4 SYNTHÉ RUGBY B1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/4 SYNTHÉ RUGBY B2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "10:00 - 11:30",
+    "activity": null
+  },
+  {
+    "facility": "AUVERGNE",
+    "space": "1/2 SYNTHÉ FOOT A",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "vendredi",
+    "organizer": "OAJLP",
+    "date_range": "T1",
+    "time_range": "08:00 - 10:00",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "vendredi",
+    "organizer": "OAJLP",
+    "date_range": "T1",
+    "time_range": "15:30 - 17:00",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "lundi",
+    "organizer": "du 13/10 au 28/11",
+    "date_range": "T1",
+    "time_range": "09:00 - 10:30",
+    "activity": "du 13/10 au 28/11"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "lundi",
+    "organizer": "du 13/10 au 28/11",
+    "date_range": "T1",
+    "time_range": "09:00 - 10:30",
+    "activity": "du 13/10 au 28/11"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "lundi",
+    "organizer": "jq 9/10",
+    "date_range": "T1",
+    "time_range": "10:00 - 11:00",
+    "activity": "jq 9/10"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "lundi",
+    "organizer": "OAJLP",
+    "date_range": "T1",
+    "time_range": "15:30 - 17:00",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "mardi",
+    "organizer": "jq 9/10",
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": "jq 9/10"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "mardi",
+    "organizer": "jq 9/10",
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": "jq 9/10"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "mardi",
+    "organizer": "OAJLP",
+    "date_range": "T1",
+    "time_range": "13:30 - 15:30",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:30",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "10:30 - 13:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:30",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "lundi",
+    "organizer": "OAJLP",
+    "date_range": "T2",
+    "time_range": "15:30 - 17:00",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "vendredi",
+    "organizer": "OAJLP",
+    "date_range": "T2",
+    "time_range": "08:00 - 10:00",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "vendredi",
+    "organizer": "OAJLP",
+    "date_range": "T2",
+    "time_range": "15:30 - 17:00",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "mardi",
+    "organizer": "OAJLP",
+    "date_range": "T2",
+    "time_range": "13:30 - 15:30",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 15:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "10:30 - 13:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "mardi",
+    "organizer": "OAJLP",
+    "date_range": "T3",
+    "time_range": "13:30 - 15:30",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "vendredi",
+    "organizer": "OAJLP",
+    "date_range": "T3",
+    "time_range": "08:00 - 10:00",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "vendredi",
+    "organizer": "OAJLP",
+    "date_range": "T3",
+    "time_range": "15:30 - 17:00",
+    "activity": "OAJLP"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "vendredi",
+    "organizer": "à partir du 3/5",
+    "date_range": "T3",
+    "time_range": "09:00 - 10:00",
+    "activity": "à partir du 3/5"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "vendredi",
+    "organizer": "à partir du 3/5",
+    "date_range": "T3",
+    "time_range": "09:00 - 10:00",
+    "activity": "à partir du 3/5"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "vendredi",
+    "organizer": "tte période",
+    "date_range": "T3",
+    "time_range": "10:00 - 11:00",
+    "activity": "tte période"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "vendredi",
+    "organizer": "tte période",
+    "date_range": "T3",
+    "time_range": "10:00 - 11:00",
+    "activity": "tte période"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PISTE + SAUTOIRS",
+    "day": "vendredi",
+    "organizer": "jq 16/4",
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": "jq 16/4"
+  },
+  {
+    "facility": "FOCH",
+    "space": "PLATEAU 1",
+    "day": "vendredi",
+    "organizer": "jq 16/4",
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": "jq 16/4"
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "10:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE FOCH",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:30",
+    "activity": null
+  },
+  {
+    "facility": "FOCH",
+    "space": "SALLE SALUSSE SANTONI",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "10:30 - 13:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "BASKET",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SAINT CLAUDE",
+    "space": "HAND",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TERRAIN STABLISÉ",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TENNIS 3 QUICKS",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TENNIS 3 QUICKS",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TENNIS 3 QUICKS",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 09:30",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 10:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TENNIS 3 QUICKS",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TERRAIN STABLISÉ",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TENNIS 3 QUICKS",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TERRAIN STABLISÉ",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "TENNIS 3 QUICKS",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "SEMBOULES",
+    "space": "SALLE ESCALADE",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 17:30",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 17:30",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "09:00 - 11:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "14:00 - 16:00",
+    "activity": null
+  },
+  {
+    "facility": "TENNIS J GREC",
+    "space": "quick",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 17:30",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "lundi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "mardi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "mercredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 1",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 2",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "CHANTARELLA TT",
+    "space": "TRI 3",
+    "day": "vendredi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 09:00",
+    "activity": null
+  },
+  {
+    "facility": "SUPER ANTIBES",
+    "space": "SYNTHE 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SUPER ANTIBES",
+    "space": "SYNTHE 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T1",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SUPER ANTIBES",
+    "space": "SYNTHE 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SUPER ANTIBES",
+    "space": "SYNTHE 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T2",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SUPER ANTIBES",
+    "space": "SYNTHE 1",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  },
+  {
+    "facility": "SUPER ANTIBES",
+    "space": "SYNTHE 2",
+    "day": "jeudi",
+    "organizer": null,
+    "date_range": "T3",
+    "time_range": "08:00 - 12:00",
+    "activity": null
+  }
+]
