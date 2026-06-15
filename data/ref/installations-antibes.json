@@ -1,0 +1,378 @@
+{
+  "version": "1.0",
+  "source": "Direction des Sports - Ville d'Antibes Juan-les-Pins",
+  "description": "Lieux et installations sportives municipales d'Antibes disponibles pour les réservations EPS",
+  "lieux": [
+    {
+      "nom": "AUVERGNE",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "1/2 SYNTHE FOOT1",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE FOOT2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE RGB1a",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE RGB1b",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE RGB2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PETIT SYNTHE FB",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "MINI PLATEAU MULTISPORT",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "BROCHARD",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "SALLE GYM",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "CHANTARELLA",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "TT",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "CHARPIN",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "DOJO",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "DANSE",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SPORTS COMBAT",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "FOCH",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "SALLE FOCH",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SALLE SALUSSE SANTONI",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PLATEAU 1&2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PLATEAU 3",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PLATEAU 1&2&3",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "TERR WILSON",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "TERR FOCH",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SAUTOIR LONGUEUR",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PISTE",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "FONTONNE",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "1/2 SYNTHE FOOT T1a",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE FOOT T1b",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE FOOT T2a",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE FOOT T2b",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE HOCKEY a",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE HOCKEY b",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PLATEAU POLYVALENT",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "DOJO CRIEE",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PLATEAU CRIEE",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "FORT CARRÉ",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "1/2 SYNTHE FOOT1",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "1/2 SYNTHE FOOT2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SAUTOIR LONGUEUR 1",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SAUTOIR LONGUEUR 2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SAUTOIRS LONGUEUR 1&2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SAUTOIR HAUTEUR",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PISTE COULOIRS 1&2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PISTE COULOIRS 3&4",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PISTE COULOIRS 5&6",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "PISTE COULOIRS 7&8",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "TERRAINS BEACH 1&2&3",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "TERRAINS 3X3 1&2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "PISCINE",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "2 LIGNES 20m",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "2 lignes 25m",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "SAINT CLAUDE",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "HAND",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "BASKET",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SALLE ESCRIME",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SALLE MULTI ACTIVITÉS",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "SEMBOULES",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "SALLE ESCALADE",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "TERRAIN STABILISÉ",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "3 TERRAINS TENNIS",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "SUPER ANTIBES",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "SYNTHE FOOT1",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "SYNTHE FOOT2",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "TENNIS J GREC",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "3 TERRAINS DURS",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        },
+        {
+          "nom": "6 TERRAINS DURS",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    },
+    {
+      "nom": "VILMORIN",
+      "type": "extra",
+      "necessiteBus": true,
+      "installations": [
+        {
+          "nom": "SALLE GYM",
+          "capaciteSimultanee": 1,
+          "activitesCompatibles": []
+        }
+      ]
+    }
+  ]
+}

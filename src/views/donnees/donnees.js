@@ -4,6 +4,7 @@
  */
 import db from '../../db/schema.js';
 import reservationsBuiltin from '../../data/reservations-builtin.json';
+import Papa from 'papaparse';
 import { toast } from '../../components/toast.js';
 import { openModal, confirmModal } from '../../components/modal.js';
 import { escapeHtml, h } from '../../utils/escape.js';
@@ -837,6 +838,9 @@ async function renderInstallationsTab(container) {
           <button class="btn btn-sm btn-outline" id="btn-import-mairie" title="Importer les créneaux de la Direction des Sports">
             &#128260; Import mairie${totalMairie > 0 ? ` <span class="tag tag-info" style="font-size:var(--fs-xs);">${totalMairie}</span>` : ''} ${helpTip('importMairie')}
           </button>
+          <button class="btn btn-sm btn-outline" id="btn-import-lieux" title="Importer des lieux et installations depuis un fichier JSON">
+            &#128229; Importer lieux
+          </button>
           <button class="btn btn-sm btn-primary" id="btn-add-lieu">+ Lieu</button>
         </div>
       </div>
@@ -896,6 +900,11 @@ async function renderInstallationsTab(container) {
   // Import mairie
   container.querySelector('#btn-import-mairie')?.addEventListener('click', () => {
     openImportMairieModal(installations, container);
+  });
+
+  // Import lieux/installations depuis JSON
+  container.querySelector('#btn-import-lieux')?.addEventListener('click', () => {
+    openImportLieuxModal(container);
   });
 
   // Ajouter un lieu
@@ -1410,6 +1419,183 @@ function openInstallationModal(inst, lieuId, activites, parentContainer) {
       toast.success('Installation ajoutée');
     }
     close();
+    await renderInstallationsTab(parentContainer);
+  });
+}
+
+// === Import lieux/installations depuis JSON ou CSV ===
+async function openImportLieuxModal(parentContainer) {
+  let lieuxData = null;
+
+  const buildPreviewHtml = (data) => {
+    const lignes = data.lieux.map(l => {
+      const badge = l.type === 'extra' ? 'tag-warning' : 'tag-success';
+      const bus = l.necessiteBus ? ' <span class="tag tag-info">Bus</span>' : '';
+      return `<tr>
+        <td><strong>${h(l.nom)}</strong></td>
+        <td><span class="tag ${badge}">${h(l.type)}</span>${bus}</td>
+        <td>${l.installations.length} installation(s)</td>
+      </tr>`;
+    }).join('');
+    return `
+      <div class="callout callout-info" style="margin-bottom:var(--sp-3);">
+        <strong>${data.lieux.length} lieux</strong> —
+        <strong>${data.lieux.reduce((s, l) => s + l.installations.length, 0)} installations</strong>
+        à importer.
+        ${data.source ? `<br><span style="color:var(--c-text-muted);font-size:var(--fs-sm);">Source : ${h(data.source)}</span>` : ''}
+      </div>
+      <div style="max-height:280px;overflow-y:auto;">
+        <table class="data-table">
+          <thead><tr><th>Lieu</th><th>Type</th><th>Installations</th></tr></thead>
+          <tbody>${lignes}</tbody>
+        </table>
+      </div>
+      <div class="callout callout-warn" style="margin-top:var(--sp-3);">
+        Les lieux dont le nom existe déjà seront ignorés. Les installations nouvelles seront ajoutées aux lieux existants.
+      </div>`;
+  };
+
+  const parseCsvToLieux = (csvText) => {
+    const result = Papa.parse(csvText.trim(), {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: h => h.trim().toUpperCase(),
+    });
+
+    // Trouver les colonnes LIEUX et INSTALLATIONS (insensible à la casse/accents)
+    const headers = result.meta.fields || [];
+    const colLieu = headers.find(h => /lieu/i.test(h));
+    const colInst = headers.find(h => /install/i.test(h));
+
+    if (!colLieu || !colInst) {
+      throw new Error(`Colonnes non trouvées. En-têtes détectés : ${headers.join(', ')}. Attendu : LIEUX et INSTALLATIONS.`);
+    }
+
+    const lieuxMap = new Map();
+    const lieuxOrder = [];
+
+    for (const row of result.data) {
+      const lieuNom = (row[colLieu] || '').trim();
+      const instNom = (row[colInst] || '').trim();
+      if (!lieuNom || !instNom) continue;
+      if (!lieuxMap.has(lieuNom)) {
+        lieuxMap.set(lieuNom, []);
+        lieuxOrder.push(lieuNom);
+      }
+      lieuxMap.get(lieuNom).push(instNom);
+    }
+
+    if (lieuxOrder.length === 0) throw new Error('Aucune donnée valide trouvée dans le fichier CSV.');
+
+    return {
+      lieux: lieuxOrder.map(nom => ({
+        nom,
+        type: 'extra',
+        necessiteBus: true,
+        installations: lieuxMap.get(nom).map(i => ({ nom: i, capaciteSimultanee: 1, activitesCompatibles: [] })),
+      })),
+    };
+  };
+
+  const initialContent = `
+    <div class="form-group">
+      <label class="form-label">Fichier JSON <span style="color:var(--c-text-muted);font-size:var(--fs-sm);">(exporté depuis cette application)</span></label>
+      <input type="file" id="md-import-lieux-json" accept=".json" class="form-input">
+    </div>
+    <div style="text-align:center;margin:var(--sp-3) 0;color:var(--c-text-muted);font-size:var(--fs-sm);">— ou —</div>
+    <div class="form-group">
+      <label class="form-label">Fichier CSV</label>
+      <input type="file" id="md-import-lieux-csv" accept=".csv,.txt" class="form-input">
+      <div class="form-hint">
+        2 colonnes obligatoires : <strong>LIEUX</strong> et <strong>INSTALLATIONS</strong><br>
+        Exemple : <code>LIEUX,INSTALLATIONS</code> → <code>Stade,Piste</code> / <code>Stade,Terrain</code>
+      </div>
+    </div>`;
+
+  const { close, modal, body } = openModal({
+    title: 'Importer des lieux et installations',
+    content: initialContent,
+    footer: `
+      <button class="btn btn-outline" id="md-import-lieux-cancel">Annuler</button>
+      <button class="btn btn-primary" id="md-import-lieux-confirm" disabled>Importer</button>`,
+  });
+
+  const getConfirmBtn = () => modal.querySelector('#md-import-lieux-confirm');
+
+  const loadData = (data) => {
+    lieuxData = data;
+    body.innerHTML = buildPreviewHtml(data);
+    getConfirmBtn().disabled = false;
+  };
+
+  modal.querySelector('#md-import-lieux-cancel')?.addEventListener('click', close);
+
+  modal.querySelector('#md-import-lieux-json')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed.lieux)) throw new Error('Format invalide : clé "lieux" manquante');
+      loadData(parsed);
+    } catch (err) {
+      toast.error(`JSON invalide : ${err.message}`);
+    }
+  });
+
+  modal.querySelector('#md-import-lieux-csv')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      loadData(parseCsvToLieux(text));
+    } catch (err) {
+      toast.error(`CSV invalide : ${err.message}`);
+    }
+  });
+
+  getConfirmBtn()?.addEventListener('click', async () => {
+    if (!lieuxData) return;
+    await captureUndo('Import lieux/installations');
+
+    const lieuxExistants = await db.lieux.toArray();
+    const nomsExistants = new Map(lieuxExistants.map(l => [l.nom.toLowerCase(), l.id]));
+
+    let lieuxCrees = 0, lieuxIgnores = 0, installsCrees = 0;
+
+    for (const lieuDef of lieuxData.lieux) {
+      const nomKey = lieuDef.nom.toLowerCase();
+      let lieuId;
+
+      if (nomsExistants.has(nomKey)) {
+        lieuId = nomsExistants.get(nomKey);
+        lieuxIgnores++;
+      } else {
+        lieuId = await db.lieux.add({
+          nom: lieuDef.nom,
+          type: lieuDef.type || 'extra',
+          necessiteBus: lieuDef.necessiteBus ?? true,
+        });
+        lieuxCrees++;
+      }
+
+      const installsExistantes = await db.installations.where('lieuId').equals(lieuId).toArray();
+      const nomsInstalls = new Set(installsExistantes.map(i => i.nom.toLowerCase()));
+
+      for (const instDef of (lieuDef.installations || [])) {
+        if (nomsInstalls.has(instDef.nom.toLowerCase())) continue;
+        await db.installations.add({
+          nom: instDef.nom,
+          lieuId,
+          capaciteSimultanee: instDef.capaciteSimultanee || 1,
+          activitesCompatibles: instDef.activitesCompatibles || [],
+        });
+        installsCrees++;
+      }
+    }
+
+    close();
+    toast.success(`Import terminé : ${lieuxCrees} lieu(x) créé(s)${lieuxIgnores ? `, ${lieuxIgnores} ignoré(s) (existaient déjà)` : ''}, ${installsCrees} installation(s) créée(s).`);
     await renderInstallationsTab(parentContainer);
   });
 }
