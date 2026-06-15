@@ -412,6 +412,13 @@ export async function renderExports(container) {
     </div>
   `;
 
+  // Tooltip natif sur tous les selects des cards (utile quand le texte est tronqué)
+  container.querySelectorAll('.export-card-actions .form-select').forEach(sel => {
+    const sync = () => { sel.title = sel.options[sel.selectedIndex]?.text || ''; };
+    sync();
+    sel.addEventListener('change', sync);
+  });
+
   // === Partage lecture seule (HTML) ===
   document.getElementById('btn-export-partage')?.addEventListener('click', async () => {
     const periodeId = document.getElementById('export-partage-per')?.value;

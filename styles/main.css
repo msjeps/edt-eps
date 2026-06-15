@@ -34,9 +34,10 @@
   --c-bg:           #F1F5F9;
   --c-surface:      #FFFFFF;
   --c-surface-alt:  #F8FAFC;
-  --c-border:       #E2E8F0;
-  --c-border-dark:  #CBD5E1;
-  --c-border-light: #EEF2F7;
+  --c-border:        #E2E8F0;
+  --c-border-dark:   #CBD5E1;
+  --c-border-strong: #94A3B8;
+  --c-border-light:  #EEF2F7;
 
   /* Texte */
   --c-text:           #0F172A;
@@ -131,9 +132,10 @@
   --c-bg:           #0B1220;
   --c-surface:      #141E33;
   --c-surface-alt:  #1C2740;
-  --c-border:       #2A3A57;
-  --c-border-dark:  #3C4F72;
-  --c-border-light: #223150;
+  --c-border:        #2A3A57;
+  --c-border-dark:   #3C4F72;
+  --c-border-strong: #4E6694;
+  --c-border-light:  #223150;
 
   /* Texte — clair sur fond sombre */
   --c-text:           #E7EDF7;
@@ -1225,10 +1227,10 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  transition: box-shadow var(--transition-md), border-color var(--transition-md), transform var(--transition-md);
+  transition: box-shadow var(--transition-md), border-color var(--transition-md),
+              background var(--transition-md), transform var(--transition-md);
 }
 .export-card:hover {
-  border-color: var(--c-border-dark);
   box-shadow: var(--shadow-md);
 }
 /* L'icône reçoit une pastille pour mieux marquer le container */
@@ -1266,16 +1268,17 @@ body {
   flex-wrap: wrap;
 }
 .export-card-actions .form-select {
-  flex: 1 1 140px;
-  min-width: 0;
+  flex: 1 1 100%;
+  min-width: 100%;
 }
 .export-card-actions .btn {
   flex: 0 0 auto;
   height: 38px;
 }
-/* Cartes pleine largeur (grid-column:1/-1) : actions à gauche, pas étirées */
+/* Cartes pleine largeur (grid-column:1/-1) : select + bouton côte à côte */
 .export-card.export-card-wide .export-card-actions .form-select {
   flex: 0 1 280px;
+  min-width: 0;
 }
 
 /* En-tête horizontal pour cartes wide — conserve la pastille d'icône */
