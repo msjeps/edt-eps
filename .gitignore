@@ -6,5 +6,6 @@ dist/
 *.pdf
 extracted_*.json
 extracted_*.txt
-.claude/worktrees/
+.claude/
+CLAUDE.md
 SECURITY_TODO.md
