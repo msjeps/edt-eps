@@ -172,6 +172,15 @@ export async function renderEdt(container) {
   });
   updateConflictBadge(conflits.length);
 
+  // IDs des séances en conflit (toutes périodes, tous enseignants)
+  const conflitSeanceIds = new Set();
+  for (const c of conflits) {
+    if (c.seance?.id != null) conflitSeanceIds.add(c.seance.id);
+    for (const s of c.seancesEnConflit || []) {
+      if (s?.id != null) conflitSeanceIds.add(s.id);
+    }
+  }
+
   // Période pilotée par le sélecteur global (header) — source de vérité partagée
   const pgVal = getPeriodeGlobale();
   if (pgVal === 'all') {
@@ -342,8 +351,8 @@ export async function renderEdt(container) {
 
           <!-- Lignes par jour -->
           ${state.showAllPeriodes && periodes.length > 1
-            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap })
-            : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes, instPatternMap })
+            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds })
+            : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes, instPatternMap, conflitSeanceIds })
           }
         </div>
       </div>
@@ -524,7 +533,7 @@ function renderAllPeriodesRows(jours, periodes, slots, seances, hStart, pas, ctx
 // ============================
 
 function renderBloc(seance, stackIndex, hStart, pas, ctx) {
-  const { enseignants, classes, activites, installations, lieux, instPatternMap } = ctx;
+  const { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds } = ctx;
   const ens = enseignants.find(e => e.id === seance.enseignantId);
   const cls = classes.find(c => c.id === seance.classeId);
   const act = activites.find(a => a.id === seance.activiteId);
@@ -541,18 +550,20 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
   const topOffset = stackIndex * densite().pitch + 2;
 
   const isFromProg = !!seance.programmationId;
+  const hasConflit = conflitSeanceIds?.has(seance.id);
 
   return `
-    <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''}"
+    <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''} ${hasConflit ? 'has-conflit' : ''}"
          data-seance-id="${seance.id}"
          data-install="${slug}"
          ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
          draggable="${seance.verrouille ? 'false' : 'true'}"
          style="width:${widthPct}%; top:${topOffset}px; position:absolute; left:0; height:${densite().blocH}px;"
-         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${inst?.nom || ''}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}">
+         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${inst?.nom || ''}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}">
       <div class="bloc-line bloc-line-top">
         <span class="bloc-class">${cls?.nom || '?'}</span>
         <span class="bloc-activity">${act?.nom || ''}</span>
+        ${hasConflit ? '<span class="bloc-conflit-icon" aria-label="Conflit">⚠</span>' : ''}
         ${seance.verrouille ? '<span class="bloc-lock-icon">&#128274;</span>' : ''}
       </div>
       <div class="bloc-line bloc-line-bot">

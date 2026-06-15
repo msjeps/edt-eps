@@ -303,6 +303,28 @@
   flex-shrink: 0;
 }
 
+.edt-bloc .bloc-conflit-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1;
+  color: var(--c-warning, #D97706);
+  filter: drop-shadow(0 0 2px rgba(217,119,6,0.5));
+}
+
+.edt-bloc.has-conflit {
+  outline: 2px solid var(--c-warning, #D97706);
+  outline-offset: -1px;
+}
+
+[data-theme="dark"] .edt-bloc .bloc-conflit-icon {
+  color: #FCD34D;
+  filter: drop-shadow(0 0 2px rgba(252,211,77,0.4));
+}
+
+[data-theme="dark"] .edt-bloc.has-conflit {
+  outline-color: #FCD34D;
+}
+
 /* ---- Mode COMPACT : bloc sur une seule ligne, polices réduites ---- */
 .edt-grid.edt-compact .edt-bloc {
   flex-direction: row;
