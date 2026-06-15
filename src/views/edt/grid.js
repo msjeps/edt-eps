@@ -10,7 +10,7 @@ import { getConfig } from '../../db/schema.js';
 import { captureUndo } from '../../utils/undo.js';
 import { toast } from '../../components/toast.js';
 import { openModal } from '../../components/modal.js';
-import { validerSeance, heureToMinutes, conflitIndisponibilite } from '../../engine/constraints.js';
+import { validerSeance, validerToutesSeances, heureToMinutes, conflitIndisponibilite } from '../../engine/constraints.js';
 import { updateConflictBadge } from '../../app.js';
 import { JOURS_COURTS } from '../../utils/helpers.js';
 import { slugify } from '../../utils/helpers.js';
@@ -154,6 +154,23 @@ export async function renderEdt(container) {
   const hEnd = heureToMinutes(heureFin || '17:00');
   const PAS = 30; // 30-minute slots
   const slots = genererSlots(hStart, hEnd, PAS);
+
+  // Détecter et afficher les conflits
+  const [ctMax, ctEcart, ct1prof, maxHeures] = await Promise.all([
+    getConfig('contrainte_max_heures_actif'),
+    getConfig('contrainte_ecart_24h_actif'),
+    getConfig('contrainte_1prof_1classe_actif'),
+    getConfig('maxHeuresJourProf'),
+  ]);
+  const indisponibilites = await db.indisponibilites.toArray();
+  const conflits = validerToutesSeances({
+    seances, classes, installations, activites, enseignants, indisponibilites,
+    maxHeuresJour: maxHeures ?? 6,
+    contrainte_max_heures_actif: ctMax ?? true,
+    contrainte_ecart_24h_actif: ctEcart ?? true,
+    contrainte_1prof_1classe_actif: ct1prof ?? true,
+  });
+  updateConflictBadge(conflits.length);
 
   // Période pilotée par le sélecteur global (header) — source de vérité partagée
   const pgVal = getPeriodeGlobale();
