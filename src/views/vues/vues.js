@@ -121,12 +121,23 @@ function periodeAbbrev(periode) {
   return nom.length > 5 ? nom.slice(0, 4) + '.' : nom;
 }
 
+/** Clé unique d'un créneau (même logique que seancesHebdo). */
+function creneauKey(s) {
+  return s.creneauClasseId
+    ? `cc:${s.creneauClasseId}`
+    : `manual:${s.enseignantId ?? ''}:${s.classeId ?? ''}:${s.jour}:${s.heureDebut}`;
+}
+
 /**
- * Retourne l'abréviation de la (des) période(s) couverte(s) si les séances ne couvrent
- * PAS toute l'année dans leur système (semestre ou trimestre). Null sinon.
- * Ex : séances en S1 seulement sur [S1,S2] → "S1" ; en T1+T2 sur [T1,T2,T3] → "T1+T2".
+ * Construit une Map creneauKey → label pour chaque créneau qui ne couvre PAS
+ * toute l'année dans son système (semestre ou trimestre).
+ *
+ * Ex : lundi S1 seulement → "S1"  |  vendredi T1+T2+T3 → pas dans la Map
+ *
+ * Doit recevoir TOUTES les séances de l'entité (pas dedupliquées) pour que
+ * chaque créneau voie toutes ses occurrences périodiques.
  */
-function periodePartielle(seances, allPeriodes) {
+function getPartialCreneauxMap(allSeances, allPeriodes) {
   const semPeriodes = allPeriodes
     .filter(p => !p.parentId && p.type === 'semestre')
     .sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
@@ -134,31 +145,28 @@ function periodePartielle(seances, allPeriodes) {
     .filter(p => !p.parentId && p.type === 'trimestre')
     .sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
-  const periodeIds = new Set(seances.map(s => s.periodeId).filter(Boolean));
-
-  const inSem = semPeriodes.filter(p => periodeIds.has(p.id));
-  if (inSem.length > 0 && inSem.length < semPeriodes.length) {
-    return inSem.map(p => periodeAbbrev(p)).join('+');
+  // Regrouper toutes les séances par créneau unique
+  const groups = new Map();
+  for (const s of allSeances) {
+    const key = creneauKey(s);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
   }
 
-  const inTri = triPeriodes.filter(p => periodeIds.has(p.id));
-  if (inTri.length > 0 && inTri.length < triPeriodes.length) {
-    return inTri.map(p => periodeAbbrev(p)).join('+');
-  }
-
-  return null;
-}
-
-/**
- * Pour la vue enseignant : construit une Map classeId → label période
- * pour les classes qui ne couvrent pas toute l'année (ex : 3A → "S1").
- */
-function getPartialClassesMap(seances, allPeriodes) {
-  const classeIds = [...new Set(seances.map(s => s.classeId).filter(Boolean))];
   const result = new Map();
-  for (const classeId of classeIds) {
-    const label = periodePartielle(seances.filter(s => s.classeId === classeId), allPeriodes);
-    if (label) result.set(classeId, label);
+  for (const [key, grp] of groups) {
+    const periodeIds = new Set(grp.map(s => s.periodeId).filter(Boolean));
+
+    const inSem = semPeriodes.filter(p => periodeIds.has(p.id));
+    if (inSem.length > 0 && inSem.length < semPeriodes.length) {
+      result.set(key, inSem.map(p => periodeAbbrev(p)).join('+'));
+      continue;
+    }
+
+    const inTri = triPeriodes.filter(p => periodeIds.has(p.id));
+    if (inTri.length > 0 && inTri.length < triPeriodes.length) {
+      result.set(key, inTri.map(p => periodeAbbrev(p)).join('+'));
+    }
   }
   return result;
 }
@@ -286,7 +294,7 @@ export function buildMiniGrid(seances, refs, opts = {}) {
       const borderRgb = hexToRgb(colors.border);
       const textDark  = luminance(hexToRgb(colors.text)) < 128;
 
-      const partialLabel = opts.partialClasses?.get(s.classeId) ?? null;
+      const partialLabel = opts.partialCreneaux?.get(creneauKey(s)) ?? null;
 
       const lines = [];
       if (opts.showClasse    && cls)  lines.push(`<strong>${cls.nom}</strong>`);
@@ -348,7 +356,7 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
     ensAvecSeances.map(ens => {
       const ensSeances = seances.filter(s => s.enseignantId === ens.id);
       const nom = [ens.prenom, ens.nom].filter(Boolean).join(' ');
-      const partialClasses = showPeriodeLabel ? getPartialClassesMap(ensSeances, periodes) : new Map();
+      const partialCreneaux = showPeriodeLabel ? getPartialCreneauxMap(ensSeances, periodes) : new Map();
       const { str: totalH, isWeighted } = showPeriodeLabel
         ? totalHAnnualise(ensSeances, periodes)
         : { str: totalHStr(ensSeances), isWeighted: false };
@@ -362,7 +370,7 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
             <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;" title="${isWeighted ? 'Moyenne annualisée — certaines classes n\'ont cours qu\'une partie de l\'année' : ''}">${totalH} / sem.${isWeighted ? ' *' : ''}</span>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true, partialClasses })}
+            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true, partialCreneaux })}
           </div>
         </div>`;
     }).join('') +
@@ -385,10 +393,15 @@ function renderVueClasses(seances, data, showPeriodeLabel = false) {
   return `<div class="vues-cards-wrap" style="display:flex;flex-wrap:wrap;gap:var(--sp-5);">` +
     classesAvecSeances.map(cls => {
       const clsSeances = seances.filter(s => s.classeId === cls.id);
-      const pPartial = showPeriodeLabel ? periodePartielle(clsSeances, periodes) : null;
+      const partialCreneaux = showPeriodeLabel ? getPartialCreneauxMap(clsSeances, periodes) : new Map();
       const { str: totalH, isWeighted } = showPeriodeLabel
         ? totalHAnnualise(clsSeances, periodes)
         : { str: totalHStr(clsSeances), isWeighted: false };
+      // Badge carte : uniquement si TOUS les créneaux sont partiels avec le même label
+      const allKeys = new Set(clsSeances.map(creneauKey));
+      const cardLabels = new Set([...allKeys].map(k => partialCreneaux.get(k)).filter(Boolean));
+      const cardPartial = (cardLabels.size === 1 && partialCreneaux.size === allKeys.size)
+        ? [...cardLabels][0] : null;
       return `
         <div class="card vue-card" style="cursor:default;min-width:400px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--sp-3);">
@@ -397,12 +410,12 @@ function renderVueClasses(seances, data, showPeriodeLabel = false) {
               ${cls.effectif ? `<div style="font-size:var(--fs-sm);color:var(--c-text-secondary);">${cls.effectif} élèves</div>` : ''}
             </div>
             <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-              ${pPartial ? `<span class="badge badge-warning" style="font-size:var(--fs-sm);white-space:nowrap;">${pPartial} uniquement</span>` : ''}
+              ${cardPartial ? `<span class="badge badge-warning" style="font-size:var(--fs-sm);white-space:nowrap;">${cardPartial} uniquement</span>` : ''}
               <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;" title="${isWeighted ? 'Moyenne annualisée' : ''}">${totalH} / sem.${isWeighted ? ' *' : ''}</span>
             </div>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true })}
+            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true, partialCreneaux })}
           </div>
         </div>`;
     }).join('') +
