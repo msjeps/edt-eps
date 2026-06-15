@@ -54,12 +54,12 @@ export function ecartEntreSeances(seanceA, seanceB) {
 // === CONTRAINTES HARD ===
 
 /**
- * Vérifie si deux séances sont sur la même période
- * (null = toutes les périodes → considéré comme "même période")
+ * Vérifie si deux séances sont sur la même période.
+ * Une séance sans periodeId est orpheline (données incohérentes) :
+ * elle n'est active sur aucune période réelle → pas de conflit avec quoi que ce soit.
  */
 function memePeriode(a, b) {
-  // Si l'une n'a pas de période assignée, elles peuvent se chevaucher
-  if (!a.periodeId || !b.periodeId) return true;
+  if (!a.periodeId || !b.periodeId) return false;
   return a.periodeId === b.periodeId;
 }
 
@@ -130,14 +130,18 @@ export function conflitEcart24h(seance, toutesSeances, classes) {
 
 /**
  * Vérifie le max 6h/jour pour un enseignant
- * Retourne le nombre total d'heures sur le jour (même période)
+ * Retourne le nombre total d'heures sur le jour pour une période donnée.
+ * Retourne 0 si periodeId est absent (séance orpheline → pas de contrainte).
  */
 export function totalHeuresJour(enseignantId, jour, toutesSeances, excludeAS = true, periodeId = null) {
+  // Séance orpheline : on ne peut pas savoir dans quelle période elle se situe
+  if (!periodeId) return 0;
+
   const seancesJour = toutesSeances.filter(s =>
     s.enseignantId === enseignantId &&
     s.jour === jour &&
-    (!excludeAS || !s.isAS) &&
-    (!periodeId || !s.periodeId || s.periodeId === periodeId)
+    s.periodeId === periodeId &&   // même période uniquement (pas de cumul inter-périodes)
+    (!excludeAS || !s.isAS)
   );
 
   return seancesJour.reduce((total, s) => {

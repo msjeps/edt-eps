@@ -18,7 +18,7 @@ import { renderAide } from './views/aide/aide.js';
 import { exportAllData, importAllData, hasData } from './db/store.js';
 import { importProjectFile, validateProjectFile, createImportConfirmDialog } from './import/import-utils.js';
 import { toast } from './components/toast.js';
-import { saveProjectFile, fsSupported } from './utils/filesystem.js';
+import { saveProjectFile, getOrPickDir, fsSupported } from './utils/filesystem.js';
 import { canUndo, getUndoLabel, undo, clearUndoStack, onUndoStackChange } from './utils/undo.js';
 import { openSnapshotsModal } from './versioning/snapshots-modal.js';
 import { isConfigComplete } from './engine/config-validator.js';
@@ -192,6 +192,10 @@ export async function initApp() {
  */
 async function saveProject() {
   try {
+    // Acquérir le handle en premier pendant que le geste utilisateur est actif.
+    // showDirectoryPicker est bloqué par Chrome si appelé après des opérations IDB async.
+    if (fsSupported) await getOrPickDir('fs_projet_dir', 'PROJET');
+
     const data = await exportAllData();
     const nom = await getConfig('etablissementNom') || 'projet';
     const json = JSON.stringify(data, null, 2);

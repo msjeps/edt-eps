@@ -158,6 +158,20 @@ function bindMainEvents(container, data) {
 function renderClassesPeriodeMatrix(content, data) {
   const { classes, periodes, creneauxClasses, programmations, enseignants, activites, installations, lieux } = data;
 
+  // Périodes par type (pour filtrer les colonnes N/A et calculer le compteur)
+  const semPeriodes = periodes.filter(p => p.type === 'semestre');
+  const trimPeriodes = periodes.filter(p => p.type === 'trimestre');
+  const semPeriodesIds = new Set(semPeriodes.map(p => p.id));
+
+  // Pour chaque créneau : a-t-il des programmations en période semestrielle ?
+  const crHasSemProgs = {};
+  const crHasAnyProgs = {};
+  for (const cc of creneauxClasses) {
+    const progs = programmations.filter(pr => pr.creneauClasseId === cc.id && pr.periodeId);
+    crHasAnyProgs[cc.id] = progs.length > 0;
+    crHasSemProgs[cc.id] = progs.some(pr => semPeriodesIds.has(pr.periodeId));
+  }
+
   // Filter classes
   let filteredClasses = classes;
   if (filtreNiveau !== 'tous') {
@@ -335,6 +349,13 @@ function renderClassesPeriodeMatrix(content, data) {
                 </td>
               `;
             } else {
+              // Colonne semestrielle pour un créneau purement trimestriel → N/A (pas de fantôme)
+              const isSemCol = semPeriodesIds.has(p.id);
+              if (isSemCol && crHasAnyProgs[cr.id] && !crHasSemProgs[cr.id]) {
+                html += `<td class="prog-cell prog-cell-na" title="Période non applicable pour ce créneau"></td>`;
+                continue;
+              }
+
               // Chercher une programmation d'une autre période qui chevauche P
               let ghostProg = null, ghostPeriode = null, isFullCover = false;
               for (const pr of programmations) {
@@ -413,10 +434,23 @@ function renderClassesPeriodeMatrix(content, data) {
 
   html += `</tbody></table></div>`;
 
-  // Stats bar
+  // Stats bar — compteur intelligent : 3 slots/créneau trimestre, n slots/créneau semestre
   const totalCreneaux = creneauxClasses.length;
-  const totalProgs = programmations.length;
-  const totalCells = creneauxClasses.length * periodes.length;
+  const totalProgs = programmations.filter(pr => pr.periodeId).length;
+  let totalCells = 0;
+  const defaultPeriodeCount = trimPeriodes.length || periodes.length; // fallback si pas de trimestres
+  for (const cc of creneauxClasses) {
+    if (crHasSemProgs[cc.id]) {
+      // Créneau semestriel : référence = nombre réel d'assignations semestrielles
+      // (1 si S1 seulement, 2 si S1+S2, 1 si non encore assigné mais type connu)
+      const semProgCount = programmations.filter(pr =>
+        pr.creneauClasseId === cc.id && pr.periodeId && semPeriodesIds.has(pr.periodeId)
+      ).length;
+      totalCells += semProgCount || 1;
+    } else {
+      totalCells += defaultPeriodeCount;
+    }
+  }
   const pctFilled = totalCells > 0 ? Math.round((totalProgs / totalCells) * 100) : 0;
 
   html += `
@@ -743,43 +777,50 @@ function detectProfConflicts(data) {
   const { creneauxClasses, enseignants, programmations, periodes } = data;
   const conflicts = [];
 
-  const byEns = {};
-  for (const cc of creneauxClasses) {
-    if (!cc.enseignantId) continue;
-    if (!byEns[cc.enseignantId]) byEns[cc.enseignantId] = [];
-    byEns[cc.enseignantId].push(cc);
+  // Index des creneauxClasses par id
+  const ccById = Object.fromEntries(creneauxClasses.map(cc => [cc.id, cc]));
+
+  // Construire une liste plate : une entrée par programmation active, avec temps effectif
+  // (override de la programmation si présent, sinon valeur du creneauClasse)
+  const items = [];
+  for (const prog of programmations) {
+    const cc = ccById[prog.creneauClasseId];
+    if (!cc || !cc.enseignantId) continue;
+    if (!prog.periodeId) continue; // programmation orpheline sans période assignée
+    items.push({
+      enseignantId: cc.enseignantId,
+      jour:       prog.jour       ?? cc.jour,
+      heureDebut: prog.heureDebut ?? cc.heureDebut,
+      heureFin:   prog.heureFin   ?? cc.heureFin,
+      periodeId:  prog.periodeId,
+      cc,
+    });
   }
 
-  for (const [ensId, ccs] of Object.entries(byEns)) {
+  // Grouper par enseignant
+  const byEns = {};
+  for (const item of items) {
+    if (!byEns[item.enseignantId]) byEns[item.enseignantId] = [];
+    byEns[item.enseignantId].push(item);
+  }
+
+  for (const [ensId, its] of Object.entries(byEns)) {
     const ens = enseignants.find(e => e.id === parseInt(ensId));
-    for (let i = 0; i < ccs.length; i++) {
-      for (let j = i + 1; j < ccs.length; j++) {
-        const a = ccs[i], b = ccs[j];
+    for (let i = 0; i < its.length; i++) {
+      for (let j = i + 1; j < its.length; j++) {
+        const a = its[i], b = its[j];
+        // Même jour et chevauchement horaire (temps effectifs)
         if (a.jour !== b.jour) continue;
         if (!(a.heureDebut < b.heureFin && b.heureDebut < a.heureFin)) continue;
 
-        // Vérifier si les programmations des deux créneaux coexistent dans le temps.
-        // Un créneau sans programmation est ignoré (pas actif = pas de conflit réel).
-        const progsA = programmations.filter(p => p.creneauClasseId === a.id);
-        const progsB = programmations.filter(p => p.creneauClasseId === b.id);
-        if (progsA.length === 0 || progsB.length === 0) continue;
-
-        // Conflit réel seulement si au moins une paire de programmations est sur des périodes
-        // qui se chevauchent dans le calendrier (ou dont les dates ne sont pas renseignées).
-        let hasRealOverlap = false;
-        outer: for (const pA of progsA) {
-          const periodeA = periodes.find(p => p.id === pA.periodeId);
-          for (const pB of progsB) {
-            const periodeB = periodes.find(p => p.id === pB.periodeId);
-            if (!periodeA || !periodeB) { hasRealOverlap = true; break outer; }
-            if (periodeA.id === periodeB.id || periodesOverlap(periodeA, periodeB)) {
-              hasRealOverlap = true;
-              break outer;
-            }
-          }
+        // Conflit réel seulement si les deux périodes se chevauchent dans le calendrier
+        const periodeA = periodes.find(p => p.id === a.periodeId);
+        const periodeB = periodes.find(p => p.id === b.periodeId);
+        if (!periodeA || !periodeB) {
+          conflicts.push({ ens, crA: a, crB: b });
+          continue;
         }
-
-        if (hasRealOverlap) {
+        if (periodeA.id === periodeB.id || periodesOverlap(periodeA, periodeB)) {
           conflicts.push({ ens, crA: a, crB: b });
         }
       }
@@ -840,41 +881,62 @@ function renderWarningBanner(warnings) {
 function detectInstallConflicts(data) {
   const { installations, periodes, creneauxClasses, programmations } = data;
   const conflicts = [];
+  const ccById = Object.fromEntries(creneauxClasses.map(cc => [cc.id, cc]));
+
+  // Seules les programmations avec une période et un créneau valides
+  const activeProgs = programmations.filter(pr =>
+    pr.periodeId && ccById[pr.creneauClasseId]
+  );
 
   for (const inst of installations) {
     const cap = inst.capaciteSimultanee || 999;
+    const instProgs = activeProgs.filter(pr => pr.installationId === inst.id);
+    if (instProgs.length <= 1) continue;
 
-    for (const p of periodes) {
-      // Progs natifs + progs fantômes des périodes qui chevauchent P
-      const allProgs = programmations.filter(pr => {
-        if (pr.installationId !== inst.id) return false;
-        if (pr.periodeId === p.id) return true;
-        const srcP = periodes.find(pp => pp.id === pr.periodeId);
-        return srcP && periodesOverlap(srcP, p);
-      });
-      if (allProgs.length <= 1) continue;
+    // Grouper par slot effectif (override prog ?? valeur creneauClasse)
+    const bySlot = {};
+    for (const pr of instProgs) {
+      const cc = ccById[pr.creneauClasseId];
+      const jour       = pr.jour       ?? cc.jour;
+      const heureDebut = pr.heureDebut ?? cc.heureDebut;
+      const key = `${jour}_${heureDebut}`;
+      if (!bySlot[key]) bySlot[key] = { jour, heureDebut, progs: [] };
+      bySlot[key].progs.push(pr);
+    }
 
-      // Group by slot
-      const bySlot = {};
-      for (const pr of allProgs) {
-        const cr = creneauxClasses.find(cc => cc.id === pr.creneauClasseId);
-        if (!cr) continue;
-        const key = `${cr.jour}_${cr.heureDebut}`;
-        if (!bySlot[key]) bySlot[key] = { jour: cr.jour, heure: cr.heureDebut, entries: [] };
-        bySlot[key].entries.push(pr);
+    for (const slot of Object.values(bySlot)) {
+      if (slot.progs.length <= 1) continue;
+
+      // Pour chaque période source distincte présente dans ce slot, compter combien
+      // d'autres programmations ont une période qui se chevauche avec elle.
+      // Le maximum de ce comptage = nombre maximum de réservations simultanées réelles.
+      // Exemple : T1 + T2 + T1 → max(2 pendant T1, 1 pendant T2) = 2, pas 3.
+      let maxSimult = 0;
+      let conflictPeriodeNom = '?';
+
+      const sourceIds = [...new Set(slot.progs.map(pr => pr.periodeId))];
+      for (const pid of sourceIds) {
+        const pRef = periodes.find(p => p.id === pid);
+        const count = slot.progs.filter(pr => {
+          const pSrc = periodes.find(p => p.id === pr.periodeId);
+          if (!pRef || !pSrc) return true;
+          return pSrc.id === pRef.id || periodesOverlap(pSrc, pRef);
+        }).length;
+        if (count > maxSimult) {
+          maxSimult = count;
+          conflictPeriodeNom = pRef?.nom ?? '?';
+        }
       }
 
-      for (const slot of Object.values(bySlot)) {
-        if (slot.entries.length > cap) {
-          conflicts.push({
-            installNom: inst.nom,
-            cap,
-            count: slot.entries.length,
-            jour: JOURS_COURTS[slot.jour] || slot.jour,
-            heure: formatHeure(slot.heure),
-            periodeNom: p.nom,
-          });
-        }
+      if (maxSimult > cap) {
+        conflicts.push({
+          installNom: inst.nom,
+          cap,
+          count: maxSimult,
+          jour: JOURS_COURTS[slot.jour] || slot.jour,
+          heure: formatHeure(slot.heureDebut),
+          periodeNom: conflictPeriodeNom,
+        });
       }
     }
   }

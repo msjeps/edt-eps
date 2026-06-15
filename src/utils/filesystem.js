@@ -83,9 +83,13 @@ export async function getOrPickDir(key, subFolder, forceReset = false) {
   if (!forceReset) {
     const stored = await loadHandle(key);
     if (stored) {
-      const ok = await ensurePermission(stored);
-      if (ok) return stored;
-      // Permission refusée → on repasse par le picker
+      try {
+        const ok = await ensurePermission(stored);
+        if (ok) return stored;
+      } catch (_e) {
+        // Handle invalide ou périmé → on supprime et on repasse par le picker
+        await removeHandle(key);
+      }
     }
   }
 
@@ -93,19 +97,25 @@ export async function getOrPickDir(key, subFolder, forceReset = false) {
   let parentHandle;
   try {
     parentHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-  } catch {
+  } catch (_e) {
     // L'utilisateur a annulé
     return null;
   }
 
-  // Créer le sous-dossier automatiquement
-  const dirHandle = await parentHandle.getDirectoryHandle(subFolder, { create: true });
+  // Créer le sous-dossier ; si Chrome/macOS bloque la création, on utilise le dossier parent
+  let dirHandle;
+  try {
+    dirHandle = await parentHandle.getDirectoryHandle(subFolder, { create: true });
+  } catch (_e) {
+    dirHandle = parentHandle;
+  }
   await storeHandle(key, dirHandle);
   return dirHandle;
 }
 
 /**
  * Écrit un fichier dans un dossier géré.
+ * Tout échec de l'API File System → fallback silencieux vers Téléchargements.
  * @param {string} key       - clé du dossier ('fs_projet_dir' | 'fs_exports_dir')
  * @param {string} subFolder - nom du sous-dossier ('PROJET' | 'EXPORTS')
  * @param {string} filename  - nom du fichier
@@ -114,24 +124,30 @@ export async function getOrPickDir(key, subFolder, forceReset = false) {
  */
 async function saveToDir(key, subFolder, filename, blob) {
   if (!SUPPORTED) {
-    // Fallback navigateur non supporté
     _fallbackSave(blob, filename);
     return { saved: true, path: null, fallback: true };
   }
 
-  const dirHandle = await getOrPickDir(key, subFolder);
-  if (!dirHandle) {
-    // Utilisateur a annulé le picker → fallback Téléchargements
+  try {
+    const dirHandle = await getOrPickDir(key, subFolder);
+    if (!dirHandle) {
+      // Utilisateur a annulé le picker
+      _fallbackSave(blob, filename);
+      return { saved: true, path: null, fallback: true };
+    }
+
+    const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+
+    return { saved: true, path: `${subFolder}/${filename}`, fallback: false };
+  } catch (_e) {
+    // Échec API (sandbox macOS, permission révoquée, handle invalide…) → téléchargement
+    await removeHandle(key);
     _fallbackSave(blob, filename);
     return { saved: true, path: null, fallback: true };
   }
-
-  const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
-  const writable = await fileHandle.createWritable();
-  await writable.write(blob);
-  await writable.close();
-
-  return { saved: true, path: `${subFolder}/${filename}`, fallback: false };
 }
 
 function _fallbackSave(blob, filename) {
@@ -165,7 +181,7 @@ export async function saveExportFile(blob, filename) {
     let dirHandle;
     try {
       dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    } catch {
+    } catch (_e) {
       // Utilisateur a annulé
       _fallbackSave(blob, filename);
       return { saved: true, path: null, fallback: true };
@@ -225,7 +241,7 @@ export async function getExportsDirPath() {
     if (!ok) return 'Dossier EXPORTS (permission refusée)';
 
     return 'Dossier EXPORTS';
-  } catch {
+  } catch (_e) {
     return 'Dossier EXPORTS';
   }
 }
