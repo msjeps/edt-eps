@@ -94,11 +94,15 @@ function totalHebdoStr(seances) {
  * @param {Array} allPeriodes - toutes les périodes du projet
  * @returns {{ str: string, isWeighted: boolean }}
  */
+/**
+ * Heures annualisées — gère le modèle hybride (T1/T2/T3 + S1/S2 coexistants).
+ * Chaque créneau est pondéré selon son système (semestre ou trimestre).
+ * Ex : 2h en S1 seulement (2 semestres) → 1h annualisé.
+ */
 function totalHebdoAnnualise(seances, allPeriodes) {
-  const topPeriodes = allPeriodes.filter(p => !p.parentId);
-  const totalP = topPeriodes.length || 1;
+  const semPeriodes = allPeriodes.filter(p => !p.parentId && p.type === 'semestre');
+  const triPeriodes = allPeriodes.filter(p => !p.parentId && p.type === 'trimestre');
 
-  // Grouper par identifiant de créneau unique
   const groups = new Map();
   for (const s of seances) {
     const key = s.creneauClasseId
@@ -113,20 +117,19 @@ function totalHebdoAnnualise(seances, allPeriodes) {
 
   for (const [, grp] of groups) {
     const dureeMin = heureToMin(grp[0].heureFin) - heureToMin(grp[0].heureDebut);
-    // Résoudre chaque periodeId vers sa période top-level
-    const topIds = new Set(
-      grp
-        .map(s => s.periodeId)
-        .filter(Boolean)
-        .map(pid => {
-          const p = allPeriodes.find(x => x.id === pid);
-          return p?.parentId ?? pid;
-        })
-    );
-    // Aucune période affectée → séance plein-année
-    const count = topIds.size || totalP;
-    const weight = Math.min(count, totalP) / totalP;
-    if (weight < 1) isWeighted = true;
+    const periodeIds = new Set(grp.map(s => s.periodeId).filter(Boolean));
+
+    const inSem = semPeriodes.filter(p => periodeIds.has(p.id));
+    const inTri = triPeriodes.filter(p => periodeIds.has(p.id));
+
+    let weight = 1;
+    if (inSem.length > 0 && semPeriodes.length > 0) {
+      weight = inSem.length / semPeriodes.length;
+    } else if (inTri.length > 0 && triPeriodes.length > 0) {
+      weight = inTri.length / triPeriodes.length;
+    }
+
+    if (weight < 0.99) isWeighted = true;
     totalMin += dureeMin * weight;
   }
 
