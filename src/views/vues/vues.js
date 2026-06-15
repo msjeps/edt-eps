@@ -177,7 +177,6 @@ export function buildMiniGrid(seances, refs, opts = {}) {
   const gridH = totalSlots * SLOT_PX;
   const DAY_COL_W = 110;
   const TIME_COL_W = 36;
-  const periodes = refs.periodes ?? [];
 
   // Générer les labels de temps (toutes les 30 min, label tous les 60 min)
   const timeLabels = [];
@@ -253,18 +252,12 @@ export function buildMiniGrid(seances, refs, opts = {}) {
       const borderRgb = hexToRgb(colors.border);
       const textDark  = luminance(hexToRgb(colors.text)) < 128;
 
-      const periode      = periodes.find(p => p.id === s.periodeId) ?? null;
-      const periodeLabel = opts.showPeriodeLabel && periode ? periodeAbbrev(periode) : null;
-
       const lines = [];
       if (opts.showClasse    && cls)  lines.push(`<strong>${cls.nom}</strong>`);
       if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
       if (act && height >= 28)        lines.push(`<span style="font-size:9px;opacity:.85;">${act.nom.length > 14 ? act.nom.slice(0, 13) + '…' : act.nom}</span>`);
       if (opts.showInstallation && inst && height >= 38) {
         lines.push(`<span style="font-size:8px;opacity:.75;">${inst.nom.length > 12 ? inst.nom.slice(0, 11) + '…' : inst.nom}</span>`);
-      }
-      if (periodeLabel) {
-        lines.push(`<span style="font-size:8px;font-weight:700;background:rgba(0,0,0,.18);border-radius:2px;padding:0 3px;margin-top:1px;align-self:flex-start;">${periodeLabel}</span>`);
       }
 
       html += `<div style="
@@ -334,7 +327,7 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
             </div>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true, showPeriodeLabel })}
+            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true })}
           </div>
         </div>`;
     }).join('') +
@@ -375,7 +368,7 @@ function renderVueClasses(seances, data, showPeriodeLabel = false) {
             </div>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true, showPeriodeLabel })}
+            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true })}
           </div>
         </div>`;
     }).join('') +
@@ -407,7 +400,7 @@ function renderVueInstallations(seances, data, showPeriodeLabel = false) {
             <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;">${instSeances.length} séance${instSeances.length > 1 ? 's' : ''}/sem.</span>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(instSeances, refs, { showClasse: true, showEnseignant: true, showPeriodeLabel })}
+            ${buildMiniGrid(instSeances, refs, { showClasse: true, showEnseignant: true })}
           </div>
         </div>`;
     }).join('') +
