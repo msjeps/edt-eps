@@ -95,21 +95,33 @@ export function conflitClasse(seance, toutesSeances) {
  * (capacité simultanée dépassée, même période uniquement)
  */
 export function conflitInstallation(seance, toutesSeances, installations) {
-  const install = installations.find(i => i.id === seance.installationId);
-  if (!install) return [];
+  const allInstIds = seance.installationsIds?.length
+    ? seance.installationsIds
+    : (seance.installationId ? [seance.installationId] : []);
+  if (allInstIds.length === 0) return [];
 
-  const simultanées = toutesSeances.filter(s =>
-    s.id !== seance.id &&
-    s.installationId === seance.installationId &&
-    memePeriode(s, seance) &&
-    creneauxChevauche(s, seance)
-  );
+  const seen = new Set();
+  const conflits = [];
 
-  // +1 pour la séance courante
-  if (simultanées.length + 1 > install.capaciteSimultanee) {
-    return simultanées;
+  for (const instId of allInstIds) {
+    const install = installations.find(i => i.id === instId);
+    if (!install) continue;
+
+    const simultanées = toutesSeances.filter(s => {
+      if (s.id === seance.id) return false;
+      const sIds = s.installationsIds?.length
+        ? s.installationsIds
+        : (s.installationId ? [s.installationId] : []);
+      return sIds.includes(instId) && memePeriode(s, seance) && creneauxChevauche(s, seance);
+    });
+
+    if (simultanées.length + 1 > install.capaciteSimultanee) {
+      for (const s of simultanées) {
+        if (!seen.has(s.id)) { seen.add(s.id); conflits.push(s); }
+      }
+    }
   }
-  return [];
+  return conflits;
 }
 
 /**

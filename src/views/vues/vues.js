@@ -285,7 +285,8 @@ export function buildMiniGrid(seances, refs, opts = {}) {
       const top    = (startMin - firstMin) / 30 * SLOT_PX + 1;
       const height = (endMin - startMin) / 30 * SLOT_PX - 2;
 
-      const inst   = refs.installations.find(i => i.id === s.installationId);
+      const allInstIds = s.installationsIds?.length ? s.installationsIds : (s.installationId ? [s.installationId] : []);
+      const inst   = refs.installations.find(i => i.id === (allInstIds[0] || s.installationId));
       const cls    = refs.classes.find(c => c.id === s.classeId);
       const ens    = refs.enseignants.find(e => e.id === s.enseignantId);
       const act    = refs.activites.find(a => a.id === s.activiteId);
@@ -300,8 +301,9 @@ export function buildMiniGrid(seances, refs, opts = {}) {
       if (opts.showClasse    && cls)  lines.push(`<strong>${cls.nom}</strong>`);
       if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
       if (act && height >= 28)        lines.push(`<span style="font-size:9px;opacity:.85;">${act.nom.length > 14 ? act.nom.slice(0, 13) + '…' : act.nom}</span>`);
-      if (opts.showInstallation && inst && height >= 38) {
-        lines.push(`<span style="font-size:8px;opacity:.75;">${inst.nom.length > 12 ? inst.nom.slice(0, 11) + '…' : inst.nom}</span>`);
+      if (opts.showInstallation && allInstIds.length > 0 && height >= 38) {
+        const instNoms = allInstIds.map(id => refs.installations.find(i => i.id === id)?.nom).filter(Boolean).join('+');
+        lines.push(`<span style="font-size:8px;opacity:.75;">${instNoms.length > 12 ? instNoms.slice(0, 11) + '…' : instNoms}</span>`);
       }
       if (partialLabel && height >= 20) {
         lines.push(`<span style="font-size:8px;font-weight:700;background:rgba(0,0,0,.18);border-radius:2px;padding:0 3px;margin-top:1px;align-self:flex-start;">${partialLabel}</span>`);

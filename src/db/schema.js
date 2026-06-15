@@ -117,6 +117,38 @@ db.version(2).stores({
   });
 });
 
+// Version 3 — multi-installations par séance
+db.version(3).stores({
+  etablissement: '++id, nom, type',
+  periodes: '++id, nom, type, dateDebut, dateFin, parentId, niveau, ordre',
+  enseignants: '++id, nom, prenom, initiales',
+  classes: '++id, nom, niveau, effectif, enseignantId',
+  activites: '++id, nom, champApprentissage, code',
+  lieux: '++id, nom, type, necessiteBus',
+  installations: '++id, lieuId, nom, capaciteSimultanee',
+  zones: '++id, installationId, nom',
+  programmations: '++id, classeId, activiteId, periodeId, installationId, zoneId, creneauClasseId, statut',
+  seances: '++id, classeId, enseignantId, activiteId, installationId, zoneId, jour, heureDebut, heureFin, periodeId, verrouille',
+  reservations: '++id, seanceId, installationId, statut, periodeId',
+  transports: '++id, seanceId, jour, lieuId, classeId, enseignantId',
+  indisponibilites: '++id, type, refId, jour, heureDebut, heureFin, periodeId, motif',
+  preferences: '++id, enseignantId, type, valeur, poids',
+  contraintes: '++id, nom, type, niveau, params, actif',
+  creneaux: '++id, jour, heureDebut, heureFin, label, ordre',
+  snapshots: '++id, nom, date, description, data',
+  changelog: '++id, date, action, entite, entiteId, details',
+  config: 'cle',
+  creneauxClasses: '++id, classeId, enseignantId, jour, heureDebut, heureFin',
+  modelesNiveau: '++id, niveau, nom',
+}).upgrade(tx => {
+  // Initialise installationsIds depuis installationId pour les séances existantes
+  return tx.table('seances').toCollection().modify(s => {
+    if (!s.installationsIds) {
+      s.installationsIds = s.installationId ? [s.installationId] : [];
+    }
+  });
+});
+
 export default db;
 
 /**

@@ -218,8 +218,10 @@ export async function renderEdt(container) {
     : null;
   const nomEtab = etablissementNom || 'EDT EPS';
 
-  // Légende des installations présentes dans les séances filtrées
-  const instIds = [...new Set(seancesFiltrees.map(s => s.installationId).filter(Boolean))];
+  // Légende des installations présentes dans les séances filtrées (multi-install supporté)
+  const instIds = [...new Set(seancesFiltrees.flatMap(s =>
+    s.installationsIds?.length ? s.installationsIds : (s.installationId ? [s.installationId] : [])
+  ))];
   const legendeItems = instIds.map(instId => {
     const inst = installations.find(i => i.id === instId);
     const lieu = inst ? lieux.find(l => l.id === inst.lieuId) : null;
@@ -537,10 +539,16 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
   const ens = enseignants.find(e => e.id === seance.enseignantId);
   const cls = classes.find(c => c.id === seance.classeId);
   const act = activites.find(a => a.id === seance.activiteId);
-  const inst = installations.find(i => i.id === seance.installationId);
+  // Support multi-installations : couleur/motif basés sur la première installation
+  const allInstIds = seance.installationsIds?.length
+    ? seance.installationsIds
+    : (seance.installationId ? [seance.installationId] : []);
+  const primaryInstId = allInstIds[0] || null;
+  const inst = installations.find(i => i.id === primaryInstId);
   const lieu = inst ? lieux.find(l => l.id === inst.lieuId) : null;
   const slug = lieu ? slugify(lieu.nom) : 'default';
-  const patternIdx = instPatternMap?.get(seance.installationId);
+  const patternIdx = instPatternMap?.get(primaryInstId);
+  const instLabel = allInstIds.map(id => installations.find(i => i.id === id)?.nom).filter(Boolean).join(' + ');
 
   // Calculate spanning
   const startMin = heureToMinutes(seance.heureDebut);
@@ -559,7 +567,7 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
          ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
          draggable="${seance.verrouille ? 'false' : 'true'}"
          style="width:${widthPct}%; top:${topOffset}px; position:absolute; left:0; height:${densite().blocH}px;"
-         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${inst?.nom || ''}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}">
+         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || ''}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}">
       <div class="bloc-line bloc-line-top">
         <span class="bloc-class">${cls?.nom || '?'}</span>
         <span class="bloc-activity">${act?.nom || ''}</span>
@@ -567,7 +575,7 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
         ${seance.verrouille ? '<span class="bloc-lock-icon">&#128274;</span>' : ''}
       </div>
       <div class="bloc-line bloc-line-bot">
-        <span class="bloc-install">${inst?.nom || ''}</span>
+        <span class="bloc-install">${instLabel || ''}</span>
         <span class="bloc-prof">${ens?.initiales || (ens ? ens.prenom?.[0] + '.' + ens.nom?.[0] : '')}</span>
       </div>
     </div>
@@ -954,22 +962,38 @@ async function openSeanceModal(seance, context, edtContainer) {
     return opts;
   }
 
-  function buildInstOptions(actId, selectedId) {
-    let opts = '<option value="">-- Choisir --</option>';
+  function buildLieuOptions(actId, selectedLieuId) {
+    let opts = '<option value="">-- Choisir un lieu --</option>';
     for (const l of lieux) {
-      const installs = installations.filter(i => {
+      const hasInst = installations.some(i => {
         if (i.lieuId !== l.id) return false;
-        if (actId && i.activitesCompatibles && i.activitesCompatibles.length > 0) {
-          return i.activitesCompatibles.includes(actId);
-        }
+        if (actId && i.activitesCompatibles?.length > 0) return i.activitesCompatibles.includes(actId);
         return true;
       });
-      if (installs.length === 0) continue;
-      for (const i of installs) {
-        opts += `<option value="${i.id}" ${selectedId === i.id ? 'selected' : ''}>${l.nom} → ${i.nom}</option>`;
-      }
+      if (!hasInst) continue;
+      opts += `<option value="${l.id}" ${selectedLieuId === l.id ? 'selected' : ''}>${l.nom}</option>`;
     }
     return opts;
+  }
+
+  function renderInstCheckboxes(lieuId, selectedIds, actId) {
+    if (!lieuId) return '<span style="color:var(--c-text-muted);font-size:var(--fs-sm);">Choisissez d\'abord un lieu</span>';
+    const installs = installations.filter(i => {
+      if (i.lieuId !== lieuId) return false;
+      if (actId && i.activitesCompatibles?.length > 0) return i.activitesCompatibles.includes(actId);
+      return true;
+    });
+    if (installs.length === 0) return '<span style="color:var(--c-text-muted);font-size:var(--fs-sm);">Aucune installation compatible</span>';
+    if (installs.length === 1) {
+      // Seule installation : cochée automatiquement, pas de case à cocher
+      return `<input type="hidden" name="md-inst-cb" value="${installs[0].id}"><span style="color:var(--c-text-muted);font-size:var(--fs-sm);">${installs[0].nom}</span>`;
+    }
+    return installs.map(i => `
+      <label style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-1) 0;cursor:pointer;font-size:var(--fs-sm);">
+        <input type="checkbox" name="md-inst-cb" value="${i.id}" ${selectedIds.includes(i.id) ? 'checked' : ''}>
+        ${i.nom}
+      </label>
+    `).join('');
   }
 
   // Met à jour le bandeau d'alerte en fonction de l'activité sélectionnée
@@ -999,7 +1023,12 @@ async function openSeanceModal(seance, context, edtContainer) {
   const selectedClasse = seance ? classes.find(c => c.id === seance.classeId) : null;
   const initNiveau = selectedClasse?.niveau || null;
   const initActId = seance?.activiteId || null;
-  const initInstId = seance?.installationId || null;
+  // Multi-installations : liste des ids sélectionnés + lieu initial
+  const initInstIds = seance?.installationsIds?.length
+    ? seance.installationsIds
+    : (seance?.installationId ? [seance.installationId] : []);
+  const initPrimaryInst = initInstIds[0] ? installations.find(i => i.id === initInstIds[0]) : null;
+  const initLieuId = initPrimaryInst?.lieuId || null;
 
   // Pré-calculer les activités déjà utilisées pour l'état initial
   let currentUsedInfo = await getUsedActInfo(seance?.classeId || null, seance?.periodeId || null);
@@ -1042,10 +1071,18 @@ async function openSeanceModal(seance, context, edtContainer) {
           <div id="md-act-warning" class="${initWarningClass}" style="display:${initInSame || initInOther ? 'block' : 'none'};">${initWarningText}</div>
         </div>
         <div class="form-group">
-          <label class="form-label">Installation</label>
-          <select class="form-select" id="md-seance-inst">
-            ${buildInstOptions(initActId, initInstId)}
+          <label class="form-label">Lieu</label>
+          <select class="form-select" id="md-seance-lieu">
+            ${buildLieuOptions(initActId, initLieuId)}
           </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">Installations</label>
+          <div id="md-inst-checkboxes" style="padding:var(--sp-2) 0;">
+            ${renderInstCheckboxes(initLieuId, initInstIds, initActId)}
+          </div>
         </div>
       </div>
       <div class="form-row">
@@ -1149,11 +1186,20 @@ async function openSeanceModal(seance, context, edtContainer) {
   // Appel initial : vérifier les indispos pour la séance existante
   checkIndispoWarning();
 
-  // === Filtrage dynamique : classe → activités, activité → installations ===
-  document.getElementById('md-seance-classe')?.addEventListener('change', async (e) => {
+  // Rafraîchit les cases d'installations selon le lieu et l'activité courants
+  function refreshInstCheckboxes() {
+    const lieuId = parseInt(document.getElementById('md-seance-lieu')?.value) || null;
+    const actId = parseInt(document.getElementById('md-seance-act')?.value) || null;
+    const box = document.getElementById('md-inst-checkboxes');
+    if (box) box.innerHTML = renderInstCheckboxes(lieuId, [], actId);
+  }
+
+  // === Filtrage dynamique : classe → activités, lieu → installations ===
+  document.getElementById('md-seance-classe')?.addEventListener('change', async () => {
     await refreshActSelect();
-    const instSelect = document.getElementById('md-seance-inst');
-    if (instSelect) instSelect.innerHTML = buildInstOptions(null, null);
+    const lieuSel = document.getElementById('md-seance-lieu');
+    if (lieuSel) { lieuSel.innerHTML = buildLieuOptions(null, null); }
+    refreshInstCheckboxes();
   });
 
   document.getElementById('md-seance-ens')?.addEventListener('change', () => checkIndispoWarning());
@@ -1167,12 +1213,17 @@ async function openSeanceModal(seance, context, edtContainer) {
 
   document.getElementById('md-seance-act')?.addEventListener('change', (e) => {
     const actId = parseInt(e.target.value) || null;
-    const instSelect = document.getElementById('md-seance-inst');
-    if (instSelect) {
-      const prevVal = parseInt(instSelect.value) || null;
-      instSelect.innerHTML = buildInstOptions(actId, prevVal);
+    const lieuSel = document.getElementById('md-seance-lieu');
+    if (lieuSel) {
+      const prevLieu = parseInt(lieuSel.value) || null;
+      lieuSel.innerHTML = buildLieuOptions(actId, prevLieu);
     }
+    refreshInstCheckboxes();
     checkActWarning(currentUsedInfo);
+  });
+
+  document.getElementById('md-seance-lieu')?.addEventListener('change', () => {
+    refreshInstCheckboxes();
   });
 
   document.getElementById('md-seance-copy')?.addEventListener('click', () => {
@@ -1197,7 +1248,12 @@ async function openSeanceModal(seance, context, edtContainer) {
       classeId: parseInt(document.getElementById('md-seance-classe').value) || null,
       enseignantId: parseInt(document.getElementById('md-seance-ens').value) || null,
       activiteId: parseInt(document.getElementById('md-seance-act').value) || null,
-      installationId: parseInt(document.getElementById('md-seance-inst').value) || null,
+      ...(() => {
+        const checked = [...document.querySelectorAll('input[name="md-inst-cb"]:checked')].map(el => parseInt(el.value));
+        const hidden = [...document.querySelectorAll('input[name="md-inst-cb"][type="hidden"]')].map(el => parseInt(el.value));
+        const ids = hidden.length ? hidden : checked;
+        return { installationsIds: ids, installationId: ids[0] || null };
+      })(),
       jour: document.getElementById('md-seance-jour').value,
       heureDebut: document.getElementById('md-seance-hdeb').value,
       heureFin: document.getElementById('md-seance-hfin').value,
@@ -1299,7 +1355,8 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
 
   const cls   = classes.find(c => c.id === seance.classeId);
   const act   = activites.find(a => a.id === seance.activiteId);
-  const inst  = installations.find(i => i.id === seance.installationId);
+  const dupInstIds = seance.installationsIds?.length ? seance.installationsIds : (seance.installationId ? [seance.installationId] : []);
+  const instLabel = dupInstIds.map(id => installations.find(i => i.id === id)?.nom).filter(Boolean).join(' + ');
   const ens   = enseignants.find(e => e.id === seance.enseignantId);
   const curPer = periodes.find(p => p.id === seance.periodeId);
 
@@ -1309,7 +1366,7 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
     title: 'Dupliquer la séance',
     content: `
       <div style="background:var(--c-surface-2,#f5f5f5);border-radius:var(--radius);padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-4);font-size:var(--fs-sm);">
-        <strong>${cls?.nom || '?'}</strong> — ${act?.nom || '?'} — ${inst?.nom || '?'}<br>
+        <strong>${cls?.nom || '?'}</strong> — ${act?.nom || '?'} — ${instLabel || '?'}<br>
         <span style="color:var(--c-text-muted);">
           ${ens ? ens.prenom + ' ' + ens.nom + ' · ' : ''}${seance.jour ? seance.jour.charAt(0).toUpperCase() + seance.jour.slice(1) : ''} ${seance.heureDebut}–${seance.heureFin} · ${curPer?.nom || 'Toutes périodes'}
         </span>
@@ -1368,6 +1425,7 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
         enseignantId:  seance.enseignantId,
         activiteId:    seance.activiteId,
         installationId: seance.installationId,
+        installationsIds: seance.installationsIds?.length ? seance.installationsIds : (seance.installationId ? [seance.installationId] : []),
         jour:          targetJour,
         heureDebut:    seance.heureDebut,
         heureFin:      seance.heureFin,
