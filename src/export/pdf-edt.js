@@ -86,6 +86,56 @@ function totalHebdoStr(seances) {
   return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
 }
 
+/**
+ * Heures hebdomadaires annualisées : une séance présente dans k périodes sur N
+ * ne compte que k/N de sa durée. Ex : 2h en S1 seulement (N=2) → 1h annualisé.
+ *
+ * @param {Array} seances     - séances de l'entité (déjà filtrées si besoin)
+ * @param {Array} allPeriodes - toutes les périodes du projet
+ * @returns {{ str: string, isWeighted: boolean }}
+ */
+function totalHebdoAnnualise(seances, allPeriodes) {
+  const topPeriodes = allPeriodes.filter(p => !p.parentId);
+  const totalP = topPeriodes.length || 1;
+
+  // Grouper par identifiant de créneau unique
+  const groups = new Map();
+  for (const s of seances) {
+    const key = s.creneauClasseId
+      ? `cc:${s.creneauClasseId}`
+      : `manual:${s.enseignantId ?? ''}:${s.classeId ?? ''}:${s.jour}:${s.heureDebut}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  }
+
+  let totalMin = 0;
+  let isWeighted = false;
+
+  for (const [, grp] of groups) {
+    const dureeMin = heureToMin(grp[0].heureFin) - heureToMin(grp[0].heureDebut);
+    // Résoudre chaque periodeId vers sa période top-level
+    const topIds = new Set(
+      grp
+        .map(s => s.periodeId)
+        .filter(Boolean)
+        .map(pid => {
+          const p = allPeriodes.find(x => x.id === pid);
+          return p?.parentId ?? pid;
+        })
+    );
+    // Aucune période affectée → séance plein-année
+    const count = topIds.size || totalP;
+    const weight = Math.min(count, totalP) / totalP;
+    if (weight < 1) isWeighted = true;
+    totalMin += dureeMin * weight;
+  }
+
+  const h = Math.floor(totalMin / 60);
+  const m = Math.round(totalMin % 60);
+  const str = m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
+  return { str, isWeighted };
+}
+
 // ============================================================
 // AXE TEMPS — construction des colonnes proportionnelles
 // ============================================================
@@ -670,15 +720,20 @@ export async function exportPdfEnseignants(periodeId, enseignantIdFilter) {
     const orsLabel = ens.ors ? `ORS : ${ens.ors}h  ·  ` : '';
     doc.text(`${orsLabel}${periodeLabel}  ·  ${anneeScolaire}`, M + 5, M + 14.5);
 
+    const { str: hebdoStr, isWeighted: hebdoWeighted } = periodeId
+      ? { str: totalHebdoStr(ensSeances), isWeighted: false }
+      : totalHebdoAnnualise(ensSeances, periodes);
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(220, 235, 255);
-    doc.text(`${totalHebdoStr(ensSeances)} / semaine`, PW - M - 5, M + 8, { align: 'right' });
+    doc.text(`${hebdoStr} / sem.`, PW - M - 5, M + 8, { align: 'right' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(160, 185, 225);
-    doc.text(etablissement, PW - M - 5, M + 14.5, { align: 'right' });
+    const etablissementLine = hebdoWeighted ? `${etablissement}  ·  moy. annuelle` : etablissement;
+    doc.text(etablissementLine, PW - M - 5, M + 14.5, { align: 'right' });
 
     // ---- GRILLE ----
     const gX = M;
@@ -802,15 +857,20 @@ export async function exportPdfClasses(periodeId, classeIdFilter) {
     const effectifLabel = cls.effectif ? `${cls.effectif} élèves  ·  ` : '';
     doc.text(`${niveauLabel}${effectifLabel}${periodeLabel}  ·  ${anneeScolaire}`, M + 5, M + 14.5);
 
+    const { str: hebdoStr, isWeighted: hebdoWeighted } = periodeId
+      ? { str: totalHebdoStr(clsSeances), isWeighted: false }
+      : totalHebdoAnnualise(clsSeances, periodes);
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(220, 235, 255);
-    doc.text(`${totalHebdoStr(clsSeances)} / semaine`, PW - M - 5, M + 8, { align: 'right' });
+    doc.text(`${hebdoStr} / sem.`, PW - M - 5, M + 8, { align: 'right' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(160, 185, 225);
-    if (ensLabel) doc.text(ensLabel, PW - M - 5, M + 14.5, { align: 'right' });
+    const ensLabelLine = [ensLabel, hebdoWeighted ? 'moy. annuelle' : ''].filter(Boolean).join('  ·  ');
+    if (ensLabelLine) doc.text(ensLabelLine, PW - M - 5, M + 14.5, { align: 'right' });
 
     // ---- GRILLE ----
     const gX = M;

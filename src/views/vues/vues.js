@@ -58,10 +58,75 @@ export function totalHStr(seances) {
   return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
 }
 
+/**
+ * Heures annualisées : pondère chaque créneau par la fraction de l'année qu'il couvre.
+ * Ex : 2h uniquement en S1 (sur 2 semestres) → 1h annualisé.
+ * @returns {{ str: string, isWeighted: boolean }}
+ */
+function totalHAnnualise(seances, allPeriodes) {
+  const topPeriodes = allPeriodes.filter(p => !p.parentId);
+  const totalP = topPeriodes.length || 1;
+
+  const groups = new Map();
+  for (const s of seances) {
+    const key = s.creneauClasseId
+      ? `cc:${s.creneauClasseId}`
+      : `manual:${s.enseignantId ?? ''}:${s.classeId ?? ''}:${s.jour}:${s.heureDebut}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  }
+
+  let totalMinutes = 0;
+  let isWeighted = false;
+
+  for (const [, grp] of groups) {
+    const dureeMin = heureToMin(grp[0].heureFin) - heureToMin(grp[0].heureDebut);
+    const topIds = new Set(
+      grp
+        .map(s => s.periodeId)
+        .filter(Boolean)
+        .map(pid => {
+          const p = allPeriodes.find(x => x.id === pid);
+          return p?.parentId ?? pid;
+        })
+    );
+    const count = topIds.size || totalP;
+    const weight = Math.min(count, totalP) / totalP;
+    if (weight < 1) isWeighted = true;
+    totalMinutes += dureeMin * weight;
+  }
+
+  const h = Math.floor(totalMinutes / 60);
+  const m = Math.round(totalMinutes % 60);
+  const str = m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
+  return { str, isWeighted };
+}
+
 function hexToRgb(hex) {
   if (!hex || hex[0] !== '#') return [150, 150, 155];
   const n = parseInt(hex.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/**
+ * Renvoie l'abréviation courte d'une période : "Semestre 1" → "S1", "Trimestre 2" → "T2", etc.
+ */
+function periodeAbbrev(periode) {
+  if (!periode) return null;
+  const nom = (periode.nom || '').trim();
+  const m = nom.match(/(?:semestre|trimestre)\s*(\d)/i);
+  if (m) return nom[0].toUpperCase() + m[1];
+  return nom.length > 5 ? nom.slice(0, 4) + '.' : nom;
+}
+
+/**
+ * Si toutes les séances d'un ensemble appartiennent à la même période, renvoie cette période.
+ * Retourne null si zéro période affectée, ou si les séances couvrent plusieurs périodes.
+ */
+function periodeUnique(seances, periodes) {
+  const ids = [...new Set(seances.map(s => s.periodeId).filter(Boolean))];
+  if (ids.length !== 1) return null;
+  return periodes.find(p => p.id === ids[0]) ?? null;
 }
 
 function luminance([r, g, b]) {
@@ -112,6 +177,7 @@ export function buildMiniGrid(seances, refs, opts = {}) {
   const gridH = totalSlots * SLOT_PX;
   const DAY_COL_W = 110;
   const TIME_COL_W = 36;
+  const periodes = refs.periodes ?? [];
 
   // Générer les labels de temps (toutes les 30 min, label tous les 60 min)
   const timeLabels = [];
@@ -187,12 +253,18 @@ export function buildMiniGrid(seances, refs, opts = {}) {
       const borderRgb = hexToRgb(colors.border);
       const textDark  = luminance(hexToRgb(colors.text)) < 128;
 
+      const periode      = periodes.find(p => p.id === s.periodeId) ?? null;
+      const periodeLabel = opts.showPeriodeLabel && periode ? periodeAbbrev(periode) : null;
+
       const lines = [];
       if (opts.showClasse    && cls)  lines.push(`<strong>${cls.nom}</strong>`);
       if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
       if (act && height >= 28)        lines.push(`<span style="font-size:9px;opacity:.85;">${act.nom.length > 14 ? act.nom.slice(0, 13) + '…' : act.nom}</span>`);
       if (opts.showInstallation && inst && height >= 38) {
         lines.push(`<span style="font-size:8px;opacity:.75;">${inst.nom.length > 12 ? inst.nom.slice(0, 11) + '…' : inst.nom}</span>`);
+      }
+      if (periodeLabel) {
+        lines.push(`<span style="font-size:8px;font-weight:700;background:rgba(0,0,0,.18);border-radius:2px;padding:0 3px;margin-top:1px;align-self:flex-start;">${periodeLabel}</span>`);
       }
 
       html += `<div style="
@@ -231,9 +303,9 @@ export function buildMiniGrid(seances, refs, opts = {}) {
 // VUES PAR ONGLET
 // ============================================================
 
-function renderVueEnseignants(seances, data) {
-  const { enseignants, classes, activites, installations, lieux } = data;
-  const refs = { classes, enseignants, activites, installations, lieux };
+function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
+  const { enseignants, classes, activites, installations, lieux, periodes } = data;
+  const refs = { classes, enseignants, activites, installations, lieux, periodes };
 
   const ensAvecSeances = enseignants.filter(e => seances.some(s => s.enseignantId === e.id));
   if (!ensAvecSeances.length) {
@@ -243,8 +315,12 @@ function renderVueEnseignants(seances, data) {
   return `<div class="vues-cards-wrap" style="display:flex;flex-wrap:wrap;gap:var(--sp-5);">` +
     ensAvecSeances.map(ens => {
       const ensSeances = seances.filter(s => s.enseignantId === ens.id);
-      const totalH = totalHStr(ensSeances);
       const nom = [ens.prenom, ens.nom].filter(Boolean).join(' ');
+      const pUnique = showPeriodeLabel ? periodeUnique(ensSeances, periodes) : null;
+      const pLabel  = pUnique ? periodeAbbrev(pUnique) : null;
+      const { str: totalH, isWeighted } = showPeriodeLabel
+        ? totalHAnnualise(ensSeances, periodes)
+        : { str: totalHStr(ensSeances), isWeighted: false };
       return `
         <div class="card vue-card" style="cursor:default;min-width:400px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--sp-3);">
@@ -252,19 +328,22 @@ function renderVueEnseignants(seances, data) {
               <div style="font-weight:600;font-size:var(--fs-base);">${nom}</div>
               ${ens.ors ? `<div style="font-size:var(--fs-sm);color:var(--c-text-secondary);">ORS : ${ens.ors}h</div>` : ''}
             </div>
-            <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;">${totalH} / sem.</span>
+            <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+              ${pLabel ? `<span class="badge badge-warning" style="font-size:var(--fs-sm);white-space:nowrap;" title="${pUnique.nom} uniquement">${pLabel} uniquement</span>` : ''}
+              <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;" title="${isWeighted ? 'Moyenne annualisée (séances sur 1 seule période comptées au prorata)' : ''}">${totalH} / sem.${isWeighted ? ' *' : ''}</span>
+            </div>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true })}
+            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true, showPeriodeLabel })}
           </div>
         </div>`;
     }).join('') +
   `</div>`;
 }
 
-function renderVueClasses(seances, data) {
-  const { enseignants, classes, activites, installations, lieux } = data;
-  const refs = { classes, enseignants, activites, installations, lieux };
+function renderVueClasses(seances, data, showPeriodeLabel = false) {
+  const { enseignants, classes, activites, installations, lieux, periodes } = data;
+  const refs = { classes, enseignants, activites, installations, lieux, periodes };
 
   const niveauOrdre = { '6e': 1, '5e': 2, '4e': 3, '3e': 4, '2nde': 5, '1ere': 6, 'term': 7 };
   const classesAvecSeances = classes
@@ -278,7 +357,11 @@ function renderVueClasses(seances, data) {
   return `<div class="vues-cards-wrap" style="display:flex;flex-wrap:wrap;gap:var(--sp-5);">` +
     classesAvecSeances.map(cls => {
       const clsSeances = seances.filter(s => s.classeId === cls.id);
-      const totalH = totalHStr(clsSeances);
+      const pUnique = showPeriodeLabel ? periodeUnique(clsSeances, periodes) : null;
+      const pLabel  = pUnique ? periodeAbbrev(pUnique) : null;
+      const { str: totalH, isWeighted } = showPeriodeLabel
+        ? totalHAnnualise(clsSeances, periodes)
+        : { str: totalHStr(clsSeances), isWeighted: false };
       return `
         <div class="card vue-card" style="cursor:default;min-width:400px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--sp-3);">
@@ -286,19 +369,22 @@ function renderVueClasses(seances, data) {
               <div style="font-weight:600;font-size:var(--fs-base);">${cls.nom}</div>
               ${cls.effectif ? `<div style="font-size:var(--fs-sm);color:var(--c-text-secondary);">${cls.effectif} élèves</div>` : ''}
             </div>
-            <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;">${totalH} / sem.</span>
+            <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+              ${pLabel ? `<span class="badge badge-warning" style="font-size:var(--fs-sm);white-space:nowrap;" title="${pUnique.nom} uniquement">${pLabel} uniquement</span>` : ''}
+              <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;" title="${isWeighted ? 'Moyenne annualisée (séances sur 1 seule période comptées au prorata)' : ''}">${totalH} / sem.${isWeighted ? ' *' : ''}</span>
+            </div>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true })}
+            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true, showPeriodeLabel })}
           </div>
         </div>`;
     }).join('') +
   `</div>`;
 }
 
-function renderVueInstallations(seances, data) {
-  const { enseignants, classes, activites, installations, lieux } = data;
-  const refs = { classes, enseignants, activites, installations, lieux };
+function renderVueInstallations(seances, data, showPeriodeLabel = false) {
+  const { enseignants, classes, activites, installations, lieux, periodes } = data;
+  const refs = { classes, enseignants, activites, installations, lieux, periodes };
 
   const instAvecSeances = installations.filter(i => seances.some(s => s.installationId === i.id));
   if (!instAvecSeances.length) {
@@ -321,7 +407,7 @@ function renderVueInstallations(seances, data) {
             <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;">${instSeances.length} séance${instSeances.length > 1 ? 's' : ''}/sem.</span>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(instSeances, refs, { showClasse: true, showEnseignant: true })}
+            ${buildMiniGrid(instSeances, refs, { showClasse: true, showEnseignant: true, showPeriodeLabel })}
           </div>
         </div>`;
     }).join('') +
@@ -420,9 +506,11 @@ export async function renderVues(container) {
     const sf = getSeancesFiltrees();
     const content = container.querySelector('#vue-content');
     if (!content) return;
-    if (currentTab === 'enseignant')    content.innerHTML = renderVueEnseignants(sf, data);
-    else if (currentTab === 'classe')   content.innerHTML = renderVueClasses(sf, data);
-    else                                content.innerHTML = renderVueInstallations(sf, data);
+    // Afficher les étiquettes de période seulement quand on voit TOUTES les périodes
+    const showPeriodeLabel = getPeriodeGlobaleId() == null;
+    if (currentTab === 'enseignant')    content.innerHTML = renderVueEnseignants(sf, data, showPeriodeLabel);
+    else if (currentTab === 'classe')   content.innerHTML = renderVueClasses(sf, data, showPeriodeLabel);
+    else                                content.innerHTML = renderVueInstallations(sf, data, showPeriodeLabel);
     updatePrintHeader();
   }
 
