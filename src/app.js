@@ -172,6 +172,20 @@ export async function initApp() {
     e.target.value = ''; // Reset file input
   });
 
+  // === Mise à jour PWA ===
+  window.addEventListener('swUpdateReady', (e) => {
+    const btn = document.getElementById('btn-update-available');
+    if (btn) btn.hidden = false;
+  });
+
+  document.getElementById('btn-update-available')?.addEventListener('click', async () => {
+    if (dataModifiedSinceLastSave) {
+      const ok = await confirmUpdateDialog();
+      if (!ok) return;
+    }
+    applySwUpdate();
+  });
+
   // === Avertissement avant fermeture du navigateur ===
   window.addEventListener('beforeunload', async (e) => {
     // On vérifie si des données existent dans la base
@@ -454,4 +468,76 @@ export function updateConflictBadge(count) {
 
 export function getCurrentView() {
   return currentView;
+}
+
+/**
+ * Demande confirmation à l'utilisateur avant d'appliquer une mise à jour
+ * quand il y a des données non sauvegardées.
+ * Retourne true si l'utilisateur accepte de continuer quand même.
+ */
+function confirmUpdateDialog() {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('modal-overlay');
+    const dialog = document.createElement('div');
+    dialog.className = 'modal update-confirm-modal';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-labelledby', 'update-confirm-title');
+    dialog.innerHTML = `
+      <div class="modal-header">
+        <h2 class="modal-title" id="update-confirm-title">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--c-warning);vertical-align:-3px;margin-right:6px">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Données non sauvegardées
+        </h2>
+      </div>
+      <div class="modal-body">
+        <p>Vous avez des modifications non sauvegardées.</p>
+        <p><strong>Sauvegardez votre projet avant d'appliquer la mise à jour</strong>, sinon les changements en cours seront perdus au rechargement.</p>
+        <div class="modal-actions" style="margin-top:1.25rem;display:flex;gap:.625rem;justify-content:flex-end">
+          <button id="upd-cancel" class="btn btn-secondary">Annuler — je sauvegarde d'abord</button>
+          <button id="upd-save-then-update" class="btn btn-primary">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right:4px">
+              <path d="M2 2.5A.5.5 0 012.5 2h8l3.5 3.5V13.5a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5v-11z"/>
+              <path d="M5 2v4h6V2M5 10.5h6"/>
+            </svg>
+            Sauvegarder puis mettre à jour
+          </button>
+          <button id="upd-force" class="btn" style="color:var(--c-text-muted)">Mettre à jour sans sauvegarder</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dialog);
+    if (overlay) overlay.classList.remove('hidden');
+
+    const close = (result) => {
+      dialog.remove();
+      if (overlay) overlay.classList.add('hidden');
+      resolve(result);
+    };
+
+    dialog.querySelector('#upd-cancel').addEventListener('click', () => close(false));
+    dialog.querySelector('#upd-force').addEventListener('click', () => close(true));
+    dialog.querySelector('#upd-save-then-update').addEventListener('click', async () => {
+      await saveProject();
+      close(true);
+    });
+  });
+}
+
+/**
+ * Envoie le signal SKIP_WAITING au SW en attente.
+ * Le rechargement est déclenché par l'événement controllerchange dans main.js.
+ */
+function applySwUpdate() {
+  const reg = window.__swRegistration;
+  if (reg?.waiting) {
+    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+  } else {
+    // Fallback : simple rechargement (le SW sera activé au prochain cycle)
+    window.location.reload();
+  }
 }

@@ -15,12 +15,17 @@ const PRECACHE_URLS = [
 ];
 
 // Install — précacher les fichiers statiques
+// Ne pas appeler skipWaiting() ici : l'app décide du bon moment
+// pour activer la mise à jour (après que l'utilisateur a sauvegardé).
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_URLS);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
   );
+});
+
+// Message : l'app peut déclencher l'activation via postMessage({type:'SKIP_WAITING'})
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // Activate — nettoyer les anciens caches

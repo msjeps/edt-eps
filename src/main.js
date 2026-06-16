@@ -29,11 +29,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Enregistrement Service Worker (PWA)
+// Enregistrement Service Worker (PWA) + détection de mise à jour
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js').catch(() => {
-      // Service worker non disponible (dev mode)
+    navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js')
+      .then((registration) => {
+        // SW déjà en attente au chargement (ex : onglet rouvert après update)
+        if (registration.waiting) {
+          window.dispatchEvent(new CustomEvent('swUpdateReady', { detail: registration }));
+        }
+
+        // Nouveau SW téléchargé pendant la session
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            // "installed" + controller existant = nouvelle version prête, ancienne active
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              window.dispatchEvent(new CustomEvent('swUpdateReady', { detail: registration }));
+            }
+          });
+        });
+
+        // Mémoriser la registration pour l'activer plus tard
+        window.__swRegistration = registration;
+      })
+      .catch(() => {
+        // Service worker non disponible (dev mode sans HTTPS)
+      });
+
+    // Quand le SW change de controller (après skipWaiting), recharger la page
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
     });
   });
 }
