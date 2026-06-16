@@ -61,23 +61,143 @@ export async function renderDashboard(container) {
       ${type ? `<p style="color: var(--c-text-muted); margin-bottom: var(--sp-6); text-transform: capitalize;">${type}${zone ? ` — Zone ${zone}` : ''}</p>` : ''}
 
       ${estVide ? `
-        <div class="card" style="text-align: center; padding: var(--sp-8);">
-          <div style="font-size: 3rem; margin-bottom: var(--sp-4);">&#127939;</div>
-          <h3 style="margin-bottom: var(--sp-2);">Bienvenue dans EDT EPS</h3>
-          <p style="color: var(--c-text-secondary); margin-bottom: var(--sp-6); max-width: 500px; margin-left: auto; margin-right: auto;">
-            Commencez par configurer votre établissement, vos enseignants, classes, activités et installations sportives.
+        <!-- ===== LANDING PAGE — état vide ===== -->
+        <style>
+          .lp-hero{background:linear-gradient(135deg,var(--c-primary-bg) 0%,var(--c-surface) 100%);border:1px solid var(--c-primary-bg-strong);border-radius:var(--radius-xl);padding:var(--sp-10) var(--sp-8);text-align:center;margin-bottom:var(--sp-8);}
+          .lp-hero-badge{display:inline-flex;align-items:center;gap:var(--sp-2);background:var(--c-primary-bg-strong);color:var(--c-primary-dark);font-size:var(--fs-sm);font-weight:600;padding:var(--sp-1) var(--sp-3);border-radius:var(--radius-full);margin-bottom:var(--sp-4);}
+          .lp-hero h1{font-size:2.5rem;font-weight:800;letter-spacing:-0.03em;color:var(--c-text);margin:0 0 var(--sp-3);}
+          .lp-hero-sub{font-size:var(--fs-lg);color:var(--c-text-secondary);max-width:560px;margin:0 auto var(--sp-6);line-height:1.6;}
+          .lp-cta{display:flex;gap:var(--sp-3);justify-content:center;flex-wrap:wrap;margin-bottom:var(--sp-3);}
+          .lp-hint{font-size:var(--fs-sm);color:var(--c-text-muted);}
+          .lp-section-title{font-size:var(--fs-xl);font-weight:700;text-align:center;margin:0 0 var(--sp-2);color:var(--c-text);}
+          .lp-section-sub{font-size:var(--fs-base);color:var(--c-text-secondary);text-align:center;margin:0 0 var(--sp-6);}
+          .lp-features{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4);margin-bottom:var(--sp-8);}
+          @media(max-width:900px){.lp-features{grid-template-columns:repeat(2,1fr);}}
+          .lp-feat{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:var(--sp-5);transition:box-shadow var(--transition),border-color var(--transition);}
+          .lp-feat:hover{box-shadow:var(--shadow-md);border-color:var(--c-primary-light);}
+          .lp-feat-icon{width:40px;height:40px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:var(--sp-3);}
+          .lp-feat h3{font-size:var(--fs-base);font-weight:700;margin:0 0 var(--sp-2);color:var(--c-text);}
+          .lp-feat p{font-size:var(--fs-sm);color:var(--c-text-secondary);margin:0;line-height:1.55;}
+          .lp-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-4);margin-bottom:var(--sp-8);position:relative;}
+          @media(max-width:900px){.lp-steps{grid-template-columns:repeat(2,1fr);}}
+          .lp-step{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-4);text-align:center;}
+          .lp-step-num{width:36px;height:36px;border-radius:var(--radius-full);background:var(--c-primary);color:#fff;font-weight:800;font-size:var(--fs-base);display:flex;align-items:center;justify-content:center;margin:0 auto var(--sp-3);}
+          .lp-step h3{font-size:var(--fs-sm);font-weight:700;color:var(--c-text);margin:0 0 var(--sp-2);}
+          .lp-step p{font-size:var(--fs-xs);color:var(--c-text-secondary);margin:0;line-height:1.5;}
+          .lp-benefits{display:flex;gap:var(--sp-3);justify-content:center;flex-wrap:wrap;margin-bottom:var(--sp-8);}
+          .lp-benefit{display:flex;align-items:center;gap:var(--sp-2);background:var(--c-surface-alt);border:1px solid var(--c-border);border-radius:var(--radius-full);padding:var(--sp-2) var(--sp-4);font-size:var(--fs-sm);color:var(--c-text-secondary);}
+          .lp-benefit-dot{width:8px;height:8px;border-radius:var(--radius-full);background:var(--c-success);flex-shrink:0;}
+          .lp-cta-bottom{background:var(--c-primary-bg);border:1px solid var(--c-primary-bg-strong);border-radius:var(--radius-xl);padding:var(--sp-8);text-align:center;}
+          .lp-cta-bottom h2{font-size:var(--fs-2xl);font-weight:700;margin:0 0 var(--sp-2);}
+          .lp-cta-bottom p{color:var(--c-text-secondary);margin:0 0 var(--sp-6);}
+        </style>
+
+        <!-- HERO -->
+        <div class="lp-hero">
+          <div class="lp-hero-badge">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="7"/><path d="M8 4v4l3 1.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+            Configuration en moins de 10 minutes
+          </div>
+          <h1>&#127939; EDT EPS</h1>
+          <p class="lp-hero-sub">
+            L'emploi du temps EPS de votre établissement, enfin simple.<br>
+            Fini les tableurs Excel complexes — planifiez, réservez et exportez en quelques clics.
           </p>
-          <div style="display:flex;gap:var(--sp-3);justify-content:center;flex-wrap:wrap;">
+          <div class="lp-cta">
             <button class="btn btn-primary btn-lg" id="btn-start-wizard">
-              Démarrer la configuration
+              &#9881; Démarrer la configuration
             </button>
             <button class="btn btn-outline btn-lg" id="btn-load-demo" title="Charge un jeu de données fictif pour explorer l'application">
-              &#128203; Charger la démo
+              &#128203; Explorer la démo
             </button>
           </div>
-          <p style="margin-top:var(--sp-3);font-size:var(--fs-sm);color:var(--c-text-muted);">
-            La démo charge un collège-lycée fictif avec 5 enseignants, 12 classes et 3 trimestres.
-          </p>
+          <p class="lp-hint">La démo charge un collège-lycée fictif avec 5 enseignants, 12 classes et 3 trimestres — aucune donnée effacée si vous rechargez.</p>
+        </div>
+
+        <!-- FONCTIONNALITÉS -->
+        <p class="lp-section-title">Tout ce dont vous avez besoin</p>
+        <p class="lp-section-sub">Une seule application pour gérer l'intégralité de votre coordination EPS.</p>
+        <div class="lp-features">
+          <div class="lp-feat">
+            <div class="lp-feat-icon" style="background:var(--c-primary-bg);">&#9881;</div>
+            <h3>Assistant de configuration</h3>
+            <p>6 étapes guidées pour saisir enseignants, classes, activités APSA et installations. Générateurs automatiques inclus.</p>
+          </div>
+          <div class="lp-feat">
+            <div class="lp-feat-icon" style="background:var(--c-success-bg);">&#128203;</div>
+            <h3>Programmation annuelle</h3>
+            <p>Matrice classe × période et installation × période. Affectez activités et installations, avec alerte si une APSA est déjà utilisée.</p>
+          </div>
+          <div class="lp-feat">
+            <div class="lp-feat-icon" style="background:#EDE9FE;">&#128197;</div>
+            <h3>EDT drag &amp; drop</h3>
+            <p>Grille semaine interactive. Déplacez les blocs d'un jour à l'autre, par période ou sur toute l'année. Blocs verrouillables.</p>
+          </div>
+          <div class="lp-feat">
+            <div class="lp-feat-icon" style="background:var(--c-danger-bg);">&#9888;</div>
+            <h3>Conflits en temps réel</h3>
+            <p>Détection automatique : doublon prof/classe/installation, ORS dépassé, écart &lt; 24h collège, incompatibilité activité↔lieu. Suggestions de résolution incluses.</p>
+          </div>
+          <div class="lp-feat">
+            <div class="lp-feat-icon" style="background:var(--c-warning-bg);">&#128228;</div>
+            <h3>Exports professionnels</h3>
+            <p>PDF équipe et fiches individuelles, Excel EDT, CSV mairie (Direction des Sports), CSV transport (1 bus = 1 ligne), JSON projet chiffrable.</p>
+          </div>
+          <div class="lp-feat">
+            <div class="lp-feat-icon" style="background:var(--c-info-bg);">&#127963;</div>
+            <h3>Réservations mairie</h3>
+            <p>Workflow proposé → demandé → accepté/refusé. Import des disponibilités de la Direction des Sports (Excel, JSON).</p>
+          </div>
+        </div>
+
+        <!-- COMMENT ÇA MARCHE -->
+        <p class="lp-section-title">Comment ça marche</p>
+        <p class="lp-section-sub">Quatre étapes, de la configuration à l'export final.</p>
+        <div class="lp-steps">
+          <div class="lp-step">
+            <div class="lp-step-num">1</div>
+            <h3>&#9881; Configurer</h3>
+            <p>Renseignez votre établissement, vos enseignants, classes, activités et installations via l'assistant guidé.</p>
+          </div>
+          <div class="lp-step">
+            <div class="lp-step-num">2</div>
+            <h3>&#128203; Programmer</h3>
+            <p>Affectez une APSA et une installation à chaque classe pour chaque trimestre ou semestre.</p>
+          </div>
+          <div class="lp-step">
+            <div class="lp-step-num">3</div>
+            <h3>&#128197; Planifier</h3>
+            <p>Ajustez la grille EDT par glisser-déposer. Les conflits sont signalés instantanément.</p>
+          </div>
+          <div class="lp-step">
+            <div class="lp-step-num">4</div>
+            <h3>&#128228; Exporter</h3>
+            <p>Générez le CSV mairie, le bon de commande transport, le PDF EDT équipe et les synthèses Excel.</p>
+          </div>
+        </div>
+
+        <!-- AVANTAGES -->
+        <div class="lp-benefits">
+          <div class="lp-benefit"><div class="lp-benefit-dot"></div>Aucune installation</div>
+          <div class="lp-benefit"><div class="lp-benefit-dot"></div>Données 100 % locales et privées</div>
+          <div class="lp-benefit"><div class="lp-benefit-dot"></div>Gratuit</div>
+          <div class="lp-benefit"><div class="lp-benefit-dot"></div>Chrome &amp; Edge recommandés</div>
+          <div class="lp-benefit"><div class="lp-benefit-dot"></div>Annuler Ctrl+Z (20 niveaux)</div>
+          <div class="lp-benefit"><div class="lp-benefit-dot"></div>Mode sombre inclus</div>
+        </div>
+
+        <!-- CTA FINAL -->
+        <div class="lp-cta-bottom">
+          <h2>Prêt à commencer ?</h2>
+          <p>Configurez votre établissement en 10 minutes ou explorez d'abord avec la démo.</p>
+          <div class="lp-cta">
+            <button class="btn btn-primary btn-lg" id="btn-start-wizard-2">
+              &#9881; Démarrer la configuration
+            </button>
+            <button class="btn btn-outline btn-lg" id="btn-load-demo-2" title="Charge un jeu de données fictif pour explorer l'application">
+              &#128203; Explorer la démo
+            </button>
+          </div>
         </div>
       ` : `
         <div class="stats-grid">
@@ -166,11 +286,11 @@ export async function renderDashboard(container) {
   `;
 
   // Bind events
-  container.querySelector('#btn-start-wizard')?.addEventListener('click', () => {
-    navigateTo('wizard');
+  container.querySelectorAll('#btn-start-wizard, #btn-start-wizard-2').forEach(btn => {
+    btn?.addEventListener('click', () => navigateTo('wizard'));
   });
 
-  container.querySelector('#btn-load-demo')?.addEventListener('click', async () => {
+  const handleLoadDemo = async () => {
     const ok = window.confirm(
       'Charger le jeu de données démo ?\n\nCela remplacera toutes les données actuelles avec un établissement fictif (Collège-Lycée Les Quatre Vents).'
     );
@@ -183,6 +303,9 @@ export async function renderDashboard(container) {
     } catch (err) {
       toast.error('Erreur lors du chargement de la démo : ' + err.message);
     }
+  };
+  container.querySelectorAll('#btn-load-demo, #btn-load-demo-2').forEach(btn => {
+    btn?.addEventListener('click', handleLoadDemo);
   });
 
   container.querySelectorAll('.dashboard-card[data-goto]').forEach(card => {
