@@ -985,7 +985,7 @@ async function renderInstallationsTab(container) {
 
 async function openImportMairieModal(installations, parentContainer) {
   let jsonData = null;
-  let etape = 1; // 1 = charger les données, 2 = mapping + options
+  let etape = 1; // 1 = source, 2 = sélection lieux, 3 = mapping espaces
 
   const periodes = await db.periodes.toArray();
 
@@ -1081,8 +1081,30 @@ async function openImportMairieModal(installations, parentContainer) {
     if (etape === 1) {
       etape = 2;
       const spaces = getUniqueSpaces(jsonData);
+      modal.querySelector('.modal-title').textContent = 'Import mairie — Sélection des lieux';
+      modal.querySelector('.modal-body').innerHTML = buildImportStep2LieuxHtml(spaces);
+      btnNext.textContent = 'Suivant →';
+      btnNext.disabled = false;
+      // Boutons tout sélectionner / désélectionner
+      modal.querySelector('#btn-select-all-fac')?.addEventListener('click', () => {
+        modal.querySelectorAll('.facility-check').forEach(cb => { cb.checked = true; });
+      });
+      modal.querySelector('#btn-deselect-all-fac')?.addEventListener('click', () => {
+        modal.querySelectorAll('.facility-check').forEach(cb => { cb.checked = false; });
+      });
+    } else if (etape === 2) {
+      const selectedFacilities = new Set(
+        [...modal.querySelectorAll('.facility-check:checked')].map(cb => cb.dataset.facility)
+      );
+      if (selectedFacilities.size === 0) {
+        toast.warning('Sélectionnez au moins un lieu.');
+        return;
+      }
+      etape = 3;
+      const allSpaces = getUniqueSpaces(jsonData);
+      const filteredSpaces = allSpaces.filter(s => selectedFacilities.has(s.facility));
       modal.querySelector('.modal-title').textContent = 'Import mairie — Correspondance des espaces';
-      modal.querySelector('.modal-body').innerHTML = buildImportStep2Html(spaces, installations);
+      modal.querySelector('.modal-body').innerHTML = buildImportStep3Html(filteredSpaces, installations);
       btnNext.textContent = 'Importer';
       btnNext.disabled = false;
     } else {
@@ -1173,7 +1195,42 @@ function updateStep1Status(modal, msg) {
   if (el) el.textContent = msg;
 }
 
-function buildImportStep2Html(spaces, installations) {
+function buildImportStep2LieuxHtml(spaces) {
+  const byFacility = new Map();
+  for (const s of spaces) {
+    if (!byFacility.has(s.facility)) byFacility.set(s.facility, { nbEspaces: 0, nbCreneaux: 0 });
+    const f = byFacility.get(s.facility);
+    f.nbEspaces++;
+    f.nbCreneaux += s.count;
+  }
+
+  const rows = [...byFacility.entries()].map(([facility, { nbEspaces, nbCreneaux }]) => `
+    <label style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);border:1px solid var(--c-border);border-radius:var(--radius-md);cursor:pointer;">
+      <input type="checkbox" class="facility-check" data-facility="${h(facility)}" checked>
+      <div style="flex:1;">
+        <div style="font-weight:600;">${h(facility)}</div>
+        <div class="u-hint">${nbEspaces} espace(s) · ${nbCreneaux} créneau(x)</div>
+      </div>
+    </label>
+  `).join('');
+
+  return `
+    <div>
+      <div class="u-desc u-mb-3">
+        Sélectionnez les lieux à importer. Seuls leurs espaces apparaîtront dans l'étape suivante.
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+        <button type="button" class="btn btn-xs btn-outline" id="btn-select-all-fac">Tout sélectionner</button>
+        <button type="button" class="btn btn-xs btn-outline" id="btn-deselect-all-fac">Tout désélectionner</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--sp-2);max-height:380px;overflow-y:auto;">
+        ${rows}
+      </div>
+    </div>
+  `;
+}
+
+function buildImportStep3Html(spaces, installations) {
   const instOptions = installations.map(i => `<option value="${i.id}">${h(i.nom)}</option>`).join('');
 
   const rows = spaces.map(({ facility, space, count }) => {
