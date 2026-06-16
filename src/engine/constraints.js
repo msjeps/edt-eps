@@ -142,17 +142,15 @@ export function conflitEcart24h(seance, toutesSeances, classes) {
 
 /**
  * Vérifie le max 6h/jour pour un enseignant
- * Retourne le nombre total d'heures sur le jour pour une période donnée.
- * Retourne 0 si periodeId est absent (séance orpheline → pas de contrainte).
+ * Retourne le nombre total d'heures sur le jour.
+ * Si periodeId est fourni : ne compte que les séances de cette période.
+ * Sinon : compte toutes les séances du jour (séances sans periodeId comprises).
  */
 export function totalHeuresJour(enseignantId, jour, toutesSeances, excludeAS = true, periodeId = null) {
-  // Séance orpheline : on ne peut pas savoir dans quelle période elle se situe
-  if (!periodeId) return 0;
-
   const seancesJour = toutesSeances.filter(s =>
     s.enseignantId === enseignantId &&
     s.jour === jour &&
-    s.periodeId === periodeId &&   // même période uniquement (pas de cumul inter-périodes)
+    (periodeId ? s.periodeId === periodeId : !s.periodeId) &&
     (!excludeAS || !s.isAS)
   );
 
@@ -222,18 +220,16 @@ export function validerSeance(seance, context) {
   } = context;
   const conflits = [];
 
-  // 1. Conflit enseignant
-  if (contrainte_1prof_1classe_actif) {
-    const confEns = conflitEnseignant(seance, seances);
-    if (confEns.length > 0) {
-      conflits.push({
-        type: 'conflit_enseignant',
-        severity: 'high',
-        message: `L'enseignant est déjà occupé sur ce créneau`,
-        seancesEnConflit: confEns,
-        seance,
-      });
-    }
+  // 1. Conflit enseignant (contrainte hard fondamentale — toujours active)
+  const confEns = conflitEnseignant(seance, seances);
+  if (confEns.length > 0) {
+    conflits.push({
+      type: 'conflit_enseignant',
+      severity: 'high',
+      message: `L'enseignant est déjà occupé sur ce créneau`,
+      seancesEnConflit: confEns,
+      seance,
+    });
   }
 
   // 2. Conflit classe (toujours actif — une classe ne peut être à deux endroits)
@@ -309,6 +305,19 @@ export function validerSeance(seance, context) {
         seance,
       });
     }
+  }
+
+  // 8. Installation manquante
+  const allInstIds = seance.installationsIds?.length
+    ? seance.installationsIds
+    : (seance.installationId ? [seance.installationId] : []);
+  if (allInstIds.length === 0) {
+    conflits.push({
+      type: 'installation_manquante',
+      severity: 'medium',
+      message: `Aucune installation n'est affectée à cette séance`,
+      seance,
+    });
   }
 
   return conflits;

@@ -174,8 +174,15 @@ export async function renderEdt(container) {
 
   // IDs des séances en conflit (toutes périodes, tous enseignants)
   const conflitSeanceIds = new Set();
+  const manqueInstallIds = new Set();
   for (const c of conflits) {
-    if (c.seance?.id != null) conflitSeanceIds.add(c.seance.id);
+    if (c.seance?.id != null) {
+      if (c.type === 'installation_manquante') {
+        manqueInstallIds.add(c.seance.id);
+      } else {
+        conflitSeanceIds.add(c.seance.id);
+      }
+    }
     for (const s of c.seancesEnConflit || []) {
       if (s?.id != null) conflitSeanceIds.add(s.id);
     }
@@ -353,7 +360,7 @@ export async function renderEdt(container) {
 
           <!-- Lignes par jour -->
           ${state.showAllPeriodes && periodes.length > 1
-            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds })
+            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds })
             : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes, instPatternMap, conflitSeanceIds })
           }
         </div>
@@ -535,7 +542,7 @@ function renderAllPeriodesRows(jours, periodes, slots, seances, hStart, pas, ctx
 // ============================
 
 function renderBloc(seance, stackIndex, hStart, pas, ctx) {
-  const { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds } = ctx;
+  const { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds } = ctx;
   const ens = enseignants.find(e => e.id === seance.enseignantId);
   const cls = classes.find(c => c.id === seance.classeId);
   const act = activites.find(a => a.id === seance.activiteId);
@@ -559,23 +566,25 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
 
   const isFromProg = !!seance.programmationId;
   const hasConflit = conflitSeanceIds?.has(seance.id);
+  const hasNoInstall = manqueInstallIds?.has(seance.id);
 
   return `
-    <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''} ${hasConflit ? 'has-conflit' : ''}"
+    <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''} ${hasConflit ? 'has-conflit' : ''} ${hasNoInstall ? 'no-install' : ''}"
          data-seance-id="${seance.id}"
          data-install="${slug}"
          ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
          draggable="${seance.verrouille ? 'false' : 'true'}"
          style="width:${widthPct}%; top:${topOffset}px; position:absolute; left:0; height:${densite().blocH}px;"
-         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || ''}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}">
+         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}">
       <div class="bloc-line bloc-line-top">
         <span class="bloc-class">${cls?.nom || '?'}</span>
         <span class="bloc-activity">${act?.nom || ''}</span>
         ${hasConflit ? '<span class="bloc-conflit-icon" aria-label="Conflit">⚠</span>' : ''}
+        ${hasNoInstall ? '<span class="bloc-no-install-icon" aria-label="Installation non affectée" title="Installation non affectée">📍</span>' : ''}
         ${seance.verrouille ? '<span class="bloc-lock-icon">&#128274;</span>' : ''}
       </div>
       <div class="bloc-line bloc-line-bot">
-        <span class="bloc-install">${instLabel || ''}</span>
+        <span class="bloc-install">${instLabel || '<em style="opacity:.6">— installation —</em>'}</span>
         <span class="bloc-prof">${ens?.initiales || (ens ? ens.prenom?.[0] + '.' + ens.nom?.[0] : '')}</span>
       </div>
     </div>

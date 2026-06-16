@@ -325,6 +325,22 @@
   outline-color: #FCD34D;
 }
 
+.edt-bloc .bloc-no-install-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1;
+  filter: drop-shadow(0 0 2px rgba(99,102,241,0.5));
+}
+
+.edt-bloc.no-install {
+  outline: 2px dashed var(--c-primary, #6366F1);
+  outline-offset: -1px;
+}
+
+[data-theme="dark"] .edt-bloc.no-install {
+  outline-color: #818CF8;
+}
+
 /* ---- Mode COMPACT : bloc sur une seule ligne, polices réduites ---- */
 .edt-grid.edt-compact .edt-bloc {
   flex-direction: row;

@@ -10,11 +10,13 @@ import { updateConflictBadge } from '../../app.js';
 import { seanceStore } from '../../db/store.js';
 
 export async function renderConflits(container) {
-  const [seances, classes, installations, activites, enseignants, indisponibilites,
+  const [seances, classes, installations, lieux, periodes, activites, enseignants, indisponibilites,
     maxHeures, ctMax, ctEcart, ct1prof] = await Promise.all([
     db.seances.toArray(),
     db.classes.toArray(),
     db.installations.toArray(),
+    db.lieux.toArray(),
+    db.periodes.toArray(),
     db.activites.toArray(),
     db.enseignants.toArray(),
     db.indisponibilites.toArray(),
@@ -25,7 +27,7 @@ export async function renderConflits(container) {
   ]);
 
   const context = {
-    seances, classes, installations, activites, enseignants, indisponibilites,
+    seances, classes, installations, lieux, periodes, activites, enseignants, indisponibilites,
     maxHeuresJour: maxHeures ?? 6,
     contrainte_max_heures_actif: ctMax ?? true,
     contrainte_ecart_24h_actif: ctEcart ?? true,
@@ -93,35 +95,58 @@ export async function renderConflits(container) {
 }
 
 function renderConflit(conflit, index, context) {
-  const { enseignants, classes, installations, activites } = context;
+  const { enseignants, classes, installations, lieux = [], periodes = [], activites } = context;
 
-  // Infos sur la séance en conflit
   const seance = conflit.seance;
   const ens = enseignants.find(e => e.id === seance?.enseignantId);
   const cls = classes.find(c => c.id === seance?.classeId);
+  const act = activites.find(a => a.id === seance?.activiteId);
+  const periode = periodes.find(p => p.id === seance?.periodeId);
 
-  // Icône et sévérité
+  // Installation principale (multi-install : prendre la première)
+  const instId = seance?.installationsIds?.[0] || seance?.installationId || null;
+  const inst = instId ? installations.find(i => i.id === instId) : null;
+  const lieu = inst ? lieux.find(l => l.id === inst.lieuId) : null;
+
   const icons = {
-    conflit_enseignant: '&#129489;',
-    conflit_classe: '&#127979;',
-    conflit_installation: '&#127963;',
-    ecart_24h: '&#9200;',
-    max_heures_jour: '&#9888;',
-    incompatibilite: '&#10060;',
-    indisponibilite: '&#128683;',
+    conflit_enseignant:    '&#129489;',
+    conflit_classe:        '&#127979;',
+    conflit_installation:  '&#127963;',
+    ecart_24h:             '&#9200;',
+    max_heures_jour:       '&#9888;',
+    incompatibilite:       '&#10060;',
+    indisponibilite:       '&#128683;',
+    installation_manquante:'&#128204;',
   };
 
   const labels = {
-    conflit_enseignant: 'Conflit enseignant',
-    conflit_classe: 'Conflit classe',
-    conflit_installation: 'Capacité installation',
-    ecart_24h: 'Écart 24h (collège)',
-    max_heures_jour: 'Dépassement heures/jour',
-    incompatibilite: 'Incompatibilité activité',
-    indisponibilite: 'Indisponibilité',
+    conflit_enseignant:    'Conflit enseignant',
+    conflit_classe:        'Conflit classe',
+    conflit_installation:  'Capacité installation',
+    ecart_24h:             'Écart 24h (collège)',
+    max_heures_jour:       'Dépassement heures/jour',
+    incompatibilite:       'Incompatibilité activité',
+    indisponibilite:       'Indisponibilité',
+    installation_manquante:'Installation non affectée',
   };
 
-  // Générer suggestions
+  // Ligne de détail principale
+  let detail = '';
+  if (seance) {
+    const classLabel = cls?.nom || '?';
+    const ensLabel   = ens ? `${ens.prenom} ${ens.nom}` : '?';
+    const creneauLabel = `${seance.jour} ${seance.heureDebut}–${seance.heureFin}`;
+    const actLabel   = act ? ` — <em>${act.nom}</em>` : '';
+    const perLabel   = periode ? ` <span style="color:var(--c-text-muted)">(${periode.nom})</span>` : '';
+    detail = `<br><strong>${classLabel}</strong> — ${ensLabel} — ${creneauLabel}${actLabel}${perLabel}`;
+
+    // Ligne installation pour les conflits qui la concernent
+    if (['conflit_installation', 'indisponibilite', 'incompatibilite'].includes(conflit.type) && inst) {
+      const lieuLabel = lieu ? `${lieu.nom} › ` : '';
+      detail += `<br><span style="color:var(--c-text-muted);font-size:var(--fs-xs);">📍 ${lieuLabel}${inst.nom}</span>`;
+    }
+  }
+
   const suggestions = genererSuggestions(conflit, context);
 
   return `
@@ -130,19 +155,16 @@ function renderConflit(conflit, index, context) {
         ${icons[conflit.type] || '&#9888;'}
       </div>
       <div class="conflict-body">
-        <div class="conflict-title">
-          ${labels[conflit.type] || conflit.type}
-        </div>
+        <div class="conflict-title">${labels[conflit.type] || conflit.type}</div>
         <div class="conflict-desc">
-          ${conflit.message}
-          ${seance ? `<br><strong>${cls?.nom || '?'}</strong> — ${ens ? ens.prenom + ' ' + ens.nom : '?'} — ${seance.jour} ${seance.heureDebut}-${seance.heureFin}` : ''}
+          ${conflit.message}${detail}
         </div>
         ${suggestions.length > 0 ? `
           <div class="conflict-actions">
             ${suggestions.map((sug, si) => `
               <button class="conflict-suggestion" data-conflit-idx="${index}" data-sug-idx="${si}"
                       title="Score: ${sug.score}/10">
-                ${sug.description}
+                ${sug.description} <span style="opacity:.55;font-size:.75em;">(${sug.score}/10)</span>
               </button>
             `).join('')}
           </div>
