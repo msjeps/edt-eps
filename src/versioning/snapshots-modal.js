@@ -152,6 +152,11 @@ function renderSnapRow(s, refSnap) {
           </svg>
           Restaurer
         </button>
+        <button class="btn btn-sm btn-ghost snap-btn-export" data-id="${s.id}" title="Télécharger ce snapshot en fichier JSON">
+          <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 3v10M6 9l4 4 4-4M4 16h12"/>
+          </svg>
+        </button>
         <button class="btn btn-sm btn-ghost snap-btn-delete" data-id="${s.id}" title="Supprimer cette version">
           <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M4 6h12M8 6V4h4v2M9 10v5M11 10v5M5 6l1 11h8l1-11"/>
@@ -232,6 +237,26 @@ function bindListEvents(snaps) {
       } catch (err) {
         toast.error('Erreur : ' + err.message);
       }
+    });
+  });
+
+  // Exporter en JSON
+  document.querySelectorAll('.snap-btn-export').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.dataset.id);
+      const snap = snaps.find(s => s.id === id);
+      if (!snap) return;
+      const blob = new Blob([snap.data], { type: 'application/json' });
+      const safeNom = snap.nom.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '');
+      const date = new Date(snap.date).toISOString().split('T')[0];
+      const filename = `EDT_EPS_snapshot_${safeNom}_${date}.json`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Snapshot « ${snap.nom} » téléchargé`);
     });
   });
 

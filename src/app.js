@@ -199,6 +199,12 @@ export async function initApp() {
 
   // Intercepter les modifications de la base pour activer le flag
   trackDatabaseChanges();
+
+  // Alerte périodique si données non sauvegardées
+  startSaveReminder();
+
+  // === Sauvegarder sous… ===
+  document.getElementById('btn-save-as-project')?.addEventListener('click', saveProjectAs);
 }
 
 /**
@@ -347,8 +353,117 @@ function markModified() {
   }
 }
 
-// Exposer saveProject pour réutilisation depuis exports.js
-export { saveProject };
+/**
+ * Alerte périodique toutes les 20 min si modifications non sauvegardées.
+ */
+function startSaveReminder() {
+  setInterval(() => {
+    if (!dataModifiedSinceLastSave) return;
+    toast.warning('Vous n\'avez pas sauvegardé depuis 20 min ou plus — pensez à sauvegarder 💾', {
+      label: 'Sauvegarder',
+      fn: saveProject,
+    });
+  }, 20 * 60 * 1000);
+}
+
+/**
+ * Sauvegarde une copie nommée du projet (ex. "avant_réunion_T2").
+ */
+async function saveProjectAs() {
+  const label = await askSaveName();
+  if (label === null) return;
+
+  try {
+    if (fsSupported) await getOrPickDir('fs_projet_dir', 'PROJET');
+
+    const data = await exportAllData();
+    const nom = await getConfig('etablissementNom') || 'projet';
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const safeLabel = label.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '');
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `EDT_EPS_${nom.replace(/\s+/g, '_')}_${safeLabel}_${date}.json`;
+
+    const result = await saveProjectFile(blob, filename);
+
+    localStorage.setItem('edteps_lastSave', new Date().toISOString());
+    dataModifiedSinceLastSave = false;
+    updateSaveStatus();
+
+    if (result.fallback) {
+      toast.success(`Copie nommée sauvegardée dans Téléchargements : ${filename}`);
+    } else {
+      toast.success(`Copie « ${label} » sauvegardée dans EDT EPS/PROJET/`);
+    }
+  } catch (err) {
+    toast.error('Erreur de sauvegarde : ' + err.message);
+  }
+}
+
+/**
+ * Affiche une mini-modale pour saisir le nom de la copie.
+ * Retourne le nom saisi, ou null si annulé.
+ */
+function askSaveName() {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('modal-overlay');
+    const dialog = document.createElement('div');
+    dialog.className = 'modal save-as-modal';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-labelledby', 'save-as-title');
+    dialog.innerHTML = `
+      <div class="modal-header">
+        <h2 class="modal-title" id="save-as-title">Sauvegarder sous…</h2>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--c-text-muted);font-size:var(--fs-sm);margin-bottom:.75rem">
+          Donnez un nom à cette copie pour l'identifier facilement.
+          Le fichier sera nommé&nbsp;: <em>EDT_EPS_ETABLISSEMENT_<strong>votre-nom</strong>_date.json</em>
+        </p>
+        <input id="save-as-name" class="form-input" type="text"
+               placeholder="ex : avant_réunion_T2, sans_install…" maxlength="50"
+               style="width:100%">
+        <div class="modal-actions" style="margin-top:1rem;display:flex;gap:.5rem;justify-content:flex-end">
+          <button id="save-as-cancel" class="btn btn-secondary">Annuler</button>
+          <button id="save-as-confirm" class="btn btn-primary">
+            <svg aria-hidden="true" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right:4px">
+              <path d="M2 2.5A.5.5 0 012.5 2h8l3.5 3.5V13.5a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5v-11z"/>
+              <path d="M5 2v4h6V2M5 10.5h6"/>
+            </svg>
+            Sauvegarder
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dialog);
+    overlay?.classList.remove('hidden');
+
+    const input = dialog.querySelector('#save-as-name');
+    input.focus();
+
+    const close = (value) => {
+      dialog.remove();
+      overlay?.classList.add('hidden');
+      resolve(value);
+    };
+
+    dialog.querySelector('#save-as-cancel').addEventListener('click', () => close(null));
+    dialog.querySelector('#save-as-confirm').addEventListener('click', () => {
+      const val = input.value.trim();
+      if (!val) { input.focus(); return; }
+      close(val);
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') dialog.querySelector('#save-as-confirm').click();
+      if (e.key === 'Escape') close(null);
+    });
+  });
+}
+
+// Exposer saveProject et saveProjectAs pour réutilisation depuis exports.js
+export { saveProject, saveProjectAs };
 
 const VIEW_LABELS = {
   dashboard: 'Accueil',
