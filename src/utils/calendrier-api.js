@@ -179,6 +179,55 @@ export function clearCalendrierCache() {
   localStorage.removeItem(CACHE_KEY);
 }
 
+// ============================================================
+// PROBE DISPONIBILITÉ ANNÉE FUTURE
+// ============================================================
+
+const DISPO_KEY = 'edteps_annees_dispo_v1';
+const DISPO_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
+
+/**
+ * Vérifie si le calendrier officiel est paru pour une année scolaire future.
+ * Résultat mis en cache 7 jours. Retourne false en cas d'erreur réseau.
+ * @param {string} anneeScolaire - ex: '2027-2028'
+ * @returns {Promise<boolean>}
+ */
+export async function checkAnneeDisponible(anneeScolaire) {
+  try {
+    const raw = localStorage.getItem(DISPO_KEY);
+    if (raw) {
+      const cache = JSON.parse(raw);
+      if (Date.now() - cache.timestamp < DISPO_TTL_MS && anneeScolaire in cache.annees) {
+        return cache.annees[anneeScolaire];
+      }
+    }
+  } catch {}
+
+  try {
+    const params = new URLSearchParams({
+      limit: '1',
+      where: `annee_scolaire="${anneeScolaire}"`,
+      select: 'annee_scolaire',
+    });
+    const res = await fetch(`${API_VACANCES}?${params}`);
+    if (!res.ok) return false;
+    const json = await res.json();
+    const dispo = (json.total_count > 0) || (Array.isArray(json.results) && json.results.length > 0);
+
+    try {
+      const raw = localStorage.getItem(DISPO_KEY);
+      const store = raw ? JSON.parse(raw) : { timestamp: Date.now(), annees: {} };
+      store.annees[anneeScolaire] = dispo;
+      store.timestamp = Date.now();
+      localStorage.setItem(DISPO_KEY, JSON.stringify(store));
+    } catch {}
+
+    return dispo;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Retourne les années scolaires disponibles dans le cache.
  */

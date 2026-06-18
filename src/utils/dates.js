@@ -20,6 +20,12 @@ export const ANNEES_SCOLAIRES = [
   '2026-2027',
 ];
 
+/** Années à venir — affichées dans le select mais désactivées tant que le calendrier officiel n'est pas paru. */
+export const ANNEES_FUTURES = [
+  '2027-2028',
+  '2028-2029',
+];
+
 // ============================================================
 // VACANCES SCOLAIRES PAR ANNÉE ET PAR ZONE
 // Convention : debut = samedi début vacances, fin = lundi reprise cours

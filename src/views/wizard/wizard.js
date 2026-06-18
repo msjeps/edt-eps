@@ -13,7 +13,8 @@ import { toast } from '../../components/toast.js';
 import { navigateTo } from '../../app.js';
 import { JOURS_OUVRES, NIVEAUX, CHAMPS_APPRENTISSAGE, getChampsApprentissage } from '../../utils/helpers.js';
 import { helpTip } from '../../components/help-tooltip.js';
-import { ANNEES_SCOLAIRES, zoneLabel } from '../../utils/dates.js';
+import { ANNEES_SCOLAIRES, ANNEES_FUTURES, zoneLabel } from '../../utils/dates.js';
+import { checkAnneeDisponible } from '../../utils/calendrier-api.js';
 
 const STEPS = [
   { id: 'etablissement', label: 'Établissement', icon: '&#127979;' },
@@ -160,10 +161,15 @@ async function renderStepEtablissement(container) {
       <div class="form-group">
         <label class="form-label">Année scolaire <span class="required">*</span></label>
         <select class="form-select" id="wiz-etab-annee">
-          ${ANNEES_SCOLAIRES.map(a => `<option value="${a}" ${annee === a ? 'selected' : ''}>${a}</option>`).join('')}
+          <optgroup label="Années connues">
+            ${ANNEES_SCOLAIRES.map(a => `<option value="${a}" ${annee === a ? 'selected' : ''}>${a}</option>`).join('')}
+          </optgroup>
+          <optgroup label="À venir">
+            ${ANNEES_FUTURES.map(a => `<option value="${a}" disabled data-future="1" title="Calendrier officiel non encore paru — sera activé automatiquement dès parution">${a} — calendrier non paru</option>`).join('')}
+          </optgroup>
         </select>
         <span style="font-size:var(--fs-xs);color:var(--c-text-muted);margin-top:4px;display:block;">
-          Les exclusions de vacances et jours fériés sont pré-configurées pour chaque année.
+          Les exclusions de vacances et jours fériés sont pré-configurées pour chaque année. Les années "à venir" s'activent automatiquement dès que le calendrier officiel est publié.
         </span>
       </div>
     </div>
@@ -276,6 +282,22 @@ async function renderStepEtablissement(container) {
   container.querySelectorAll('#wiz-jours .chip').forEach(chip => {
     chip.addEventListener('click', () => chip.classList.toggle('selected'));
   });
+
+  // Probe silencieuse des années futures — active l'option si le calendrier est paru
+  const selAnnee = document.getElementById('wiz-etab-annee');
+  if (selAnnee) {
+    ANNEES_FUTURES.forEach(async (a) => {
+      const dispo = await checkAnneeDisponible(a);
+      if (dispo) {
+        const opt = selAnnee.querySelector(`option[value="${a}"]`);
+        if (opt) {
+          opt.disabled = false;
+          opt.textContent = a;
+          opt.removeAttribute('title');
+        }
+      }
+    });
+  }
 }
 
 // === Étape Périodes (maintenant étape 4, après Classes) ===
