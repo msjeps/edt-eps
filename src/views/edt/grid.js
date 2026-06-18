@@ -426,9 +426,7 @@ function assignStackLevels(seances) {
       subEndTimes[sub] = endMin;
     }
 
-    // Avancer le pointeur de base du nombre de sous-niveaux utilisés
-    const maxSub = Math.max(0, ...ensSeances.map(s => levels.get(s.id) - baseLevel));
-    baseLevel += maxSub + 1;
+    baseLevel += subEndTimes.length;
   }
 
   return levels;
