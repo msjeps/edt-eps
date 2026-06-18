@@ -27,15 +27,19 @@ export function genererSuggestions(conflit, context) {
       suggestions.push(...suggestionsSwaps(conflit, context));
       break;
 
+    case 'indisponibilite_enseignant':
+      // Absence prof : uniquement déplacements sur un autre créneau/jour (validerSeance filtre déjà les indispos)
+      suggestions.push(...suggestionsDeplacements(conflit, context, 4));
+      break;
+
     case 'conflit_installation':
-    case 'indisponibilite': {
+    case 'indisponibilite_installation': {
       // Priorité : même lieu (10) > autre lieu compatible (8) > 1 créneau (7)
       const instSugs = suggestionsChangementInstallation(conflit, context);
       suggestions.push(...instSugs);
       if (suggestions.length === 0) {
         suggestions.push(...suggestionsDeplacements(conflit, context, 1));
       } else {
-        // Ajouter au plus 1 créneau alternatif en dernier recours
         const slot = suggestionsDeplacements(conflit, context, 1);
         suggestions.push(...slot);
       }

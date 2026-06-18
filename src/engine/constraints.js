@@ -293,15 +293,26 @@ export function validerSeance(seance, context) {
     });
   }
 
-  // 7. Indisponibilités
+  // 7. Indisponibilités — distingue absence prof et indispo installation
   if (indisponibilites) {
     const confIndispo = conflitIndisponibilite(seance, indisponibilites);
-    if (confIndispo.length > 0) {
+    const indispoEns   = confIndispo.filter(i => i.type === 'enseignant');
+    const indispoInst  = confIndispo.filter(i => i.type === 'installation');
+    if (indispoEns.length > 0) {
       conflits.push({
-        type: 'indisponibilite',
+        type: 'indisponibilite_enseignant',
         severity: 'high',
-        message: `Créneau en conflit avec une indisponibilité`,
-        indisponibilites: confIndispo,
+        message: `Enseignant absent sur ce créneau`,
+        indisponibilites: indispoEns,
+        seance,
+      });
+    }
+    if (indispoInst.length > 0) {
+      conflits.push({
+        type: 'indisponibilite_installation',
+        severity: 'high',
+        message: `Créneau en conflit avec une indisponibilité d'installation`,
+        indisponibilites: indispoInst,
         seance,
       });
     }

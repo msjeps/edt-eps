@@ -109,25 +109,27 @@ function renderConflit(conflit, index, context) {
   const lieu = inst ? lieux.find(l => l.id === inst.lieuId) : null;
 
   const icons = {
-    conflit_enseignant:    '&#129489;',
-    conflit_classe:        '&#127979;',
-    conflit_installation:  '&#127963;',
-    ecart_24h:             '&#9200;',
-    max_heures_jour:       '&#9888;',
-    incompatibilite:       '&#10060;',
-    indisponibilite:       '&#128683;',
-    installation_manquante:'&#128204;',
+    conflit_enseignant:         '&#129489;',
+    conflit_classe:             '&#127979;',
+    conflit_installation:       '&#127963;',
+    ecart_24h:                  '&#9200;',
+    max_heures_jour:            '&#9888;',
+    incompatibilite:            '&#10060;',
+    indisponibilite_enseignant: '&#128683;',
+    indisponibilite_installation:'&#127963;',
+    installation_manquante:     '&#128204;',
   };
 
   const labels = {
-    conflit_enseignant:    'Conflit enseignant',
-    conflit_classe:        'Conflit classe',
-    conflit_installation:  'Capacité installation',
-    ecart_24h:             'Écart 24h (collège)',
-    max_heures_jour:       'Dépassement heures/jour',
-    incompatibilite:       'Incompatibilité activité',
-    indisponibilite:       'Indisponibilité',
-    installation_manquante:'Installation non affectée',
+    conflit_enseignant:         'Conflit enseignant',
+    conflit_classe:             'Conflit classe',
+    conflit_installation:       'Capacité installation',
+    ecart_24h:                  'Écart 24h (collège)',
+    max_heures_jour:            'Dépassement heures/jour',
+    incompatibilite:            'Incompatibilité activité',
+    indisponibilite_enseignant: 'Absence prof',
+    indisponibilite_installation:'Indisponibilité installation',
+    installation_manquante:     'Installation non affectée',
   };
 
   // Ligne de détail principale
@@ -141,7 +143,7 @@ function renderConflit(conflit, index, context) {
     detail = `<br><strong>${classLabel}</strong> — ${ensLabel} — ${creneauLabel}${actLabel}${perLabel}`;
 
     // Ligne installation pour les conflits qui la concernent
-    if (['conflit_installation', 'indisponibilite', 'incompatibilite'].includes(conflit.type) && inst) {
+    if (['conflit_installation', 'indisponibilite_installation', 'incompatibilite'].includes(conflit.type) && inst) {
       const lieuLabel = lieu ? `${lieu.nom} › ` : '';
       detail += `<br><span style="color:var(--c-text-muted);font-size:var(--fs-xs);">📍 ${lieuLabel}${inst.nom}</span>`;
     }
