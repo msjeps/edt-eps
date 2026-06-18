@@ -12,6 +12,7 @@ import { saveExportFile } from '../utils/filesystem.js';
 import { toast } from '../components/toast.js';
 import { getInstallationColors } from '../utils/colors.js';
 import { slugify } from '../utils/helpers.js';
+import { getOverlappingPeriodeIds } from '../utils/period-store.js';
 
 // ============================================================
 // CONSTANTES
@@ -572,7 +573,7 @@ export async function exportPdfEquipe(periodeId) {
   const refs = { classes, enseignants, activites, installations, lieux };
 
   const targetPeriodes = periodeId
-    ? periodes.filter(p => p.id === parseInt(periodeId))
+    ? periodes.filter(p => getOverlappingPeriodeIds(parseInt(periodeId), periodes).has(p.id))
     : periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
   if (!targetPeriodes.length) { toast.warning('Aucune période sélectionnée'); return; }
@@ -667,7 +668,7 @@ export async function exportPdfEnseignants(periodeId, enseignantIdFilter) {
     : enseignants;
 
   const targetPeriodes = periodeId
-    ? periodes.filter(p => p.id === parseInt(periodeId))
+    ? periodes.filter(p => getOverlappingPeriodeIds(parseInt(periodeId), periodes).has(p.id))
     : periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
   if (!targetPeriodes.length || !targetEnseignants.length) {
@@ -787,7 +788,7 @@ export async function exportPdfClasses(periodeId, classeIdFilter) {
     : [...classes].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 
   const targetPeriodes = periodeId
-    ? periodes.filter(p => p.id === parseInt(periodeId))
+    ? periodes.filter(p => getOverlappingPeriodeIds(parseInt(periodeId), periodes).has(p.id))
     : periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
   if (!targetPeriodes.length || !targetClasses.length) {

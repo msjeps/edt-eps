@@ -14,7 +14,7 @@ import { validerSeance, validerToutesSeances, heureToMinutes, conflitIndisponibi
 import { updateConflictBadge } from '../../app.js';
 import { JOURS_COURTS } from '../../utils/helpers.js';
 import { slugify } from '../../utils/helpers.js';
-import { getPeriodeGlobale, setPeriodeGlobale } from '../../utils/period-store.js';
+import { getPeriodeGlobale, setPeriodeGlobale, getOverlappingPeriodeIds } from '../../utils/period-store.js';
 
 // État local
 let state = {
@@ -207,7 +207,8 @@ export async function renderEdt(container) {
   // Filtrer séances
   let seancesFiltrees = seances;
   if (!state.showAllPeriodes && state.periodeId) {
-    seancesFiltrees = seances.filter(s => s.periodeId === state.periodeId || !s.periodeId);
+    const visibleIds = getOverlappingPeriodeIds(state.periodeId, periodes);
+    seancesFiltrees = seances.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
   if (state.filtreEnseignant) {
     seancesFiltrees = seancesFiltrees.filter(s => s.enseignantId === state.filtreEnseignant);

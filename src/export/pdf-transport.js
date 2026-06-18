@@ -14,6 +14,7 @@ import db, { getConfig } from '../db/schema.js';
 import { saveExportFile } from '../utils/filesystem.js';
 import { toast } from '../components/toast.js';
 import { getCalendrierExclusions } from '../utils/dates.js';
+import { getOverlappingPeriodeIds } from '../utils/period-store.js';
 
 // ============================================================
 // CONSTANTES
@@ -173,7 +174,11 @@ async function buildData(periodeId, exclusions = []) {
   const excl  = await getCalendrierExclusions(zone, annee);
 
   let src = seances;
-  if (periodeId) src = src.filter(s => s.periodeId === parseInt(periodeId));
+  if (periodeId) {
+    const pid = parseInt(periodeId);
+    const visibleIds = getOverlappingPeriodeIds(pid, periodes);
+    src = src.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
+  }
 
   const rows       = [];
   const appliedExcl = []; // exclusions transport effectivement appliquées

@@ -33,3 +33,27 @@ export function onPeriodeGlobaleChange(fn) {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }
+
+/**
+ * Retourne un Set de tous les IDs de périodes dont les dates chevauchent
+ * celles de la période sélectionnée (la période elle-même incluse).
+ * Permet d'afficher les séances semestre dans une vue trimestre et vice-versa.
+ *
+ * @param {number|null} periodeId - ID de la période sélectionnée, ou null = toutes
+ * @param {Array} allPeriodes     - tableau complet des périodes
+ * @returns {Set<number>|null}    - Set d'IDs, ou null si periodeId est null
+ */
+export function getOverlappingPeriodeIds(periodeId, allPeriodes) {
+  if (periodeId == null) return null;
+  const selected = allPeriodes.find(p => p.id === periodeId);
+  if (!selected || !selected.dateDebut || !selected.dateFin) return new Set([periodeId]);
+  const result = new Set();
+  for (const p of allPeriodes) {
+    if (!p.dateDebut || !p.dateFin) continue;
+    // Deux intervalles [d1,f1] et [d2,f2] se chevauchent si d1 <= f2 && d2 <= f1
+    if (selected.dateDebut <= p.dateFin && p.dateDebut <= selected.dateFin) {
+      result.add(p.id);
+    }
+  }
+  return result;
+}

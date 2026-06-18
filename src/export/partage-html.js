@@ -431,11 +431,23 @@ function renderLegend(seances){
   return'<div class="legend">'+items+'</div>';
 }
 
-// ── Filtrage par période ──
+// ── Filtrage par période (inclut les périodes chevauchantes par dates) ──
+function getOverlapIds(periodeId){
+  if(!periodeId)return null;
+  const sel=DATA.periodes.find(p=>p.id===periodeId);
+  if(!sel||!sel.dateDebut||!sel.dateFin)return new Set([periodeId]);
+  const ids=new Set();
+  for(const p of DATA.periodes){
+    if(!p.dateDebut||!p.dateFin)continue;
+    if(sel.dateDebut<=p.dateFin&&p.dateDebut<=sel.dateFin)ids.add(p.id);
+  }
+  return ids;
+}
 function filterSeances(periodeId){
   if(!periodeId)return DATA.seances;
   const pid=parseInt(periodeId);
-  return DATA.seances.filter(s=>s.periodeId===pid);
+  const ids=getOverlapIds(pid);
+  return DATA.seances.filter(s=>!s.periodeId||ids.has(s.periodeId));
 }
 
 // ── Vues ──

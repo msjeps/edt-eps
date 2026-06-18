@@ -10,6 +10,7 @@ import Papa from 'papaparse';
 import { saveExportFile } from '../../utils/filesystem.js';
 import ExcelJS from 'exceljs';
 import { exportPdfEquipe, exportPdfEnseignants, exportPdfClasses } from '../../export/pdf-edt.js';
+import { getOverlappingPeriodeIds } from '../../utils/period-store.js';
 
 function addSheetFromAoa(wb, sheetName, wsData, colWidths, merges) {
   const ws = wb.addWorksheet(sheetName);
@@ -582,7 +583,9 @@ async function exportCsvMairie(periodeId) {
 
   let data = seances;
   if (periodeId) {
-    data = data.filter(s => s.periodeId === parseInt(periodeId));
+    const pid = parseInt(periodeId);
+    const visibleIds = getOverlappingPeriodeIds(pid, periodes);
+    data = data.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
 
   // Index des ordres de périodes pour le tri
@@ -688,7 +691,9 @@ async function exportCsvTransport(periodeId) {
 
   let data = seances;
   if (periodeId) {
-    data = data.filter(s => s.periodeId === parseInt(periodeId));
+    const pid = parseInt(periodeId);
+    const visibleIds = getOverlappingPeriodeIds(pid, periodes);
+    data = data.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
 
   // Filtrer seulement les séances qui nécessitent un transport
@@ -882,7 +887,8 @@ async function exportExcelEdt(periodeId) {
   const wb = new ExcelJS.Workbook();
 
   for (const per of periodesToExport) {
-    const perSeances = seances.filter(s => s.periodeId === per.id);
+    const perVisibleIds = getOverlappingPeriodeIds(per.id, periodes);
+    const perSeances = seances.filter(s => !s.periodeId || perVisibleIds.has(s.periodeId));
 
     const headerRow = ['Créneau', ...joursOuvres.map(j => j.charAt(0).toUpperCase() + j.slice(1))];
     const dataRows = [];

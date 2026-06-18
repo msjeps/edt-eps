@@ -5,7 +5,7 @@
 import db from '../../db/schema.js';
 import { getInstallationColors } from '../../utils/colors.js';
 import { slugify } from '../../utils/helpers.js';
-import { getPeriodeGlobale, getPeriodeGlobaleId, setPeriodeGlobale } from '../../utils/period-store.js';
+import { getPeriodeGlobale, getPeriodeGlobaleId, setPeriodeGlobale, getOverlappingPeriodeIds } from '../../utils/period-store.js';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
 const JOURS_COURTS = { lundi: 'Lun', mardi: 'Mar', mercredi: 'Mer', jeudi: 'Jeu', vendredi: 'Ven' };
@@ -527,7 +527,8 @@ export async function renderVues(container) {
   function getSeancesFiltrees() {
     const id = getPeriodeGlobaleId();
     if (id == null) return seances;
-    return seances.filter(s => s.periodeId === id);
+    const visibleIds = getOverlappingPeriodeIds(id, periodes);
+    return seances.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
 
   const TAB_LABELS = { enseignant: 'Par enseignant', classe: 'Par classe', installation: 'Par installation' };
