@@ -383,33 +383,52 @@ export async function renderEdt(container) {
 // ============================
 
 /**
- * Assigne un niveau de pile (stackLevel) à chaque séance par coloration de graphe d'intervalles.
- * Deux séances qui se chevauchent dans le temps reçoivent des niveaux différents.
+ * Assigne un niveau de pile (stackLevel) à chaque séance en garantissant
+ * qu'un même enseignant occupe toujours la même ligne (lane dédiée par enseignant).
+ * Les séances sans enseignant partagent un pool commun en fin de liste.
  * Retourne une Map<seanceId, stackLevel>.
  */
 function assignStackLevels(seances) {
   if (!seances || seances.length === 0) return new Map();
 
-  // Trier par heure de début
-  const sorted = [...seances].sort(
-    (a, b) => heureToMinutes(a.heureDebut) - heureToMinutes(b.heureDebut)
-  );
+  // Regrouper par enseignant (null/undefined → clé '__none__')
+  const byEns = new Map();
+  for (const s of seances) {
+    const key = s.enseignantId || '__none__';
+    if (!byEns.has(key)) byEns.set(key, []);
+    byEns.get(key).push(s);
+  }
 
-  const levels = new Map();          // seanceId → level
-  const levelEndTimes = [];          // level → minute de fin de la dernière séance placée
+  // Trier les enseignants par heure de début de leur premier cours
+  const sortedEns = [...byEns.entries()].sort((a, b) => {
+    const minA = Math.min(...a[1].map(s => heureToMinutes(s.heureDebut)));
+    const minB = Math.min(...b[1].map(s => heureToMinutes(s.heureDebut)));
+    return minA - minB;
+  });
 
-  for (const s of sorted) {
-    const startMin = heureToMinutes(s.heureDebut);
-    const endMin   = heureToMinutes(s.heureFin);
+  const levels = new Map();
+  let baseLevel = 0;
 
-    // Trouver le premier niveau disponible (pas de chevauchement)
-    let level = 0;
-    while (levelEndTimes[level] !== undefined && levelEndTimes[level] > startMin) {
-      level++;
+  for (const [, ensSeances] of sortedEns) {
+    // Trier les cours de cet enseignant par heure de début
+    const sorted = [...ensSeances].sort(
+      (a, b) => heureToMinutes(a.heureDebut) - heureToMinutes(b.heureDebut)
+    );
+
+    // Sous-niveaux pour les éventuels chevauchements intra-enseignant
+    const subEndTimes = [];
+    for (const s of sorted) {
+      const startMin = heureToMinutes(s.heureDebut);
+      const endMin   = heureToMinutes(s.heureFin);
+      let sub = 0;
+      while (subEndTimes[sub] !== undefined && subEndTimes[sub] > startMin) sub++;
+      levels.set(s.id, baseLevel + sub);
+      subEndTimes[sub] = endMin;
     }
 
-    levels.set(s.id, level);
-    levelEndTimes[level] = endMin;
+    // Avancer le pointeur de base du nombre de sous-niveaux utilisés
+    const maxSub = Math.max(0, ...ensSeances.map(s => levels.get(s.id) - baseLevel));
+    baseLevel += maxSub + 1;
   }
 
   return levels;
