@@ -1245,6 +1245,20 @@ body {
   border-color: var(--c-border-dark);
 }
 
+/* Stat cards utilisées comme boutons-filtres (Réservations) */
+button.stat-card {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+button.stat-card.resa-stat-btn--active {
+  border-color: var(--c-primary);
+  background: var(--c-primary-bg);
+  box-shadow: 0 0 0 2px var(--c-primary-light);
+}
+
 .stat-value {
   font-size: var(--fs-2xl);
   font-weight: 700;
