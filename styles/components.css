@@ -1021,7 +1021,7 @@
   gap: 7px;
   padding: 8px 16px;
   background: var(--c-primary-bg);
-  border-bottom: 1px solid #BFDBFE;
+  border-bottom: 1px solid var(--c-primary-bg-strong);
   font-size: 0.8rem;
   color: var(--c-primary-dark);
   flex-shrink: 0;
@@ -1032,7 +1032,7 @@
 .snap-ref-clear {
   margin-left: auto;
   background: none;
-  border: 1px solid #93C5FD;
+  border: 1px solid var(--c-primary-light);
   color: var(--c-primary-dark);
   border-radius: 4px;
   padding: 1px 8px;
@@ -1042,7 +1042,7 @@
 }
 .snap-ref-clear:hover { background: var(--c-primary-bg-strong); }
 .snap-ref-hint {
-  color: #60A5FA;
+  color: var(--c-primary-light);
   font-size: 0.72rem;
   width: 100%;
   padding-left: 2px;
@@ -1603,3 +1603,90 @@ kbd {
   font-size: var(--fs-xs);
   font-weight: 600;
 }
+
+/* ============================================================
+   EDT — Filtres toolbar (anti-inline)
+   ============================================================ */
+#edt-filtre-ens { width: 150px; }
+#edt-filtre-cls { width: 120px; }
+#edt-filtre-ens,
+#edt-filtre-cls { padding: 4px 8px; font-size: var(--fs-xs); }
+
+.edt-header-cell-per { font-size: 9px; }
+
+/* ============================================================
+   EDT — Modale séance (anti-inline)
+   ============================================================ */
+
+/* Liste de cases à cocher pour les installations */
+.inst-cb-list { padding: var(--sp-2) 0; }
+.inst-cb-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) 0;
+  cursor: pointer;
+  font-size: var(--fs-sm);
+}
+.inst-cb-label input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+
+/* Texte d'aide (installation ou lieu non choisi) */
+.form-hint { font-size: var(--fs-sm); color: var(--c-text-muted); }
+
+/* Note "séance liée à la programmation" */
+.linked-prog-note { color: var(--c-text-muted); font-size: var(--fs-xs); margin-top: var(--sp-2); }
+
+/* Rangée boutons footer modale */
+.modal-footer-row { display: flex; gap: var(--sp-2); }
+
+/* ============================================================
+   EDT — Modale duplication (anti-inline)
+   ============================================================ */
+
+/* Carte récapitulative séance source */
+.seance-summary-card {
+  background: var(--c-surface-alt);
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-sm);
+}
+
+/* Liste de cases à cocher pour les périodes */
+.period-cb-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+.period-cb-label { display: flex; align-items: center; gap: var(--sp-2); cursor: pointer; font-size: var(--fs-sm); }
+.period-cb-label input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+.tag-current-per { color: var(--c-text-muted); font-size: var(--fs-xs); }
+
+/* ============================================================
+   Conflits — mise en page (anti-inline)
+   ============================================================ */
+
+.conflits-content { max-width: 900px; margin: 0 auto; }
+.conflits-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-4);
+}
+.conflits-actions { display: flex; gap: var(--sp-2); align-items: center; }
+
+/* Tag compteur de conflits (taille légèrement agrandie) */
+.tag-count { font-size: var(--fs-sm); padding: 6px 14px; }
+
+/* Texte d'intro */
+.conflits-hint { color: var(--c-text-muted); font-size: var(--fs-xs); margin-bottom: var(--sp-3); }
+
+/* Détail installation dans une carte conflit */
+.conflict-inst-label { color: var(--c-text-muted); font-size: var(--fs-xs); }
+
+/* Score suggestion */
+.sug-score { opacity: 0.55; font-size: 0.75em; }
+
+/* Message absence de suggestion */
+.sug-empty { font-size: var(--fs-xs); color: var(--c-text-muted); margin-top: 4px; }

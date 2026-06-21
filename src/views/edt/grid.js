@@ -128,6 +128,7 @@ async function syncSeancesFromProgrammation() {
 // ============================
 
 export async function renderEdt(container) {
+  container.setAttribute('aria-busy', 'true');
   // Auto-sync from programmation
   await syncSeancesFromProgrammation();
 
@@ -258,11 +259,12 @@ export async function renderEdt(container) {
     'gymnase': '#00796B', 'terr-msj': '#546E7A', 'parc-exflora': '#757575',
   };
 
+  container.removeAttribute('aria-busy');
   container.innerHTML = `
     <div class="edt-container ${state.patterns ? 'edt-patterns' : ''}">
 
       <!-- Header visible uniquement à l'impression -->
-      <div class="print-header" style="display:none;">
+      <div class="print-header">
         <div class="print-header-left">
           <span class="print-header-title">${nomEtab} — Emploi du temps EPS</span>
           <span class="print-header-subtitle">
@@ -279,7 +281,7 @@ export async function renderEdt(container) {
 
       <!-- Légende print (visible uniquement à l'impression) -->
       ${legendeItems.length > 0 ? `
-        <div class="edt-legend-print" style="display:none;">
+        <div class="edt-legend-print">
           ${legendeItems.map(({ inst, slug }) => `
             <span class="edt-legend-print-item">
               <span class="edt-legend-print-swatch" style="background:${INSTALL_COLORS[slug] || '#3B82F6'};"></span>
@@ -303,13 +305,13 @@ export async function renderEdt(container) {
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group edt-filters">
-          <select id="edt-filtre-ens" class="form-select" style="width:150px;padding:4px 8px;font-size:var(--fs-xs);">
+          <select id="edt-filtre-ens" class="form-select">
             <option value="">Tous les enseignants</option>
             ${enseignants.map(e => `
               <option value="${e.id}" ${state.filtreEnseignant === e.id ? 'selected' : ''}>${e.prenom} ${e.nom}</option>
             `).join('')}
           </select>
-          <select id="edt-filtre-cls" class="form-select" style="width:120px;padding:4px 8px;font-size:var(--fs-xs);">
+          <select id="edt-filtre-cls" class="form-select">
             <option value="">Toutes les classes</option>
             ${classes.map(c => `
               <option value="${c.id}" ${state.filtreClasse === c.id ? 'selected' : ''}>${c.nom}</option>
@@ -359,7 +361,7 @@ export async function renderEdt(container) {
       <div class="edt-grid-wrapper">
         <div class="edt-grid ${state.density === 'compact' ? 'edt-compact' : ''}" style="grid-template-columns: ${state.showAllPeriodes && periodes.length > 1 ? '40px ' : ''}repeat(${slots.length}, 1fr);">
           <!-- En-têtes temps -->
-          ${state.showAllPeriodes && periodes.length > 1 ? '<div class="edt-header-cell" style="font-size:9px;">Pér.</div>' : ''}
+          ${state.showAllPeriodes && periodes.length > 1 ? '<div class="edt-header-cell edt-header-cell-per">Pér.</div>' : ''}
           ${slots.map(s => `
             <div class="edt-header-cell ${s.isHour ? '' : 'half-hour'}">${s.label}</div>
           `).join('')}
@@ -465,7 +467,7 @@ function renderSinglePeriodeRows(jours, slots, seances, hStart, pas, ctx) {
     // Bande jour pleine largeur — sert de séparateur visuel entre les jours
     const jourFull = jour.charAt(0).toUpperCase() + jour.slice(1);
     const nbSeances = jourSeances.length;
-    html += `<div class="edt-day-header" style="grid-column:1/-1;">
+    html += `<div class="edt-day-header">
       <span class="edt-day-header-name">${jourFull}</span>
       ${nbSeances > 0 ? `<span class="edt-day-header-count">${nbSeances} séance${nbSeances > 1 ? 's' : ''}</span>` : ''}
     </div>`;
@@ -530,7 +532,7 @@ function renderAllPeriodesRows(jours, periodes, slots, seances, hStart, pas, ctx
       if (pi === 0) {
         const jourFull = jour.charAt(0).toUpperCase() + jour.slice(1);
         const nbSeances = jourSeances.length;
-        html += `<div class="edt-day-header" style="grid-column:1/-1;">
+        html += `<div class="edt-day-header">
           <span class="edt-day-header-name">${jourFull}</span>
           ${nbSeances > 0 ? `<span class="edt-day-header-count">${nbSeances} séance${nbSeances > 1 ? 's' : ''}</span>` : ''}
         </div>`;
@@ -598,7 +600,7 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
          data-install="${slug}"
          ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
          draggable="${seance.verrouille ? 'false' : 'true'}"
-         style="width:${widthPct}%; top:${topOffset}px; position:absolute; left:0; height:${densite().blocH}px;"
+         style="width:${widthPct}%; top:${topOffset}px; height:${densite().blocH}px;"
          title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}${hasResaRefusee ? '\n🚫 Réservation refusée' : ''}">
       <div class="bloc-line bloc-line-top">
         <span class="bloc-class">${cls?.nom || '?'}</span>
@@ -608,7 +610,7 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
         ${seance.verrouille ? '<span class="bloc-lock-icon">&#128274;</span>' : ''}
       </div>
       <div class="bloc-line bloc-line-bot">
-        <span class="bloc-install">${instLabel || '<em style="opacity:.6">— installation —</em>'}</span>
+        <span class="bloc-install">${instLabel || '<em class="bloc-no-install-label">— installation —</em>'}</span>
         <span class="bloc-prof">${ens?.initiales || (ens ? ens.prenom?.[0] + '.' + ens.nom?.[0] : '')}</span>
       </div>
     </div>
@@ -876,14 +878,14 @@ async function showMoveChoiceDialog({ seance, siblings, creneau, newJour, newHeu
     const { close } = openModal({
       title: 'Appliquer le déplacement à…',
       content: `
-        <p style="margin:0 0 0.75rem;">Ce déplacement concerne aussi d'autres périodes :</p>
-        <ul style="margin:0 0 0.75rem 1.25rem;font-size:0.85rem;color:var(--c-text-secondary);">
+        <p class="u-mb-3">Ce déplacement concerne aussi d'autres périodes :</p>
+        <ul class="u-mb-3 u-text-sm u-muted" style="margin-left:1.25rem;">
           ${siblings.map(s => {
             const pNom = periodes.find(p => p.id === s.periodeId)?.nom || '?';
             return `<li>${pNom}</li>`;
           }).join('')}
         </ul>
-        <p style="margin:0;font-size:0.85rem;color:var(--c-text-muted);">
+        <p class="u-muted u-text-sm" style="margin:0;">
           <strong>Cette période uniquement</strong> conserve les horaires des autres périodes indépendants.<br>
           <strong>Toutes les périodes</strong> met à jour le créneau commun (efface les horaires individuels).
         </p>`,
@@ -1010,19 +1012,19 @@ async function openSeanceModal(seance, context, edtContainer) {
   }
 
   function renderInstCheckboxes(lieuId, selectedIds, actId) {
-    if (!lieuId) return '<span style="color:var(--c-text-muted);font-size:var(--fs-sm);">Choisissez d\'abord un lieu</span>';
+    if (!lieuId) return '<span class="form-hint">Choisissez d\'abord un lieu</span>';
     const installs = installations.filter(i => {
       if (i.lieuId !== lieuId) return false;
       if (actId && i.activitesCompatibles?.length > 0) return i.activitesCompatibles.includes(actId);
       return true;
     });
-    if (installs.length === 0) return '<span style="color:var(--c-text-muted);font-size:var(--fs-sm);">Aucune installation compatible</span>';
+    if (installs.length === 0) return '<span class="form-hint">Aucune installation compatible</span>';
     if (installs.length === 1) {
       // Seule installation : cochée automatiquement, pas de case à cocher
-      return `<input type="hidden" name="md-inst-cb" value="${installs[0].id}"><span style="color:var(--c-text-muted);font-size:var(--fs-sm);">${installs[0].nom}</span>`;
+      return `<input type="hidden" name="md-inst-cb" value="${installs[0].id}"><span class="form-hint">${installs[0].nom}</span>`;
     }
     return installs.map(i => `
-      <label style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-1) 0;cursor:pointer;font-size:var(--fs-sm);">
+      <label class="inst-cb-label">
         <input type="checkbox" name="md-inst-cb" value="${i.id}" ${selectedIds.includes(i.id) ? 'checked' : ''}>
         ${i.nom}
       </label>
@@ -1111,9 +1113,9 @@ async function openSeanceModal(seance, context, edtContainer) {
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group" style="flex:1;">
+        <div class="form-group u-flex-1">
           <label class="form-label">Installations</label>
-          <div id="md-inst-checkboxes" style="padding:var(--sp-2) 0;">
+          <div id="md-inst-checkboxes" class="inst-cb-list">
             ${renderInstCheckboxes(initLieuId, initInstIds, initActId)}
           </div>
         </div>
@@ -1136,7 +1138,7 @@ async function openSeanceModal(seance, context, edtContainer) {
           <input type="time" class="form-input" id="md-seance-hfin" value="${seance?.heureFin || '10:00'}">
         </div>
       </div>
-      <div id="md-indispo-warning" class="md-act-warning md-act-warning--danger" style="display:none;"></div>
+      <div id="md-indispo-warning" class="md-act-warning md-act-warning--danger md-act-warning--hidden"></div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Période</label>
@@ -1150,11 +1152,11 @@ async function openSeanceModal(seance, context, edtContainer) {
         <label class="form-label">Notes</label>
         <textarea class="form-textarea" id="md-seance-notes" rows="2" placeholder="Notes...">${seance?.notes || ''}</textarea>
       </div>
-      ${seance?.programmationId ? '<p style="color:var(--c-text-muted);font-size:var(--fs-xs);margin-top:var(--sp-2);">&#9432; Cette séance est liée à la programmation annuelle.</p>' : ''}
+      ${seance?.programmationId ? '<p class="linked-prog-note">&#9432; Cette séance est liée à la programmation annuelle.</p>' : ''}
     `,
     footer: `
       ${isEdit ? '<button class="btn btn-danger" id="md-seance-del">Supprimer</button>' : '<span></span>'}
-      <div style="display:flex;gap:var(--sp-2);">
+      <div class="modal-footer-row">
         ${isEdit ? '<button class="btn btn-ghost" id="md-seance-copy" title="Dupliquer cette séance vers un autre jour ou une autre période">⧉ Copier</button>' : ''}
         <button class="btn btn-outline" id="md-seance-cancel">Annuler</button>
         <button class="btn btn-primary" id="md-seance-save">${isEdit ? 'Enregistrer' : 'Ajouter'}</button>
@@ -1398,9 +1400,9 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
   const { close } = openModal({
     title: 'Dupliquer la séance',
     content: `
-      <div style="background:var(--c-surface-2,#f5f5f5);border-radius:var(--radius);padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-4);font-size:var(--fs-sm);">
+      <div class="seance-summary-card">
         <strong>${cls?.nom || '?'}</strong> — ${act?.nom || '?'} — ${instLabel || '?'}<br>
-        <span style="color:var(--c-text-muted);">
+        <span class="u-muted">
           ${ens ? ens.prenom + ' ' + ens.nom + ' · ' : ''}${seance.jour ? seance.jour.charAt(0).toUpperCase() + seance.jour.slice(1) : ''} ${seance.heureDebut}–${seance.heureFin} · ${curPer?.nom || 'Toutes périodes'}
         </span>
       </div>
@@ -1414,22 +1416,22 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
 
       <div class="form-group">
         <label class="form-label">Période(s) de destination</label>
-        <div style="display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-1);">
+        <div class="period-cb-list">
           ${periodes.map(p => `
-            <label style="display:flex;align-items:center;gap:var(--sp-2);cursor:pointer;font-size:var(--fs-sm);">
-              <input type="checkbox" name="dup-per" value="${p.id}" ${p.id !== seance.periodeId ? 'checked' : ''} style="width:15px;height:15px;cursor:pointer;">
-              <span>${p.nom}${p.id === seance.periodeId ? ' <span style="color:var(--c-text-muted);font-size:var(--fs-xs);">(période actuelle)</span>' : ''}</span>
+            <label class="period-cb-label">
+              <input type="checkbox" name="dup-per" value="${p.id}" ${p.id !== seance.periodeId ? 'checked' : ''}>
+              <span>${p.nom}${p.id === seance.periodeId ? ' <span class="tag-current-per">(période actuelle)</span>' : ''}</span>
             </label>
           `).join('')}
         </div>
-        <p style="font-size:var(--fs-xs);color:var(--c-text-muted);margin-top:var(--sp-2);margin-bottom:0;">
+        <p class="u-hint" style="margin-top:var(--sp-2);margin-bottom:0;">
           Une copie indépendante sera créée pour chaque période cochée.
         </p>
       </div>
     `,
     footer: `
       <span></span>
-      <div style="display:flex;gap:var(--sp-2);">
+      <div class="modal-footer-row">
         <button class="btn btn-outline" id="dup-cancel">Annuler</button>
         <button class="btn btn-primary" id="dup-confirm">Dupliquer</button>
       </div>

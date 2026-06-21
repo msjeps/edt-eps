@@ -39,18 +39,18 @@ export async function renderConflits(container) {
   updateConflictBadge(conflits.length);
 
   container.innerHTML = `
-    <div style="max-width:900px;margin:0 auto;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);">
+    <div class="conflits-content">
+      <div class="conflits-header-row">
         <h2>Conflits & Alertes</h2>
-        <div style="display:flex;gap:var(--sp-2);align-items:center;">
+        <div class="conflits-actions">
           <button class="btn btn-outline btn-sm" id="btn-refresh-conflits" title="Recalculer les conflits">&#x21bb; Actualiser</button>
-          <span class="tag ${conflits.length > 0 ? 'tag-danger' : 'tag-success'}" style="font-size:var(--fs-sm);padding:6px 14px;">
+          <span class="tag tag-count ${conflits.length > 0 ? 'tag-danger' : 'tag-success'}">
             ${conflits.length} conflit${conflits.length > 1 ? 's' : ''}
           </span>
         </div>
       </div>
 
-      <p style="color:var(--c-text-muted);font-size:var(--fs-xs);margin-bottom:var(--sp-3);">
+      <p class="conflits-hint">
         Les conflits sont détectés <strong>par période</strong> : deux séances au même créneau mais sur des périodes différentes ne sont pas en conflit.
       </p>
 
@@ -143,13 +143,13 @@ function renderConflit(conflit, index, context) {
     const ensLabel   = ens ? `${ens.prenom} ${ens.nom}` : '?';
     const creneauLabel = `${seance.jour} ${seance.heureDebut}–${seance.heureFin}`;
     const actLabel   = act ? ` — <em>${act.nom}</em>` : '';
-    const perLabel   = periode ? ` <span style="color:var(--c-text-muted)">(${periode.nom})</span>` : '';
+    const perLabel   = periode ? ` <span class="u-muted">(${periode.nom})</span>` : '';
     detail = `<br><strong>${classLabel}</strong> — ${ensLabel} — ${creneauLabel}${actLabel}${perLabel}`;
 
     // Ligne installation pour les conflits qui la concernent
     if (['conflit_installation', 'indisponibilite_installation', 'incompatibilite', 'reservation_refusee'].includes(conflit.type) && inst) {
       const lieuLabel = lieu ? `${lieu.nom} › ` : '';
-      detail += `<br><span style="color:var(--c-text-muted);font-size:var(--fs-xs);">📍 ${lieuLabel}${inst.nom}</span>`;
+      detail += `<br><span class="conflict-inst-label">📍 ${lieuLabel}${inst.nom}</span>`;
     }
   }
 
@@ -170,11 +170,11 @@ function renderConflit(conflit, index, context) {
             ${suggestions.map((sug, si) => `
               <button class="conflict-suggestion" data-conflit-idx="${index}" data-sug-idx="${si}"
                       title="Score: ${sug.score}/10">
-                ${sug.description} <span style="opacity:.55;font-size:.75em;">(${sug.score}/10)</span>
+                ${sug.description} <span class="sug-score">(${sug.score}/10)</span>
               </button>
             `).join('')}
           </div>
-        ` : '<div style="font-size:var(--fs-xs);color:var(--c-text-muted);margin-top:4px;">Aucune suggestion automatique disponible</div>'}
+        ` : '<div class="sug-empty">Aucune suggestion automatique disponible</div>'}
       </div>
     </div>
   `;

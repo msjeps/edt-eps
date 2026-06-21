@@ -112,6 +112,7 @@
   background: #1E293B;            /* dark navy = même couleur que sidebar */
   border-top: 3px solid #3B82F6;  /* accent bleu */
   border-bottom: 1px solid #0F172A;
+  grid-column: 1 / -1;
 }
 
 .edt-day-header-name {
@@ -674,4 +675,63 @@
 /* En mode motifs sombre, la pastille de légende reste claire pour servir de clé */
 [data-theme="dark"] .edt-container.edt-patterns .edt-legend-color {
   background-color: var(--c-surface-alt);
+}
+
+/* ============================================================
+   Anti-inline — règles déplacées depuis attributs style=
+   ============================================================ */
+
+/* Éléments print-only : masqués à l'écran, visibles dans @media print */
+.print-header,
+.edt-legend-print { display: none; }
+
+/* Libellé "— installation —" quand aucune installation choisie */
+.bloc-no-install-label { opacity: 0.6; font-style: normal; }
+
+/* Warning indisponibilité initialement masqué */
+.md-act-warning--hidden { display: none; }
+
+/* ============================================================
+   PATTERNS DALTONISME — vues individuelles (mini-grid)
+   Synchronisés avec les mêmes 9 motifs que la grille EDT.
+   Activés par .mini-grid-patterns (même toggle localStorage).
+   ============================================================ */
+
+.mini-grid-patterns {
+  --pat-0: repeating-linear-gradient(45deg, rgba(15,23,42,.16) 0 2px, transparent 2px 8px);
+  --pat-1: repeating-linear-gradient(-45deg, rgba(15,23,42,.16) 0 2px, transparent 2px 8px);
+  --pat-2: radial-gradient(rgba(15,23,42,.26) 1.3px, transparent 1.5px);
+  --pat-3: repeating-linear-gradient(90deg, rgba(15,23,42,.18) 0 2px, transparent 2px 9px);
+  --pat-4: repeating-linear-gradient(0deg, rgba(15,23,42,.18) 0 2px, transparent 2px 9px);
+  --pat-5: repeating-linear-gradient(45deg, rgba(15,23,42,.14) 0 2px, transparent 2px 7px),
+           repeating-linear-gradient(-45deg, rgba(15,23,42,.14) 0 2px, transparent 2px 7px);
+  --pat-6: repeating-linear-gradient(0deg, rgba(15,23,42,.14) 0 2px, transparent 2px 9px),
+           repeating-linear-gradient(90deg, rgba(15,23,42,.14) 0 2px, transparent 2px 9px);
+  --pat-7: repeating-linear-gradient(45deg, rgba(15,23,42,.2) 0 2px, transparent 2px 5px);
+  --pat-8: radial-gradient(rgba(15,23,42,.28) 1.2px, transparent 1.4px);
+}
+
+.mini-grid-patterns [data-pattern="0"] { background-image: var(--pat-0); }
+.mini-grid-patterns [data-pattern="1"] { background-image: var(--pat-1); }
+.mini-grid-patterns [data-pattern="2"] { background-image: var(--pat-2); background-size: 7px 7px; }
+.mini-grid-patterns [data-pattern="3"] { background-image: var(--pat-3); }
+.mini-grid-patterns [data-pattern="4"] { background-image: var(--pat-4); }
+.mini-grid-patterns [data-pattern="5"] { background-image: var(--pat-5); }
+.mini-grid-patterns [data-pattern="6"] { background-image: var(--pat-6); }
+.mini-grid-patterns [data-pattern="7"] { background-image: var(--pat-7); }
+.mini-grid-patterns [data-pattern="8"] { background-image: var(--pat-8); background-size: 6px 6px; }
+
+/* Mode sombre : même encre claire que la grille EDT */
+[data-theme="dark"] .mini-grid-patterns {
+  --pat-0: repeating-linear-gradient(45deg, rgba(231,237,247,.18) 0 2px, transparent 2px 8px);
+  --pat-1: repeating-linear-gradient(-45deg, rgba(231,237,247,.18) 0 2px, transparent 2px 8px);
+  --pat-2: radial-gradient(rgba(231,237,247,.30) 1.3px, transparent 1.5px);
+  --pat-3: repeating-linear-gradient(90deg, rgba(231,237,247,.20) 0 2px, transparent 2px 9px);
+  --pat-4: repeating-linear-gradient(0deg, rgba(231,237,247,.20) 0 2px, transparent 2px 9px);
+  --pat-5: repeating-linear-gradient(45deg, rgba(231,237,247,.16) 0 2px, transparent 2px 7px),
+           repeating-linear-gradient(-45deg, rgba(231,237,247,.16) 0 2px, transparent 2px 7px);
+  --pat-6: repeating-linear-gradient(0deg, rgba(231,237,247,.16) 0 2px, transparent 2px 9px),
+           repeating-linear-gradient(90deg, rgba(231,237,247,.16) 0 2px, transparent 2px 9px);
+  --pat-7: repeating-linear-gradient(45deg, rgba(231,237,247,.22) 0 2px, transparent 2px 5px);
+  --pat-8: radial-gradient(rgba(231,237,247,.32) 1.2px, transparent 1.4px);
 }

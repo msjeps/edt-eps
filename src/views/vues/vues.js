@@ -241,7 +241,8 @@ export function buildMiniGrid(seances, refs, opts = {}) {
 
   const totalW = TIME_COL_W + jourActifs.length * DAY_COL_W;
 
-  let html = `<div class="mini-grid" style="width:${totalW}px;min-width:${totalW}px;">`;
+  const { patternsEnabled, instPatternMap } = opts;
+  let html = `<div class="mini-grid ${patternsEnabled ? 'mini-grid-patterns' : ''}" style="width:${totalW}px;min-width:${totalW}px;">`;
 
   // --- EN-TÊTES JOURS ---
   html += `<div class="mini-grid-header" style="display:flex;">`;
@@ -286,7 +287,8 @@ export function buildMiniGrid(seances, refs, opts = {}) {
       const height = (endMin - startMin) / 30 * SLOT_PX - 2;
 
       const allInstIds = s.installationsIds?.length ? s.installationsIds : (s.installationId ? [s.installationId] : []);
-      const inst   = refs.installations.find(i => i.id === (allInstIds[0] || s.installationId));
+      const primaryInstId = allInstIds[0] || s.installationId;
+      const inst   = refs.installations.find(i => i.id === primaryInstId);
       const cls    = refs.classes.find(c => c.id === s.classeId);
       const ens    = refs.enseignants.find(e => e.id === s.enseignantId);
       const act    = refs.activites.find(a => a.id === s.activiteId);
@@ -294,6 +296,7 @@ export function buildMiniGrid(seances, refs, opts = {}) {
       const rgb    = hexToRgb(colors.bg);
       const borderRgb = hexToRgb(colors.border);
       const textDark  = luminance(hexToRgb(colors.text)) < 128;
+      const patternIdx = instPatternMap?.get(primaryInstId);
 
       const partialLabel = opts.partialCreneaux?.get(creneauKey(s)) ?? null;
 
@@ -309,12 +312,12 @@ export function buildMiniGrid(seances, refs, opts = {}) {
         lines.push(`<span style="font-size:8px;font-weight:700;background:rgba(0,0,0,.18);border-radius:2px;padding:0 3px;margin-top:1px;align-self:flex-start;">${partialLabel}</span>`);
       }
 
-      html += `<div style="
+      html += `<div ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''} style="
         position:absolute;
         top:${top}px;
         left:2px;right:2px;
         height:${height}px;
-        background:${colors.bg};
+        background-color:${colors.bg};
         border:1.5px solid ${colors.border};
         border-radius:3px;
         overflow:hidden;
@@ -346,7 +349,7 @@ export function buildMiniGrid(seances, refs, opts = {}) {
 // ============================================================
 
 function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
-  const { enseignants, classes, activites, installations, lieux, periodes } = data;
+  const { enseignants, classes, activites, installations, lieux, periodes, patternsEnabled, instPatternMap } = data;
   const refs = { classes, enseignants, activites, installations, lieux, periodes };
 
   const ensAvecSeances = enseignants.filter(e => seances.some(s => s.enseignantId === e.id));
@@ -372,7 +375,7 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
             <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;" title="${isWeighted ? 'Moyenne annualisée — certaines classes n\'ont cours qu\'une partie de l\'année' : ''}">${totalH} / sem.${isWeighted ? ' *' : ''}</span>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true, partialCreneaux })}
+            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true, partialCreneaux, patternsEnabled, instPatternMap })}
           </div>
         </div>`;
     }).join('') +
@@ -380,7 +383,7 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
 }
 
 function renderVueClasses(seances, data, showPeriodeLabel = false) {
-  const { enseignants, classes, activites, installations, lieux, periodes } = data;
+  const { enseignants, classes, activites, installations, lieux, periodes, patternsEnabled, instPatternMap } = data;
   const refs = { classes, enseignants, activites, installations, lieux, periodes };
 
   const niveauOrdre = { '6e': 1, '5e': 2, '4e': 3, '3e': 4, '2nde': 5, '1ere': 6, 'term': 7 };
@@ -417,7 +420,7 @@ function renderVueClasses(seances, data, showPeriodeLabel = false) {
             </div>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true, partialCreneaux })}
+            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true, partialCreneaux, patternsEnabled, instPatternMap })}
           </div>
         </div>`;
     }).join('') +
@@ -425,7 +428,7 @@ function renderVueClasses(seances, data, showPeriodeLabel = false) {
 }
 
 function renderVueInstallations(seances, data, showPeriodeLabel = false) {
-  const { enseignants, classes, activites, installations, lieux, periodes } = data;
+  const { enseignants, classes, activites, installations, lieux, periodes, patternsEnabled, instPatternMap } = data;
   const refs = { classes, enseignants, activites, installations, lieux, periodes };
 
   const instAvecSeances = installations.filter(i => seances.some(s => s.installationId === i.id));
@@ -449,7 +452,7 @@ function renderVueInstallations(seances, data, showPeriodeLabel = false) {
             <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;">${instSeances.length} séance${instSeances.length > 1 ? 's' : ''}/sem.</span>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(instSeances, refs, { showClasse: true, showEnseignant: true })}
+            ${buildMiniGrid(instSeances, refs, { showClasse: true, showEnseignant: true, patternsEnabled, instPatternMap })}
           </div>
         </div>`;
     }).join('') +
@@ -471,7 +474,13 @@ export async function renderVues(container) {
     db.periodes.toArray(),
   ]);
 
-  const data = { seances, enseignants, classes, activites, installations, lieux, periodes };
+  const patternsEnabled = localStorage.getItem('edt-patterns') === '1';
+  const instPatternMap = new Map();
+  [...installations]
+    .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr'))
+    .forEach((inst, i) => instPatternMap.set(inst.id, i % 9));
+
+  const data = { seances, enseignants, classes, activites, installations, lieux, periodes, patternsEnabled, instPatternMap };
   const periodesPrincipales = periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
   container.innerHTML = `

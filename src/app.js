@@ -221,7 +221,8 @@ async function saveProject() {
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const ts = new Date().toISOString().replace('T', '_').split('.')[0].replace(/:/g, '-');
-    const filename = `EDT_EPS_${nom.replace(/\s+/g, '_')}_${ts}.json`;
+    const safeNom = nom.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '');
+    const filename = `EDT_EPS_${safeNom}_${ts}.json`;
 
     const result = await saveProjectFile(blob, filename);
 
@@ -381,8 +382,9 @@ async function saveProjectAs() {
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const safeLabel = label.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '');
+    const safeNomCopy = nom.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '');
     const date = new Date().toISOString().split('T')[0];
-    const filename = `EDT_EPS_${nom.replace(/\s+/g, '_')}_${safeLabel}_${date}.json`;
+    const filename = `EDT_EPS_${safeNomCopy}_${safeLabel}_${date}.json`;
 
     const result = await saveProjectFile(blob, filename);
 

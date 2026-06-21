@@ -890,7 +890,9 @@ body {
   line-height: 1.5;
 }
 
-.form-input:hover, .form-select:hover { border-color: var(--c-border-dark); }
+.form-input:hover,
+.form-select:hover,
+.form-textarea:hover { border-color: var(--c-border-dark); }
 
 .form-input:focus,
 .form-select:focus,
@@ -1568,6 +1570,8 @@ button.stat-card.resa-stat-btn--active {
 .u-mb-3        { margin-bottom: var(--sp-3); }
 .u-mb-4        { margin-bottom: var(--sp-4); }
 .u-mb-2-0      { margin: 0 0 var(--sp-2) 0; }
+/* Flex croissant (remplace style="flex:1") */
+.u-flex-1      { flex: 1; }
 
 /* ============================================================
    PRINT
