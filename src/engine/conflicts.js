@@ -55,6 +55,7 @@ export function genererSuggestions(conflit, context) {
       break;
 
     case 'incompatibilite':
+    case 'reservation_refusee':
       suggestions.push(...suggestionsChangementInstallation(conflit, context));
       break;
   }

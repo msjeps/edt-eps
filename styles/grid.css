@@ -341,6 +341,26 @@
   outline-color: #818CF8;
 }
 
+/* Réservation refusée : fond rouge vif + bordure épaisse, sans badge */
+.edt-bloc.resa-refusee {
+  background: #EF4444 !important;
+  border-color: #991B1B !important;
+  border-bottom-width: 4px !important;
+  color: #FFFFFF !important;
+}
+
+.edt-bloc.resa-refusee .bloc-activity,
+.edt-bloc.resa-refusee .bloc-install,
+.edt-bloc.resa-refusee .bloc-prof {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-theme="dark"] .edt-bloc.resa-refusee {
+  background: #DC2626 !important;
+  border-color: #7F1D1D !important;
+  color: #FFFFFF !important;
+}
+
 /* ---- Mode COMPACT : bloc sur une seule ligne, polices réduites ---- */
 .edt-grid.edt-compact .edt-bloc {
   flex-direction: row;

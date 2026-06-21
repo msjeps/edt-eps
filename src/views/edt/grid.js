@@ -133,7 +133,7 @@ export async function renderEdt(container) {
 
   const [
     seances, enseignants, classes, activites,
-    installations, lieux, periodes, joursOuvres,
+    installations, lieux, periodes, reservations, joursOuvres,
     heureDebut, heureFin, etablissementNom
   ] = await Promise.all([
     db.seances.toArray(),
@@ -143,6 +143,7 @@ export async function renderEdt(container) {
     db.installations.toArray(),
     db.lieux.toArray(),
     db.periodes.toArray(),
+    db.reservations.toArray(),
     getConfig('joursOuvres'),
     getConfig('heureDebut'),
     getConfig('heureFin'),
@@ -165,6 +166,7 @@ export async function renderEdt(container) {
   const indisponibilites = await db.indisponibilites.toArray();
   const conflits = validerToutesSeances({
     seances, classes, installations, activites, enseignants, indisponibilites,
+    reservations,
     maxHeuresJour: maxHeures ?? 6,
     contrainte_max_heures_actif: ctMax ?? true,
     contrainte_ecart_24h_actif: ctEcart ?? true,
@@ -175,10 +177,13 @@ export async function renderEdt(container) {
   // IDs des séances en conflit (toutes périodes, tous enseignants)
   const conflitSeanceIds = new Set();
   const manqueInstallIds = new Set();
+  const resaRefuseeIds = new Set();
   for (const c of conflits) {
     if (c.seance?.id != null) {
       if (c.type === 'installation_manquante') {
         manqueInstallIds.add(c.seance.id);
+      } else if (c.type === 'reservation_refusee') {
+        resaRefuseeIds.add(c.seance.id);
       } else {
         conflitSeanceIds.add(c.seance.id);
       }
@@ -361,8 +366,8 @@ export async function renderEdt(container) {
 
           <!-- Lignes par jour -->
           ${state.showAllPeriodes && periodes.length > 1
-            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds })
-            : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes, instPatternMap, conflitSeanceIds })
+            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds })
+            : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds })
           }
         </div>
       </div>
@@ -560,7 +565,7 @@ function renderAllPeriodesRows(jours, periodes, slots, seances, hStart, pas, ctx
 // ============================
 
 function renderBloc(seance, stackIndex, hStart, pas, ctx) {
-  const { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds } = ctx;
+  const { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds } = ctx;
   const ens = enseignants.find(e => e.id === seance.enseignantId);
   const cls = classes.find(c => c.id === seance.classeId);
   const act = activites.find(a => a.id === seance.activiteId);
@@ -585,15 +590,16 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
   const isFromProg = !!seance.programmationId;
   const hasConflit = conflitSeanceIds?.has(seance.id);
   const hasNoInstall = manqueInstallIds?.has(seance.id);
+  const hasResaRefusee = resaRefuseeIds?.has(seance.id);
 
   return `
-    <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''} ${hasConflit ? 'has-conflit' : ''} ${hasNoInstall ? 'no-install' : ''}"
+    <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''} ${hasConflit ? 'has-conflit' : ''} ${hasNoInstall ? 'no-install' : ''} ${hasResaRefusee ? 'resa-refusee' : ''}"
          data-seance-id="${seance.id}"
          data-install="${slug}"
          ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
          draggable="${seance.verrouille ? 'false' : 'true'}"
          style="width:${widthPct}%; top:${topOffset}px; position:absolute; left:0; height:${densite().blocH}px;"
-         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}">
+         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}${hasResaRefusee ? '\n🚫 Réservation refusée' : ''}">
       <div class="bloc-line bloc-line-top">
         <span class="bloc-class">${cls?.nom || '?'}</span>
         <span class="bloc-activity">${act?.nom || ''}</span>

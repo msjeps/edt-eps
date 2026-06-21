@@ -331,6 +331,24 @@ export function validerSeance(seance, context) {
     });
   }
 
+  // 9. Réservation refusée (installation actuelle non disponible)
+  if (context.reservations) {
+    const resaRefusee = context.reservations.find(r =>
+      r.seanceId === seance.id &&
+      r.statut === 'refuse' &&
+      (allInstIds.length === 0 || allInstIds.includes(r.installationId))
+    );
+    if (resaRefusee) {
+      conflits.push({
+        type: 'reservation_refusee',
+        severity: 'high',
+        message: 'Installation non disponible — réservation refusée',
+        seance,
+        reservation: resaRefusee,
+      });
+    }
+  }
+
   return conflits;
 }
 

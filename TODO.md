@@ -20,10 +20,10 @@
 - [x] **Barre de progression globale** — sous les 4 compteurs : `X / total acceptées (Y %)` + barre colorée verte ≥80 % / ambre ≥50 % / rouge <50 % ; masquée si aucune réservation
 - [x] **Tri par colonne** — tous les en-têtes cliquables, indicateur ▲ bleu visible en permanence sur toutes les colonnes (75 % opacité) → ▲/▼ plein + gras sur la colonne active ; tri secondaire stable lieu→installation→jour→heure ; état de tri persisté entre les changements de filtre
 
-### Phase 3 — Intégration EDT + Conflits (impacte `grid.js` et `conflicts.js`)
+### Phase 3 — Intégration EDT + Conflits ✅ FAIT (21/06/2026)
 
-- [ ] **Bloc EDT rouge si réservation refusée** — quand une séance a une réservation au statut `refuse`, toute la case du bloc EDT passe en rouge (fond rouge clair, bordure rouge) ; **pas de badge** pour éviter la confusion avec les autres alertes (installation manquante 📍, conflit ⚠️) ; le rouge disparaît dès qu'une autre installation est assignée à la séance
-- [ ] **Conflit "installation non disponible"** — nouveau type de conflit dans `conflicts.js` qui remonte dans le tableau Conflits avec le libellé `"Installation non disponible — réservation refusée"` ; lié à la séance concernée ; suggère de changer d'installation ; conflit résolu automatiquement quand la réservation du nouveau créneau/installation n'est plus `refuse`
+- [x] **Bloc EDT rouge si réservation refusée** — quand une séance a une réservation au statut `refuse`, toute la case du bloc EDT passe en rouge (fond rouge clair, bordure rouge) ; **pas de badge** pour éviter la confusion avec les autres alertes (installation manquante 📍, conflit ⚠️) ; le rouge disparaît dès qu'une autre installation est assignée à la séance
+- [x] **Conflit "installation non disponible"** — nouveau type de conflit `reservation_refusee` dans `constraints.js` qui remonte dans le tableau Conflits avec le libellé `"Installation non disponible — réservation refusée"` ; lié à la séance concernée ; suggère de changer d'installation ; conflit résolu automatiquement quand la réservation du nouveau créneau/installation n'est plus `refuse`
 
 ---
 

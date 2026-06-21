@@ -11,7 +11,7 @@ import { seanceStore } from '../../db/store.js';
 
 export async function renderConflits(container) {
   const [seances, classes, installations, lieux, periodes, activites, enseignants, indisponibilites,
-    maxHeures, ctMax, ctEcart, ct1prof] = await Promise.all([
+    reservations, maxHeures, ctMax, ctEcart, ct1prof] = await Promise.all([
     db.seances.toArray(),
     db.classes.toArray(),
     db.installations.toArray(),
@@ -20,6 +20,7 @@ export async function renderConflits(container) {
     db.activites.toArray(),
     db.enseignants.toArray(),
     db.indisponibilites.toArray(),
+    db.reservations.toArray(),
     getConfig('maxHeuresJourProf'),
     getConfig('contrainte_max_heures_actif'),
     getConfig('contrainte_ecart_24h_actif'),
@@ -28,6 +29,7 @@ export async function renderConflits(container) {
 
   const context = {
     seances, classes, installations, lieux, periodes, activites, enseignants, indisponibilites,
+    reservations,
     maxHeuresJour: maxHeures ?? 6,
     contrainte_max_heures_actif: ctMax ?? true,
     contrainte_ecart_24h_actif: ctEcart ?? true,
@@ -118,6 +120,7 @@ function renderConflit(conflit, index, context) {
     indisponibilite_enseignant: '&#128683;',
     indisponibilite_installation:'&#127963;',
     installation_manquante:     '&#128204;',
+    reservation_refusee:        '&#128683;',
   };
 
   const labels = {
@@ -130,6 +133,7 @@ function renderConflit(conflit, index, context) {
     indisponibilite_enseignant: 'Absence prof',
     indisponibilite_installation:'Indisponibilité installation',
     installation_manquante:     'Installation non affectée',
+    reservation_refusee:        'Installation non disponible',
   };
 
   // Ligne de détail principale
@@ -143,7 +147,7 @@ function renderConflit(conflit, index, context) {
     detail = `<br><strong>${classLabel}</strong> — ${ensLabel} — ${creneauLabel}${actLabel}${perLabel}`;
 
     // Ligne installation pour les conflits qui la concernent
-    if (['conflit_installation', 'indisponibilite_installation', 'incompatibilite'].includes(conflit.type) && inst) {
+    if (['conflit_installation', 'indisponibilite_installation', 'incompatibilite', 'reservation_refusee'].includes(conflit.type) && inst) {
       const lieuLabel = lieu ? `${lieu.nom} › ` : '';
       detail += `<br><span style="color:var(--c-text-muted);font-size:var(--fs-xs);">📍 ${lieuLabel}${inst.nom}</span>`;
     }
