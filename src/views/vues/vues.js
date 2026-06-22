@@ -586,12 +586,7 @@ export async function renderVues(container) {
     const id = getPeriodeGlobaleId();
     if (id == null) return seances;
     const visibleIds = getOverlappingPeriodeIds(id, periodes);
-    console.log('[vues] periodeId=', id, 'type=', typeof id);
-    console.log('[vues] periodes=', periodes.map(p => ({ id: p.id, type: typeof p.id, nom: p.nom, dateDebut: p.dateDebut, dateFin: p.dateFin })));
-    console.log('[vues] visibleIds=', [...visibleIds]);
-    const result = seances.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
-    console.log('[vues] seances total=', seances.length, '→ filtrees=', result.length, 'periodeIds dans seances=', [...new Set(seances.map(s => s.periodeId))]);
-    return result;
+    return seances.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
 
   const TAB_LABELS = { enseignant: 'Par enseignant', classe: 'Par classe', installation: 'Par installation' };
