@@ -278,62 +278,99 @@ export function buildMiniGrid(seances, refs, opts = {}) {
     }
 
     // Blocs séances
-    for (const s of byJour[jour]) {
-      const startMin = heureToMin(s.heureDebut);
-      const endMin   = heureToMin(s.heureFin);
-      if (startMin < firstMin || endMin > lastMin || startMin >= endMin) continue;
-
-      const top    = (startMin - firstMin) / 30 * SLOT_PX + 1;
-      const height = (endMin - startMin) / 30 * SLOT_PX - 2;
-
-      const allInstIds = s.installationsIds?.length ? s.installationsIds : (s.installationId ? [s.installationId] : []);
-      const primaryInstId = allInstIds[0] || s.installationId;
-      const inst   = refs.installations.find(i => i.id === primaryInstId);
-      const cls    = refs.classes.find(c => c.id === s.classeId);
-      const ens    = refs.enseignants.find(e => e.id === s.enseignantId);
-      const act    = refs.activites.find(a => a.id === s.activiteId);
-      const colors = getColors(inst, refs.lieux);
-      const rgb    = hexToRgb(colors.bg);
-      const borderRgb = hexToRgb(colors.border);
-      const textDark  = luminance(hexToRgb(colors.text)) < 128;
-      const patternIdx = instPatternMap?.get(primaryInstId);
-
-      const partialLabel = opts.partialCreneaux?.get(creneauKey(s)) ?? null;
-
-      const lines = [];
-      if (opts.showClasse    && cls)  lines.push(`<strong>${cls.nom}</strong>`);
-      if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
-      if (act && height >= 28)        lines.push(`<span style="font-size:9px;opacity:.85;">${act.nom.length > 14 ? act.nom.slice(0, 13) + '…' : act.nom}</span>`);
-      if (opts.showInstallation && allInstIds.length > 0 && height >= 38) {
-        const instNoms = allInstIds.map(id => refs.installations.find(i => i.id === id)?.nom).filter(Boolean).join('+');
-        lines.push(`<span style="font-size:8px;opacity:.75;">${instNoms.length > 12 ? instNoms.slice(0, 11) + '…' : instNoms}</span>`);
+    if (opts.allPeriodesMode && opts.rootPeriodes?.length) {
+      // ── Mode "Toutes les périodes" : un bloc fusionné par créneau ──
+      const slotGroups = new Map();
+      for (const s of byJour[jour]) {
+        const key = creneauKey(s);
+        if (!slotGroups.has(key)) slotGroups.set(key, []);
+        slotGroups.get(key).push(s);
       }
-      if (partialLabel && height >= 20) {
-        lines.push(`<span style="font-size:8px;font-weight:700;background:rgba(0,0,0,.18);border-radius:2px;padding:0 3px;margin-top:1px;align-self:flex-start;">${partialLabel}</span>`);
+      for (const [, grp] of slotGroups) {
+        const s0 = grp[0];
+        const startMin = heureToMin(s0.heureDebut);
+        const endMin   = heureToMin(s0.heureFin);
+        if (startMin < firstMin || startMin >= endMin) continue;
+        const top    = (startMin - firstMin) / 30 * SLOT_PX + 1;
+        const height = (endMin - startMin) / 30 * SLOT_PX - 2;
+        const cls = refs.classes.find(c => c.id === s0.classeId);
+        const ens = refs.enseignants.find(e => e.id === s0.enseignantId);
+        const lines = [];
+        if (opts.showClasse    && cls) lines.push(`<strong style="font-size:10px;">${cls.nom}</strong>`);
+        if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
+        // Déterminer le système (trimestre ou semestre) selon les périodes réelles du créneau
+        const usedIds = new Set(grp.map(x => x.periodeId).filter(Boolean));
+        const semPer = opts.rootPeriodes.filter(p => p.type === 'semestre');
+        const triPer = opts.rootPeriodes.filter(p => p.type === 'trimestre');
+        const usesSem = semPer.some(p => usedIds.has(p.id));
+        const relevantPer = usesSem ? semPer : triPer;
+        for (const p of relevantPer) {
+          const s = grp.find(x => x.periodeId === p.id);
+          const act = s ? refs.activites.find(a => a.id === s.activiteId) : null;
+          const ab  = periodeAbbrev(p);
+          lines.push(`<div style="display:flex;gap:2px;align-items:baseline;line-height:1.2;"><span style="font-size:8px;font-weight:700;color:var(--c-primary);min-width:14px;flex-shrink:0;">${ab}</span><span style="font-size:9px;${!act ? 'color:var(--c-text-secondary);font-style:italic;' : ''}">${act ? (act.nom.length > 14 ? act.nom.slice(0, 13) + '…' : act.nom) : '—'}</span></div>`);
+        }
+        html += `<div style="position:absolute;top:${top}px;left:2px;right:2px;height:${height}px;background:var(--c-surface-alt);border:1.5px solid var(--c-border-strong);border-radius:3px;overflow:hidden;padding:2px 3px;color:var(--c-text);display:flex;flex-direction:column;justify-content:flex-start;gap:1px;font-size:10px;line-height:1.25;box-sizing:border-box;">
+          <div style="height:3px;background:var(--c-border-strong);margin:-2px -3px 1px;border-radius:2px 2px 0 0;"></div>
+          ${lines.join('')}
+        </div>`;
       }
+    } else {
+      // ── Mode normal : un bloc par séance avec couleur installation ──
+      for (const s of byJour[jour]) {
+        const startMin = heureToMin(s.heureDebut);
+        const endMin   = heureToMin(s.heureFin);
+        if (startMin < firstMin || endMin > lastMin || startMin >= endMin) continue;
 
-      html += `<div ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''} style="
-        position:absolute;
-        top:${top}px;
-        left:2px;right:2px;
-        height:${height}px;
-        background-color:${colors.bg};
-        border:1.5px solid ${colors.border};
-        border-radius:3px;
-        overflow:hidden;
-        padding:2px 3px;
-        color:${colors.text};
-        display:flex;
-        flex-direction:column;
-        justify-content:flex-start;
-        gap:1px;
-        font-size:10px;
-        line-height:1.25;
-        box-sizing:border-box;
-      ">
-        <div style="height:3px;background:${colors.border};margin:-2px -3px 1px;border-radius:2px 2px 0 0;"></div>
-        ${lines.join('')}
-      </div>`;
+        const top    = (startMin - firstMin) / 30 * SLOT_PX + 1;
+        const height = (endMin - startMin) / 30 * SLOT_PX - 2;
+
+        const allInstIds = s.installationsIds?.length ? s.installationsIds : (s.installationId ? [s.installationId] : []);
+        const primaryInstId = allInstIds[0] || s.installationId;
+        const inst   = refs.installations.find(i => i.id === primaryInstId);
+        const cls    = refs.classes.find(c => c.id === s.classeId);
+        const ens    = refs.enseignants.find(e => e.id === s.enseignantId);
+        const act    = refs.activites.find(a => a.id === s.activiteId);
+        const colors = getColors(inst, refs.lieux);
+        const patternIdx = instPatternMap?.get(primaryInstId);
+
+        const partialLabel = opts.partialCreneaux?.get(creneauKey(s)) ?? null;
+
+        const lines = [];
+        if (opts.showClasse    && cls)  lines.push(`<strong>${cls.nom}</strong>`);
+        if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
+        if (act && height >= 28)        lines.push(`<span style="font-size:9px;opacity:.85;">${act.nom.length > 14 ? act.nom.slice(0, 13) + '…' : act.nom}</span>`);
+        if (opts.showInstallation && allInstIds.length > 0 && height >= 38) {
+          const instNoms = allInstIds.map(id => refs.installations.find(i => i.id === id)?.nom).filter(Boolean).join('+');
+          lines.push(`<span style="font-size:8px;opacity:.75;">${instNoms.length > 12 ? instNoms.slice(0, 11) + '…' : instNoms}</span>`);
+        }
+        if (partialLabel && height >= 20) {
+          lines.push(`<span style="font-size:8px;font-weight:700;background:rgba(0,0,0,.18);border-radius:2px;padding:0 3px;margin-top:1px;align-self:flex-start;">${partialLabel}</span>`);
+        }
+
+        html += `<div ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''} style="
+          position:absolute;
+          top:${top}px;
+          left:2px;right:2px;
+          height:${height}px;
+          background-color:${colors.bg};
+          border:1.5px solid ${colors.border};
+          border-radius:3px;
+          overflow:hidden;
+          padding:2px 3px;
+          color:${colors.text};
+          display:flex;
+          flex-direction:column;
+          justify-content:flex-start;
+          gap:1px;
+          font-size:10px;
+          line-height:1.25;
+          box-sizing:border-box;
+        ">
+          <div style="height:3px;background:${colors.border};margin:-2px -3px 1px;border-radius:2px 2px 0 0;"></div>
+          ${lines.join('')}
+        </div>`;
+      }
     }
 
     html += `</div>`; // mini-grid-day-col
@@ -357,11 +394,15 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
     return `<div class="empty-state"><div class="empty-state-icon">&#128100;</div><div class="empty-state-title">Aucun enseignant avec des séances</div></div>`;
   }
 
+  const rootPeriodes = showPeriodeLabel
+    ? periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id))
+    : [];
+
   return `<div class="vues-cards-wrap" style="display:flex;flex-wrap:wrap;gap:var(--sp-5);">` +
     ensAvecSeances.map(ens => {
       const ensSeances = seances.filter(s => s.enseignantId === ens.id);
       const nom = [ens.prenom, ens.nom].filter(Boolean).join(' ');
-      const partialCreneaux = showPeriodeLabel ? getPartialCreneauxMap(ensSeances, periodes) : new Map();
+      const partialCreneaux = showPeriodeLabel ? new Map() : getPartialCreneauxMap(ensSeances, periodes);
       const { str: totalH, isWeighted } = showPeriodeLabel
         ? totalHAnnualise(ensSeances, periodes)
         : { str: totalHStr(ensSeances), isWeighted: false };
@@ -375,7 +416,7 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
             <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;" title="${isWeighted ? 'Moyenne annualisée — certaines classes n\'ont cours qu\'une partie de l\'année' : ''}">${totalH} / sem.${isWeighted ? ' *' : ''}</span>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: true, partialCreneaux, patternsEnabled, instPatternMap })}
+            ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: !showPeriodeLabel, partialCreneaux, allPeriodesMode: showPeriodeLabel, rootPeriodes, patternsEnabled, instPatternMap })}
           </div>
         </div>`;
     }).join('') +
@@ -395,17 +436,21 @@ function renderVueClasses(seances, data, showPeriodeLabel = false) {
     return `<div class="empty-state"><div class="empty-state-icon">&#127979;</div><div class="empty-state-title">Aucune classe avec des séances</div></div>`;
   }
 
+  const rootPeriodes = showPeriodeLabel
+    ? periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id))
+    : [];
+
   return `<div class="vues-cards-wrap" style="display:flex;flex-wrap:wrap;gap:var(--sp-5);">` +
     classesAvecSeances.map(cls => {
       const clsSeances = seances.filter(s => s.classeId === cls.id);
-      const partialCreneaux = showPeriodeLabel ? getPartialCreneauxMap(clsSeances, periodes) : new Map();
+      const partialCreneaux = showPeriodeLabel ? new Map() : getPartialCreneauxMap(clsSeances, periodes);
       const { str: totalH, isWeighted } = showPeriodeLabel
         ? totalHAnnualise(clsSeances, periodes)
         : { str: totalHStr(clsSeances), isWeighted: false };
-      // Badge carte : uniquement si TOUS les créneaux sont partiels avec le même label
+      // Badge carte période unique — pertinent seulement hors mode toutes-périodes
       const allKeys = new Set(clsSeances.map(creneauKey));
       const cardLabels = new Set([...allKeys].map(k => partialCreneaux.get(k)).filter(Boolean));
-      const cardPartial = (cardLabels.size === 1 && partialCreneaux.size === allKeys.size)
+      const cardPartial = (!showPeriodeLabel && cardLabels.size === 1 && partialCreneaux.size === allKeys.size)
         ? [...cardLabels][0] : null;
       return `
         <div class="card vue-card" style="cursor:default;min-width:400px;">
@@ -420,7 +465,7 @@ function renderVueClasses(seances, data, showPeriodeLabel = false) {
             </div>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: true, partialCreneaux, patternsEnabled, instPatternMap })}
+            ${buildMiniGrid(clsSeances, refs, { showEnseignant: true, showInstallation: !showPeriodeLabel, partialCreneaux, allPeriodesMode: showPeriodeLabel, rootPeriodes, patternsEnabled, instPatternMap })}
           </div>
         </div>`;
     }).join('') +
@@ -435,6 +480,10 @@ function renderVueInstallations(seances, data, showPeriodeLabel = false) {
   if (!instAvecSeances.length) {
     return `<div class="empty-state"><div class="empty-state-icon">&#127968;</div><div class="empty-state-title">Aucune installation utilisée</div></div>`;
   }
+
+  const rootPeriodes = showPeriodeLabel
+    ? periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id))
+    : [];
 
   return `<div class="vues-cards-wrap" style="display:flex;flex-wrap:wrap;gap:var(--sp-5);">` +
     instAvecSeances.map(inst => {
@@ -452,7 +501,7 @@ function renderVueInstallations(seances, data, showPeriodeLabel = false) {
             <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;">${instSeances.length} séance${instSeances.length > 1 ? 's' : ''}/sem.</span>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
-            ${buildMiniGrid(instSeances, refs, { showClasse: true, showEnseignant: true, patternsEnabled, instPatternMap })}
+            ${buildMiniGrid(instSeances, refs, { showClasse: true, showEnseignant: true, allPeriodesMode: showPeriodeLabel, rootPeriodes, patternsEnabled, instPatternMap })}
           </div>
         </div>`;
     }).join('') +
@@ -537,7 +586,12 @@ export async function renderVues(container) {
     const id = getPeriodeGlobaleId();
     if (id == null) return seances;
     const visibleIds = getOverlappingPeriodeIds(id, periodes);
-    return seances.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
+    console.log('[vues] periodeId=', id, 'type=', typeof id);
+    console.log('[vues] periodes=', periodes.map(p => ({ id: p.id, type: typeof p.id, nom: p.nom, dateDebut: p.dateDebut, dateFin: p.dateFin })));
+    console.log('[vues] visibleIds=', [...visibleIds]);
+    const result = seances.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
+    console.log('[vues] seances total=', seances.length, '→ filtrees=', result.length, 'periodeIds dans seances=', [...new Set(seances.map(s => s.periodeId))]);
+    return result;
   }
 
   const TAB_LABELS = { enseignant: 'Par enseignant', classe: 'Par classe', installation: 'Par installation' };

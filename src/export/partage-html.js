@@ -263,6 +263,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
 .stat-ors{font-size:10px;color:#94a3b8;margin-top:2px}
 .stat-sessions{font-size:10px;color:#64748b}
 
+/* ── Bloc multi-périodes (toutes périodes) ── */
+.bloc-multi{background:#f8fafc!important;border-left:3px solid #94a3b8!important;padding:3px 6px}
+.period-row{display:flex;align-items:baseline;gap:4px;line-height:1.3}
+.period-ab{font-size:9px;font-weight:700;color:#3b82f6;min-width:16px;flex-shrink:0}
+.period-act{font-size:10px;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.period-dash{font-size:10px;color:#94a3b8;font-style:italic}
+/* ── Badge période sur bloc normal ── */
+.bloc-period-badge{display:inline-block;margin-left:4px;font-size:8px;font-weight:700;
+  background:rgba(30,41,59,.15);border-radius:3px;padding:0 3px;vertical-align:middle;color:inherit}
+
 /* ── Print ── */
 @media print{
   @page{size:A4 landscape;margin:10mm}
@@ -325,6 +335,24 @@ function ensLabel(ens){
   return((ens.prenom?ens.prenom[0]+'. ':'')+ens.nom).trim();
 }
 
+function periodeAbbrev(p){
+  if(!p)return'';
+  const m=(p.nom||'').match(/(?:semestre|trimestre)\\s*(\\d)/i);
+  if(m)return p.nom[0].toUpperCase()+m[1];
+  const n=(p.nom||'').trim();
+  return n.length>5?n.slice(0,4)+'.':n;
+}
+
+function rootPeriodes(){
+  return DATA.periodes
+    .filter(p=>!p.parentId)
+    .sort((a,b)=>(a.ordre??a.id)-(b.ordre??b.id));
+}
+
+function creneauKey(s){
+  return s.creneauClasseId?'cc:'+s.creneauClasseId:'m:'+(s.enseignantId||'')+'_'+(s.classeId||'')+'_'+s.jour+'_'+s.heureDebut;
+}
+
 // Déduplique par creneauClasseId pour le total hebdo
 function seancesHebdo(seances){
   const seen=new Set();
@@ -340,9 +368,97 @@ function totalHStr(seances){
   return mm?hh+'h'+String(mm).padStart(2,'0')+'/sem':hh+'h/sem';
 }
 
+// ── Grille horaire toutes périodes (blocs fusionnés par créneau) ──
+function renderGridAllPeriodes(seances, mode){
+  if(!seances.length)return'<p class="empty-state">Aucune séance pour cette sélection</p>';
+  const jours=DATA.joursOuvres;
+  const rp=rootPeriodes();
+
+  let firstMin=Infinity,lastMin=0;
+  for(const s of seances){
+    if(s.heureDebut)firstMin=Math.min(firstMin,heureToMin(s.heureDebut));
+    if(s.heureFin)  lastMin =Math.max(lastMin, heureToMin(s.heureFin));
+  }
+  firstMin=Math.floor(firstMin/30)*30;
+  lastMin =Math.ceil(lastMin/30)*30;
+  const totalPx=((lastMin-firstMin)/30)*SLOT_H;
+
+  let timeCols='';
+  for(let m=firstMin;m<=lastMin;m+=30){
+    const top=((m-firstMin)/30)*SLOT_H;
+    const hh=Math.floor(m/60),mn=m%60;
+    const lbl=mn===0?hh+'h':hh+'h'+String(mn).padStart(2,'0');
+    timeCols+='<div class="time-label" style="top:'+top+'px">'+lbl+'</div>';
+  }
+
+  let daysCols='';
+  for(const jour of jours){
+    const jourSeances=seances.filter(s=>(s.jour||'').toLowerCase()===jour);
+
+    // Grouper par creneauKey
+    const groups=new Map();
+    for(const s of jourSeances){
+      const k=creneauKey(s);
+      if(!groups.has(k))groups.set(k,[]);
+      groups.get(k).push(s);
+    }
+
+    let lines='';
+    for(let m=firstMin;m<lastMin;m+=30){
+      const top=((m-firstMin)/30)*SLOT_H;
+      lines+='<div class="grid-line'+(m%60===0?' on-hour':'')+'" style="top:'+top+'px"></div>';
+    }
+
+    let blocs='';
+    for(const[,grp]of groups){
+      const s0=grp[0];
+      const top=((heureToMin(s0.heureDebut)-firstMin)/30)*SLOT_H;
+      const ht=Math.max(((heureToMin(s0.heureFin)-heureToMin(s0.heureDebut))/30)*SLOT_H-2,20);
+      const cls=DATA.classes.find(cc=>cc.id===s0.classeId);
+      const ens=DATA.enseignants.find(e=>e.id===s0.enseignantId);
+
+      let header='';
+      if(mode==='ens'&&cls)header='<div class="bloc-main">'+escH(cls.nom||'')+'</div>';
+      else if(mode==='cls'&&ens)header='<div class="bloc-main">'+escH(ensLabel(ens))+'</div>';
+      else if(cls)header='<div class="bloc-main">'+escH(cls.nom||'')+'</div>';
+
+      // Déterminer le système (trimestre ou semestre) selon les périodes réelles du créneau
+      const usedIds=new Set(grp.map(x=>x.periodeId).filter(Boolean));
+      const semPer=rp.filter(p=>p.type==='semestre');
+      const triPer=rp.filter(p=>p.type==='trimestre');
+      const usesSem=semPer.some(p=>usedIds.has(p.id));
+      const relevantPer=usesSem?semPer:triPer;
+
+      let periodRows=relevantPer.map(p=>{
+        const s=grp.find(x=>x.periodeId===p.id);
+        const act=s?DATA.activites.find(a=>a.id===s.activiteId):null;
+        const ab=periodeAbbrev(p);
+        return'<div class="period-row"><span class="period-ab">'+escH(ab)+'</span>'
+          +(act?'<span class="period-act">'+escH(act.nom)+'</span>':'<span class="period-dash">—</span>')
+          +'</div>';
+      }).join('');
+
+      blocs+='<div class="bloc bloc-multi" style="top:'+top+'px;height:'+ht+'px;">'
+        +header
+        +periodRows
+        +'</div>';
+    }
+    daysCols+='<div class="day-col">'
+      +'<div class="day-header">'+(JOURS_COURTS[jour]||jour)+'</div>'
+      +'<div class="day-slots" style="height:'+totalPx+'px;">'+lines+blocs+'</div>'
+      +'</div>';
+  }
+
+  return'<div class="grid-outer"><div class="grid-wrap">'
+    +'<div class="time-col" style="height:'+totalPx+'px;">'+timeCols+'</div>'
+    +'<div class="days-row">'+daysCols+'</div>'
+    +'</div></div>';
+}
+
 // ── Grille horaire ──
 // mode : 'ens' (affiche classe+act+lieu), 'cls' (act+lieu+ens)
-function renderGrid(seances, mode){
+// activePeriodeId : quand non null, affiche le badge période sur chaque bloc
+function renderGrid(seances, mode, activePeriodeId){
   if(!seances.length)return'<p class="empty-state">Aucune séance pour cette sélection</p>';
   const jours=DATA.joursOuvres;
 
@@ -397,8 +513,16 @@ function renderGrid(seances, mode){
         extra=ens?'<div class="bloc-ens">'+escH(ensLabel(ens))+'</div>':'';
       }
 
+      // Badge période si on affiche une période spécifique (ex: S1 visible dans vue Trimestre 1)
+      let periodBadge='';
+      if(activePeriodeId&&s.periodeId){
+        const sp=DATA.periodes.find(p=>p.id===s.periodeId);
+        const ab=periodeAbbrev(sp);
+        if(ab)periodBadge='<span class="bloc-period-badge">'+escH(ab)+'</span>';
+      }
+
       blocs+='<div class="bloc" style="top:'+top+'px;height:'+ht+'px;background:'+c.bg+';border-left-color:'+c.border+';">'
-        +'<div class="bloc-time">'+escH(s.heureDebut)+'&ndash;'+escH(s.heureFin)+'</div>'
+        +'<div class="bloc-time">'+escH(s.heureDebut)+'&ndash;'+escH(s.heureFin)+periodBadge+'</div>'
         +'<div class="bloc-main">'+main+'</div>'
         +(sub1?'<div class="bloc-act">'+sub1+'</div>':'')
         +(sub2?'<div class="bloc-loc">'+sub2+'</div>':'')
@@ -488,7 +612,7 @@ function renderEquipe(periodeId){
         +(ens.initiales?'<span class="ens-badge">'+escH(ens.initiales)+'</span>':'')
         +'<span class="ens-hours">'+totalHStr(es)+'</span>'
       +'</div>'
-      +renderGrid(es,'ens')
+      +(periodeId?renderGrid(es,'ens',parseInt(periodeId)):renderGridAllPeriodes(es,'ens'))
       +'</div>';
   }
   return html;
@@ -502,8 +626,8 @@ function renderEnseignant(ensId,periodeId){
   const per=periodeId?DATA.periodes.find(p=>p.id===parseInt(periodeId)):null;
   return'<div class="view-title">'+escH(nom)+'</div>'
     +'<div class="view-sub">'+(per?escH(per.nom):'Toutes les périodes')+' &mdash; '+totalHStr(seances)+'</div>'
-    +renderLegend(seances)
-    +'<div class="ens-section">'+renderGrid(seances,'ens')+'</div>';
+    +(per?'':renderLegend(seances))
+    +'<div class="ens-section">'+(periodeId?renderGrid(seances,'ens',parseInt(periodeId)):renderGridAllPeriodes(seances,'ens'))+'</div>';
 }
 
 function renderClasse(classeId,periodeId){
@@ -515,8 +639,8 @@ function renderClasse(classeId,periodeId){
   const sub=(per?escH(per.nom):'Toutes les périodes')+(ens?' &mdash; Prof&nbsp;: '+escH(ens.prenom?ens.prenom+' '+ens.nom:ens.nom):'');
   return'<div class="view-title">'+escH(cls.nom)+'</div>'
     +'<div class="view-sub">'+sub+'</div>'
-    +renderLegend(seances)
-    +'<div class="ens-section">'+renderGrid(seances,'cls')+'</div>';
+    +(per?'':renderLegend(seances))
+    +'<div class="ens-section">'+(periodeId?renderGrid(seances,'cls',parseInt(periodeId)):renderGridAllPeriodes(seances,'cls'))+'</div>';
 }
 
 // ── État global ──
