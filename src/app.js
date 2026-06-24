@@ -650,11 +650,14 @@ function confirmUpdateDialog() {
  * Le rechargement est déclenché par l'événement controllerchange dans main.js.
  */
 function applySwUpdate() {
+  // Désactiver le beforeunload pour que le rechargement ne soit pas bloqué
+  dataModifiedSinceLastSave = false;
   const reg = window.__swRegistration;
   if (reg?.waiting) {
     reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    // Filet de sécurité : si controllerchange ne se déclenche pas dans les 3s, forcer le rechargement
+    setTimeout(() => window.location.reload(), 3000);
   } else {
-    // Fallback : simple rechargement (le SW sera activé au prochain cycle)
     window.location.reload();
   }
 }
