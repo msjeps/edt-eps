@@ -440,12 +440,8 @@ function drawGrid(doc, {
     const curr = rows[ri];
     const isGroupBoundary = curr.jour !== prev.jour || (showEnsCol && curr.ens?.id !== prev.ens?.id);
 
-    if (isGroupBoundary) {
-      doc.setDrawColor(...GROUP_LINE);
-      doc.setLineWidth(0.45);
-      doc.line(gX, y, gX + gridW, y);
-    } else {
-      // Filet très fin dans la zone période+horaires uniquement (les merged cells couvrent le reste)
+    if (!isGroupBoundary) {
+      // Filet très fin entre périodes du même groupe (dans la zone période+horaires uniquement)
       const thinStartX = showEnsCol ? col2X : col1X;
       doc.setDrawColor(210, 215, 230);
       doc.setLineWidth(0.07);
