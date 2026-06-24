@@ -553,25 +553,28 @@ function drawGrid(doc, {
 // ============================================================
 
 function drawLegend(doc, x, y, seances, installations, maxX, lieux) {
-  const usedInsts = [...new Set(seances.map(s => s.installationId))]
-    .map(id => installations.find(i => i.id === id))
-    .filter(Boolean);
-  if (!usedInsts.length) return;
+  // Dédupliquer les lieux utilisés (via les installations des séances)
+  const usedLieuIds = [...new Set(
+    seances.map(s => installations.find(i => i.id === s.installationId)?.lieuId).filter(Boolean)
+  )];
+  const usedLieux = usedLieuIds.map(id => lieux.find(l => l.id === id)).filter(Boolean);
+  if (!usedLieux.length) return;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6);
   doc.setTextColor(60, 70, 100);
-  doc.text('Installations : ', x, y + 2.5);
-  let legX = x + doc.getTextWidth('Installations : ') + 1;
+  doc.text('Lieux : ', x, y + 2.5);
+  let legX = x + doc.getTextWidth('Lieux : ') + 1;
   doc.setFont('helvetica', 'normal');
 
-  for (const inst of usedInsts) {
-    const colors = instColors(inst, lieux);
+  for (const lieu of usedLieux) {
+    const { slugify: sl } = { slugify: (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') };
+    const colors = getInstallationColors(sl(lieu.nom));
     doc.setFillColor(...hexToRgb(colors.border));
     doc.rect(legX, y, 3.5, 3, 'F');
     doc.setTextColor(50, 60, 80);
-    doc.text(inst.nom, legX + 4.5, y + 2.5);
-    legX += 5 + doc.getTextWidth(inst.nom) + 4;
+    doc.text(lieu.nom, legX + 4.5, y + 2.5);
+    legX += 5 + doc.getTextWidth(lieu.nom) + 4;
     if (legX > maxX) break;
   }
 }
