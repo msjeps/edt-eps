@@ -29,10 +29,11 @@ const JOUR_BG     = [228, 236, 252]; // cellule jour (fond)
 const JOUR_FG     = [28, 48, 88];   // texte jour
 const ENS_BG      = [242, 246, 255]; // cellule enseignant
 const PER_BG      = [248, 250, 255]; // cellule période
-const ROW_EVEN_BG = [252, 253, 255];
-const ROW_ODD_BG  = [245, 248, 254];
+const GROUP_A_BG  = [245, 249, 255]; // fond groupe pair (bleuté)
+const GROUP_B_BG  = [252, 252, 248]; // fond groupe impair (chaud)
 const GRID_LINE   = [200, 207, 220];
 const JOUR_LINE   = [145, 160, 195];
+const GROUP_LINE  = [140, 155, 185]; // ligne séparation entre groupes enseignant
 
 // ============================================================
 // UTILITAIRES
@@ -393,9 +394,16 @@ function drawGrid(doc, {
   }
 
   // ---- LIGNES DE DONNÉES ----
+  // Calcul de l'index de groupe (change à chaque nouvel enseignant ou nouveau jour)
+  let groupIdx = 0;
   rows.forEach((row, ri) => {
+    if (ri > 0) {
+      const prev = rows[ri - 1];
+      if (row.jour !== prev.jour || (showEnsCol && row.ens?.id !== prev.ens?.id)) groupIdx++;
+    }
     const y = gY + headerH + ri * rowH;
-    const bg = ri % 2 === 0 ? ROW_EVEN_BG : ROW_ODD_BG;
+    // Fond alterné par groupe (pas par ligne) — rend les groupes immédiatement visibles
+    const bg = groupIdx % 2 === 0 ? GROUP_A_BG : GROUP_B_BG;
     doc.setFillColor(...bg);
     doc.rect(gX, y, gridW, rowH, 'F');
 
@@ -425,8 +433,7 @@ function drawGrid(doc, {
   });
 
   // ---- TRAITS HORIZONTAUX ----
-  // Logique de bordures : ligne fine entre périodes du même groupe enseignant,
-  // ligne medium entre groupes différents (enseignant ou jour différent)
+  // Ligne épaisse entre groupes (ens ou jour différent), filet entre périodes du même groupe
   for (let ri = 1; ri < rows.length; ri++) {
     const y = gY + headerH + ri * rowH;
     const prev = rows[ri - 1];
@@ -434,14 +441,14 @@ function drawGrid(doc, {
     const isGroupBoundary = curr.jour !== prev.jour || (showEnsCol && curr.ens?.id !== prev.ens?.id);
 
     if (isGroupBoundary) {
-      doc.setDrawColor(...GRID_LINE);
-      doc.setLineWidth(0.18);
+      doc.setDrawColor(...GROUP_LINE);
+      doc.setLineWidth(0.45);
       doc.line(gX, y, gX + gridW, y);
     } else {
-      // Ligne très fine uniquement dans la zone période+horaires (pas sur les merged cells jour/ens)
+      // Filet très fin dans la zone période+horaires uniquement (les merged cells couvrent le reste)
       const thinStartX = showEnsCol ? col2X : col1X;
-      doc.setDrawColor(215, 220, 235);
-      doc.setLineWidth(0.06);
+      doc.setDrawColor(210, 215, 230);
+      doc.setLineWidth(0.07);
       doc.line(thinStartX, y, gX + gridW, y);
     }
   }
@@ -488,7 +495,7 @@ function drawGrid(doc, {
       { align: 'center' }
     );
     doc.setDrawColor(...JOUR_LINE);
-    doc.setLineWidth(0.22);
+    doc.setLineWidth(0.55);
     doc.rect(col0X, jourY, jourColW, jourH, 'S');
 
     if (showEnsCol) {
@@ -517,8 +524,8 @@ function drawGrid(doc, {
           ensY + ensH / 2 - (ensLines.length - 1) * 1.8 + 1,
           { align: 'center' }
         );
-        doc.setDrawColor(175, 185, 215);
-        doc.setLineWidth(0.18);
+        doc.setDrawColor(130, 150, 200);
+        doc.setLineWidth(0.45);
         doc.rect(col1X, ensY, ensColW, ensH, 'S');
 
         ensRi = ensEnd;
