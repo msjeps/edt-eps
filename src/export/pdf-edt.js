@@ -11,7 +11,7 @@ import db, { getConfig } from '../db/schema.js';
 import { saveExportFile } from '../utils/filesystem.js';
 import { toast } from '../components/toast.js';
 import { getInstallationColors } from '../utils/colors.js';
-import { slugify } from '../utils/helpers.js';
+import { slugify, dateHeure } from '../utils/helpers.js';
 import { getOverlappingPeriodeIds } from '../utils/period-store.js';
 
 // ============================================================
@@ -661,7 +661,7 @@ export async function exportPdfEquipe(periodeId) {
 
   const perLabel = periodeId ? (targetPeriodes[0]?.nom || 'periode') : 'annuel';
   const blob = doc.output('blob');
-  await saveExportFile(blob, `EDT_Equipe_${perLabel}_${new Date().toISOString().split('T')[0]}.pdf`);
+  await saveExportFile(blob, `EDT_Equipe_${perLabel}_${dateHeure()}.pdf`);
   toast.success(`PDF EDT Équipe exporté (${doc.getNumberOfPages()} page(s))`);
 }
 
@@ -781,7 +781,7 @@ export async function exportPdfEnseignants(periodeId, enseignantIdFilter) {
 
   const ensLabel = enseignantIdFilter ? (targetEnseignants[0]?.nom || 'ens') : 'tous';
   const blob = doc.output('blob');
-  await saveExportFile(blob, `Fiches_Enseignants_${ensLabel}_${new Date().toISOString().split('T')[0]}.pdf`);
+  await saveExportFile(blob, `Fiches_Enseignants_${ensLabel}_${dateHeure()}.pdf`);
   toast.success(`Fiches PDF exportées (${doc.getNumberOfPages()} page(s))`);
 }
 
@@ -919,6 +919,6 @@ export async function exportPdfClasses(periodeId, classeIdFilter) {
 
   const clsLabel = classeIdFilter ? (targetClasses[0]?.nom || 'classe') : 'toutes';
   const blob = doc.output('blob');
-  await saveExportFile(blob, `Fiches_Classes_${clsLabel}_${new Date().toISOString().split('T')[0]}.pdf`);
+  await saveExportFile(blob, `Fiches_Classes_${clsLabel}_${dateHeure()}.pdf`);
   toast.success(`Fiches classes PDF exportées (${doc.getNumberOfPages()} page(s))`);
 }

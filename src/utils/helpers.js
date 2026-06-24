@@ -153,3 +153,15 @@ export function slugify(str) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 }
+
+/**
+ * Horodatage pour les noms de fichiers exports : YYYY-MM-DD_HHhMM
+ * Permet de distinguer deux exports du m\u00eame jour sans \u00e9craser le pr\u00e9c\u00e9dent.
+ */
+export function dateHeure() {
+  const now = new Date();
+  const d = now.toISOString().split('T')[0];
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  return `${d}_${h}h${m}`;
+}

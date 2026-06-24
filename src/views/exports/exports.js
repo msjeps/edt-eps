@@ -5,7 +5,7 @@ import db from '../../db/schema.js';
 import { getConfig, setConfig } from '../../db/schema.js';
 import { toast } from '../../components/toast.js';
 import { genererDatesJour, getCalendrierExclusions } from '../../utils/dates.js';
-import { JOURS_OUVRES, slugify } from '../../utils/helpers.js';
+import { JOURS_OUVRES, slugify, dateHeure } from '../../utils/helpers.js';
 import Papa from 'papaparse';
 import { saveExportFile } from '../../utils/filesystem.js';
 import ExcelJS from 'exceljs';
@@ -657,7 +657,7 @@ async function exportCsvMairie(periodeId) {
   const csv = Papa.unparse(cleanRows, { delimiter: ';' });
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
   const per = periodeId ? periodes.find(p => p.id === parseInt(periodeId))?.nom || '' : 'annuel';
-  const result = await saveExportFile(blob, `Reservations_Mairie_${per}_${new Date().toISOString().split('T')[0]}.csv`);
+  const result = await saveExportFile(blob, `Reservations_Mairie_${per}_${dateHeure()}.csv`);
 
   if (result.fallback) {
     toast.success(`Export CSV sauvegardé en téléchargement (${rows.length} réservations)`);
@@ -838,7 +838,7 @@ async function exportCsvTransport(periodeId) {
   const csv = Papa.unparse(finalRows, { delimiter: ';' });
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
   const per = periodeId ? periodes.find(p => p.id === parseInt(periodeId))?.nom || '' : 'annuel';
-  await saveExportFile(blob, `Transport_EPS_${per}_${new Date().toISOString().split('T')[0]}.csv`);
+  await saveExportFile(blob, `Transport_EPS_${per}_${dateHeure()}.csv`);
 
   if (nbDatesMissing > 0) {
     toast.warning(`Export transport sauvegardé — ${nbDatesMissing} séance(s) sans dates (période non configurée)`);
@@ -1014,7 +1014,7 @@ async function exportExcelEdt(periodeId) {
   // Télécharger
   const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  await saveExportFile(blob, `EDT_EPS_${etablissement}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  await saveExportFile(blob, `EDT_EPS_${etablissement}_${dateHeure()}.xlsx`);
   toast.success('Export Excel sauvegardé');
 }
 
@@ -1299,7 +1299,7 @@ async function exportSyntheses() {
   const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const etablissement = await getConfig('etablissementNom') || 'Établissement';
-  await saveExportFile(blob, `Syntheses_EPS_${etablissement}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  await saveExportFile(blob, `Syntheses_EPS_${etablissement}_${dateHeure()}.xlsx`);
   toast.success('Synthèses sauvegardées');
 }
 

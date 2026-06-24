@@ -15,6 +15,7 @@ import { saveExportFile } from '../utils/filesystem.js';
 import { toast } from '../components/toast.js';
 import { getCalendrierExclusions } from '../utils/dates.js';
 import { getOverlappingPeriodeIds } from '../utils/period-store.js';
+import { dateHeure } from '../utils/helpers.js';
 
 // ============================================================
 // CONSTANTES
@@ -610,7 +611,7 @@ export async function exportPdfTransport(periodeId, exclusions = []) {
     }
 
     const blob  = doc.output('blob');
-    const fname = `Transport_PDF_${etab}_${perNom}_${new Date().toISOString().split('T')[0]}.pdf`
+    const fname = `Transport_PDF_${etab}_${perNom}_${dateHeure()}.pdf`
       .replace(/\s+/g, '_');
     await saveExportFile(blob, fname);
 
