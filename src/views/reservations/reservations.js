@@ -242,8 +242,8 @@ export async function renderReservations(container) {
     noteDisplayEl.innerHTML = `
       <div style="display:flex;gap:4px;align-items:center;margin-top:4px;">
         <input class="form-input resa-note-input" type="text" value="${currentNote.replace(/"/g, '&quot;')}"
-               placeholder="Ajouter une note…"
-               style="flex:1;padding:2px 6px;font-size:var(--fs-xs);">
+               placeholder="Ajouter une note…" maxlength="50"
+               style="flex:1;min-width:200px;padding:4px 8px;font-size:var(--fs-sm);height:32px;">
         <button class="btn-icon-sm resa-note-save" title="Enregistrer">✓</button>
         <button class="btn-icon-sm resa-note-cancel" title="Annuler">✕</button>
       </div>
