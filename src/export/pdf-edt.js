@@ -306,7 +306,7 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false) {
   }
 
   doc.setDrawColor(...borderRgb);
-  doc.setLineWidth(0.25);
+  doc.setLineWidth(0.15);
   doc.rect(x, y, w, h, 'S');
 }
 
@@ -425,12 +425,26 @@ function drawGrid(doc, {
   });
 
   // ---- TRAITS HORIZONTAUX ----
-  doc.setDrawColor(...GRID_LINE);
-  doc.setLineWidth(0.12);
-  rows.forEach((_, ri) => {
+  // Logique de bordures : ligne fine entre périodes du même groupe enseignant,
+  // ligne medium entre groupes différents (enseignant ou jour différent)
+  for (let ri = 1; ri < rows.length; ri++) {
     const y = gY + headerH + ri * rowH;
-    doc.line(gX, y, gX + gridW, y);
-  });
+    const prev = rows[ri - 1];
+    const curr = rows[ri];
+    const isGroupBoundary = curr.jour !== prev.jour || (showEnsCol && curr.ens?.id !== prev.ens?.id);
+
+    if (isGroupBoundary) {
+      doc.setDrawColor(...GRID_LINE);
+      doc.setLineWidth(0.18);
+      doc.line(gX, y, gX + gridW, y);
+    } else {
+      // Ligne très fine uniquement dans la zone période+horaires (pas sur les merged cells jour/ens)
+      const thinStartX = showEnsCol ? col2X : col1X;
+      doc.setDrawColor(215, 220, 235);
+      doc.setLineWidth(0.06);
+      doc.line(thinStartX, y, gX + gridW, y);
+    }
+  }
 
   // ---- TRAITS VERTICAUX (colonnes fixes) ----
   doc.setDrawColor(...GRID_LINE);
@@ -474,7 +488,7 @@ function drawGrid(doc, {
       { align: 'center' }
     );
     doc.setDrawColor(...JOUR_LINE);
-    doc.setLineWidth(0.4);
+    doc.setLineWidth(0.22);
     doc.rect(col0X, jourY, jourColW, jourH, 'S');
 
     if (showEnsCol) {
@@ -504,7 +518,7 @@ function drawGrid(doc, {
           { align: 'center' }
         );
         doc.setDrawColor(175, 185, 215);
-        doc.setLineWidth(0.25);
+        doc.setLineWidth(0.18);
         doc.rect(col1X, ensY, ensColW, ensH, 'S');
 
         ensRi = ensEnd;
@@ -516,7 +530,7 @@ function drawGrid(doc, {
 
   // Bordure extérieure
   doc.setDrawColor(...HEADER_BG);
-  doc.setLineWidth(0.5);
+  doc.setLineWidth(0.3);
   doc.rect(gX, gY, gridW, headerH + rows.length * rowH, 'S');
 
   return gY + headerH + rows.length * rowH;
@@ -600,11 +614,11 @@ export async function exportPdfEquipe(periodeId) {
   const TIME_AVAIL = PW - 2 * M - FIXED_W;
   const xCoords = buildXCoords(timeAxis, 0, TIME_AVAIL);
 
-  // Hauteur de ligne dynamique pour tenir sur une page
+  // Hauteur de ligne dynamique pour tenir sur une page (sans minimum rigide qui cause le débordement)
   const HEADER_H = rows.length > 25 ? 6 : 8;
   const LEGEND_FOOTER_H = 12;
   const AVAILABLE_H = PH - 2 * M - TITLE_H - HEADER_H - LEGEND_FOOTER_H;
-  const ROW_H = Math.max(4, Math.min(9, AVAILABLE_H / rows.length));
+  const ROW_H = Math.min(9, AVAILABLE_H / rows.length);
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const periodeLabel = periodeId
