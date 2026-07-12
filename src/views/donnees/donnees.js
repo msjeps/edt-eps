@@ -8,7 +8,7 @@ import Papa from 'papaparse';
 import { toast } from '../../components/toast.js';
 import { openModal, confirmModal } from '../../components/modal.js';
 import { escapeHtml, h } from '../../utils/escape.js';
-import { NIVEAUX, CHAMPS_APPRENTISSAGE, getChampsApprentissage, JOURS_OUVRES, JOURS_COURTS } from '../../utils/helpers.js';
+import { NIVEAUX, CHAMPS_APPRENTISSAGE, getChampsApprentissage, JOURS_OUVRES, JOURS_COURTS, deriveInitiales } from '../../utils/helpers.js';
 import { getConfig, setConfig } from '../../db/schema.js';
 import { captureUndo } from '../../utils/undo.js';
 import {
@@ -276,6 +276,26 @@ async function openEnseignantModal(ens = null) {
 
   bindIndispoToggle(modal);
 
+  // Synchronisation auto des initiales avec prénom/nom tant qu'elles ne sont pas
+  // personnalisées (elles servent d'identité de l'enseignant dans l'EDT).
+  const prenomInput = modal.querySelector('#md-ens-prenom');
+  const nomInput = modal.querySelector('#md-ens-nom');
+  const initInput = modal.querySelector('#md-ens-init');
+  // Considérées « manuelles » si, à l'ouverture, elles diffèrent de la dérivation
+  // du nom actuel (donc saisies volontairement par l'utilisateur).
+  let initManuelles = isEdit && !!ens.initiales
+    && ens.initiales.toUpperCase() !== deriveInitiales(ens.prenom, ens.nom).toUpperCase();
+  const syncInitiales = () => {
+    if (initManuelles) return;
+    initInput.value = deriveInitiales(prenomInput.value, nomInput.value);
+  };
+  prenomInput?.addEventListener('input', syncInitiales);
+  nomInput?.addEventListener('input', syncInitiales);
+  initInput?.addEventListener('input', () => {
+    // L'utilisateur reprend la main ; si le champ est vidé, on repasse en auto.
+    initManuelles = initInput.value.trim() !== '';
+  });
+
   modal.querySelector('#md-ens-cancel')?.addEventListener('click', close);
   modal.querySelector('#md-ens-save')?.addEventListener('click', async () => {
     const data = {
@@ -290,6 +310,20 @@ async function openEnseignantModal(ens = null) {
     if (!data.nom) {
       toast.warning('Le nom est obligatoire');
       return;
+    }
+
+    // Filet de sécurité : si le nom a changé et que les initiales n'ont pas été
+    // saisies à la main (encore identiques à l'existant), on les régénère pour
+    // éviter que l'EDT garde l'ancienne identité.
+    if (isEdit) {
+      const nomAChange = data.prenom !== (ens.prenom || '') || data.nom !== (ens.nom || '');
+      const initInchangees = data.initiales === (ens.initiales || '').toUpperCase();
+      if (nomAChange && initInchangees) {
+        data.initiales = deriveInitiales(data.prenom, data.nom).toUpperCase();
+      }
+    }
+    if (!data.initiales) {
+      data.initiales = deriveInitiales(data.prenom, data.nom).toUpperCase();
     }
 
     const nouvellesIndispos = collectIndisposFromModal(modal, 'enseignant', null);

@@ -3,6 +3,7 @@
  */
 import db from './db/schema.js';
 import { initDefaultConfig, getConfig } from './db/schema.js';
+import { migrerInitiales } from './db/migrations.js';
 import { refreshCalendrierBackground } from './utils/calendrier-api.js';
 import { ANNEES_SCOLAIRES } from './utils/dates.js';
 import { renderDashboard } from './views/dashboard.js';
@@ -38,6 +39,17 @@ let dataModifiedSinceLastSave = false;
 export async function initApp() {
   // Initialiser la config par défaut
   await initDefaultConfig();
+
+  // Migration : synchroniser les initiales des enseignants avec leur nom
+  // (l'EDT affiche les initiales stockées — un renommage antérieur les laissait périmées)
+  try {
+    const initModifs = await migrerInitiales();
+    if (initModifs > 0) {
+      toast.info(`${initModifs} enseignant${initModifs > 1 ? 's' : ''} : initiales synchronisées avec le nom`);
+    }
+  } catch (err) {
+    console.warn('Migration initiales ignorée :', err);
+  }
 
   // Rafraîchir le calendrier scolaire en arrière-plan (non bloquant)
   refreshCalendrierBackground(ANNEES_SCOLAIRES);

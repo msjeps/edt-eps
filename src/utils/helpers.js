@@ -155,6 +155,21 @@ export function slugify(str) {
 }
 
 /**
+ * D\u00e9rive des initiales par d\u00e9faut \u00e0 partir du pr\u00e9nom/nom.
+ * Ex. Martin LEBLANC \u2192 "MLe" (initiale du pr\u00e9nom + 2 premi\u00e8res lettres du nom).
+ * Sert d'identit\u00e9 de l'enseignant dans les blocs de l'EDT.
+ */
+export function deriveInitiales(prenom, nom) {
+  const p = (prenom || '').trim();
+  const n = (nom || '').trim();
+  if (!n && !p) return '';
+  if (!n) return p.slice(0, 3).charAt(0).toUpperCase() + p.slice(1, 3).toLowerCase();
+  const first = (p.charAt(0) || n.charAt(0)).toUpperCase();
+  const rest = n.charAt(0).toUpperCase() + n.charAt(1).toLowerCase();
+  return (first + rest).trim();
+}
+
+/**
  * Horodatage pour les noms de fichiers exports : YYYY-MM-DD_HHhMM
  * Permet de distinguer deux exports du m\u00eame jour sans \u00e9craser le pr\u00e9c\u00e9dent.
  */
