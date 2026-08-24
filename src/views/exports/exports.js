@@ -449,6 +449,31 @@ export async function renderExports(container) {
   let exclusions = await loadExclusions();
   renderExclusionsList(exclusions, classes, 'exclusions-list');
 
+  // === Exclusions transport — "Toutes les classes" mutuellement exclusif ===
+  // Par défaut "Toutes les classes" est sélectionné ; en multi-select natif, un
+  // Ctrl+clic sur une classe précise AJOUTE à la sélection existante au lieu de
+  // la remplacer, donc "Toutes les classes" restait coché en même temps que les
+  // classes choisies (et le code d'ajout retombait alors silencieusement sur
+  // "all"). On force ici l'exclusivité quel que soit le mode de clic/OS.
+  const exclClassesSel = document.getElementById('excl-classes');
+  let exclClassesPrev = exclClassesSel ? [...exclClassesSel.selectedOptions].map(o => o.value) : ['all'];
+  exclClassesSel?.addEventListener('change', () => {
+    const current = [...exclClassesSel.selectedOptions].map(o => o.value);
+    let next = current;
+    if (current.length === 0) {
+      next = ['all']; // rien sélectionné → retour à "Toutes les classes"
+    } else if (current.includes('all') && current.length > 1) {
+      const added = current.filter(v => !exclClassesPrev.includes(v));
+      next = added.includes('all')
+        ? ['all']                            // "Toutes les classes" vient d'être cochée → on nettoie le reste
+        : current.filter(v => v !== 'all');  // une classe précise vient d'être ajoutée → on décoche "Toutes les classes"
+    }
+    if (next !== current) {
+      [...exclClassesSel.options].forEach(o => { o.selected = next.includes(o.value); });
+    }
+    exclClassesPrev = next;
+  });
+
   // === Exclusions transport — ajout ===
   document.getElementById('btn-add-exclusion')?.addEventListener('click', async () => {
     const date        = document.getElementById('excl-date')?.value;
@@ -461,10 +486,13 @@ export async function renderExports(container) {
     if (!date) { toast.warning('Veuillez saisir une date'); return; }
     if (dateFin && dateFin < date) { toast.warning('La date de fin doit être postérieure à la date de début'); return; }
 
-    // Déterminer classesIds
+    // Déterminer classesIds (filet de sécurité : si "all" et des classes précises sont
+    // sélectionnés en même temps, on privilégie les classes précises plutôt que de tout
+    // exclure silencieusement)
+    const optsSpecifiques = opts.filter(v => v !== 'all');
     let classesIds = 'all';
-    if (opts.length > 0 && !opts.includes('all')) {
-      classesIds = opts.map(v => parseInt(v)).filter(Boolean);
+    if (optsSpecifiques.length > 0) {
+      classesIds = optsSpecifiques.map(v => parseInt(v)).filter(Boolean);
     }
 
     // Construire la liste des dates à exclure (une seule si pas de date de fin,
@@ -505,6 +533,7 @@ export async function renderExports(container) {
     if (document.getElementById('excl-raison'))   document.getElementById('excl-raison').value = '';
     // Reset select : remettre "Toutes" sélectionné
     if (sel) { [...sel.options].forEach(o => { o.selected = o.value === 'all'; }); }
+    exclClassesPrev = ['all'];
     toast.success(dates.length > 1 ? `${dates.length} dates exclues ajoutées` : 'Date exclue ajoutée');
   });
 
