@@ -291,6 +291,7 @@ export async function renderExports(container) {
           </div>
           <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
             Ces dates sont retirées du planning PDF transport. Une page récapitulative est ajoutée au PDF si des exclusions sont appliquées.
+            Renseignez une <strong>date de fin</strong> pour exclure une période entière (ex&nbsp;: une semaine) en une seule saisie.
           </p>
 
           <!-- Formulaire ajout -->
@@ -300,6 +301,10 @@ export async function renderExports(container) {
             <div style="display:flex;flex-direction:column;gap:4px;">
               <label style="font-size:var(--fs-sm);font-weight:600;">Date</label>
               <input type="date" class="form-input" id="excl-date" style="width:150px;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:var(--fs-sm);font-weight:600;">Date de fin <span style="font-weight:400;color:var(--c-text-secondary);">(optionnel)</span></label>
+              <input type="date" class="form-input" id="excl-date-fin" style="width:150px;">
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px;">
               <label style="font-size:var(--fs-sm);font-weight:600;">Raison</label>
@@ -318,6 +323,10 @@ export async function renderExports(container) {
                 Ctrl+clic pour sélection multiple
               </small>
             </div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);padding-bottom:8px;white-space:nowrap;">
+              <input type="checkbox" id="excl-jours-ouvres" checked>
+              Jours ouvrés uniquement (lun-ven)
+            </label>
             <button class="btn btn-primary" id="btn-add-exclusion">+ Ajouter</button>
           </div>
 
@@ -442,12 +451,15 @@ export async function renderExports(container) {
 
   // === Exclusions transport — ajout ===
   document.getElementById('btn-add-exclusion')?.addEventListener('click', async () => {
-    const date   = document.getElementById('excl-date')?.value;
-    const raison = document.getElementById('excl-raison')?.value.trim();
-    const sel    = document.getElementById('excl-classes');
-    const opts   = [...(sel?.selectedOptions || [])].map(o => o.value);
+    const date        = document.getElementById('excl-date')?.value;
+    const dateFin      = document.getElementById('excl-date-fin')?.value;
+    const joursOuvres  = document.getElementById('excl-jours-ouvres')?.checked ?? true;
+    const raison       = document.getElementById('excl-raison')?.value.trim();
+    const sel          = document.getElementById('excl-classes');
+    const opts         = [...(sel?.selectedOptions || [])].map(o => o.value);
 
     if (!date) { toast.warning('Veuillez saisir une date'); return; }
+    if (dateFin && dateFin < date) { toast.warning('La date de fin doit être postérieure à la date de début'); return; }
 
     // Déterminer classesIds
     let classesIds = 'all';
@@ -455,21 +467,45 @@ export async function renderExports(container) {
       classesIds = opts.map(v => parseInt(v)).filter(Boolean);
     }
 
-    exclusions.push({
-      id:         crypto.randomUUID(),
-      date,
-      raison,
-      classesIds,
+    // Construire la liste des dates à exclure (une seule si pas de date de fin,
+    // sinon toutes les dates de la plage — éventuellement filtrées aux jours ouvrés)
+    const dates = [];
+    if (dateFin) {
+      const cur = new Date(date + 'T00:00:00');
+      const fin = new Date(dateFin + 'T00:00:00');
+      while (cur <= fin) {
+        const jourSemaine = cur.getDay(); // 0=dim ... 6=sam
+        if (!joursOuvres || (jourSemaine >= 1 && jourSemaine <= 5)) {
+          // Formatage en local (pas toISOString, qui convertit en UTC et peut décaler la date d'un jour)
+          const y = cur.getFullYear();
+          const m = String(cur.getMonth() + 1).padStart(2, '0');
+          const d = String(cur.getDate()).padStart(2, '0');
+          dates.push(`${y}-${m}-${d}`);
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else {
+      dates.push(date);
+    }
+
+    dates.forEach(d => {
+      exclusions.push({
+        id:         crypto.randomUUID(),
+        date:       d,
+        raison,
+        classesIds,
+      });
     });
     await saveExclusions(exclusions);
     renderExclusionsList(exclusions, classes, 'exclusions-list');
 
     // Reset form
-    if (document.getElementById('excl-date'))   document.getElementById('excl-date').value = '';
-    if (document.getElementById('excl-raison')) document.getElementById('excl-raison').value = '';
+    if (document.getElementById('excl-date'))     document.getElementById('excl-date').value = '';
+    if (document.getElementById('excl-date-fin')) document.getElementById('excl-date-fin').value = '';
+    if (document.getElementById('excl-raison'))   document.getElementById('excl-raison').value = '';
     // Reset select : remettre "Toutes" sélectionné
     if (sel) { [...sel.options].forEach(o => { o.selected = o.value === 'all'; }); }
-    toast.success('Date exclue ajoutée');
+    toast.success(dates.length > 1 ? `${dates.length} dates exclues ajoutées` : 'Date exclue ajoutée');
   });
 
   // === Exclusions transport — suppression (délégation) ===
