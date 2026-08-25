@@ -355,10 +355,11 @@ async function openEnseignantModal(ens = null) {
 
 // === Contraintes ===
 async function renderContraintesTab(container) {
-  const [ctMax, ctEcart, ct1prof] = await Promise.all([
+  const [ctMax, ctEcart, ct1prof, ctAS] = await Promise.all([
     getConfig('contrainte_max_heures_actif'),
     getConfig('contrainte_ecart_24h_actif'),
     getConfig('contrainte_1prof_1classe_actif'),
+    getConfig('as_bloque_ressources_actif'),
   ]);
 
   const regles = [
@@ -379,6 +380,12 @@ async function renderContraintesTab(container) {
       val: ct1prof ?? true,
       titre: '1 enseignant = 1 classe par créneau',
       desc: 'Un enseignant ne peut pas être assigné à deux classes différentes au même moment.',
+    },
+    {
+      cle: 'as_bloque_ressources_actif',
+      val: ctAS ?? true,
+      titre: 'L\'AS bloque les ressources (installation, enseignant)',
+      desc: 'Une séance d\'AS déclenche les conflits d\'installation et d\'enseignant comme un cours normal. Désactivez si l\'AS est gérée en dehors de ce système de réservation.',
     },
   ];
 

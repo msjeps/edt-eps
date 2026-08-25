@@ -16,7 +16,7 @@ export async function renderDashboard(container) {
   const [
     enseignants, classes, activites, installations, seances,
     periodes, lieux, indisponibilites, nom, type, zone,
-    ctMax, ctEcart, ct1prof,
+    ctMax, ctEcart, ct1prof, asBloqueRessources,
     validation,
   ] = await Promise.all([
     db.enseignants.toArray(),
@@ -33,6 +33,7 @@ export async function renderDashboard(container) {
     getConfig('contrainte_max_heures_actif'),
     getConfig('contrainte_ecart_24h_actif'),
     getConfig('contrainte_1prof_1classe_actif'),
+    getConfig('as_bloque_ressources_actif'),
     validateProjectConfig(),
   ]);
 
@@ -43,8 +44,9 @@ export async function renderDashboard(container) {
   // Calcul des conflits
   let nbConflits = 0;
   if (seances.length > 0) {
+    const seancesPourConflits = (asBloqueRessources ?? true) ? seances : seances.filter(s => !s.isAS);
     const conflits = validerToutesSeances({
-      seances, classes, installations, activites, indisponibilites,
+      seances: seancesPourConflits, classes, installations, activites, indisponibilites,
       contrainte_max_heures_actif: ctMax ?? true,
       contrainte_ecart_24h_actif: ctEcart ?? true,
       contrainte_1prof_1classe_actif: ct1prof ?? true,

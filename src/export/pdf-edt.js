@@ -273,7 +273,7 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false) {
 
   const primaryLabel = showTeacher
     ? (ens ? [ens.prenom, ens.nom].filter(Boolean).join(' ') : '')
-    : (cls?.nom || '');
+    : (seance.isAS ? `AS ${seance.intitule || ''}`.trim() : (cls?.nom || ''));
 
   if (h < 7) {
     const actName = act ? (act.nom.length > 14 ? act.nom.substring(0, 13) + '…' : act.nom) : '';
@@ -753,9 +753,11 @@ export async function exportPdfEnseignants(periodeId, enseignantIdFilter) {
     const orsLabel = ens.ors ? `ORS : ${ens.ors}h  ·  ` : '';
     doc.text(`${orsLabel}${periodeLabel}  ·  ${anneeScolaire}`, M + 5, M + 14.5);
 
+    // L'AS est hors ORS : exclue du total hebdo affiché (mais reste visible sur la grille)
+    const ensSeancesOrs = ensSeances.filter(s => !s.isAS);
     const { str: hebdoStr, isWeighted: hebdoWeighted } = periodeId
-      ? { str: totalHebdoStr(ensSeances), isWeighted: false }
-      : totalHebdoAnnualise(ensSeances, periodes);
+      ? { str: totalHebdoStr(ensSeancesOrs), isWeighted: false }
+      : totalHebdoAnnualise(ensSeancesOrs, periodes);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);

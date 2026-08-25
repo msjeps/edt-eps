@@ -79,9 +79,12 @@ export function conflitEnseignant(seance, toutesSeances) {
 
 /**
  * Vérifie qu'une classe n'est pas en double sur le même créneau
- * (même période uniquement)
+ * (même période uniquement).
+ * Une séance sans classe (ex : AS, dont le "groupe" est un intitulé libre,
+ * pas une classe) n'est jamais concernée par ce conflit.
  */
 export function conflitClasse(seance, toutesSeances) {
+  if (!seance.classeId) return [];
   return toutesSeances.filter(s =>
     s.id !== seance.id &&
     s.classeId === seance.classeId &&
@@ -126,14 +129,17 @@ export function conflitInstallation(seance, toutesSeances, installations) {
 
 /**
  * Vérifie la contrainte 24h minimum entre deux séances
- * d'une même classe de collège (même période uniquement)
+ * d'une même classe de collège (même période uniquement).
+ * L'AS n'est jamais concernée (ni comme source, ni comme cible) : elle n'a
+ * pas les mêmes contraintes que l'enseignement (cf. help-tooltip "as").
  */
 export function conflitEcart24h(seance, toutesSeances, classes) {
+  if (seance.isAS) return [];
   const classe = classes.find(c => c.id === seance.classeId);
   if (!classe || !NIVEAUX_COLLEGE.includes(classe.niveau)) return [];
 
   return toutesSeances.filter(s => {
-    if (s.id === seance.id || s.classeId !== seance.classeId) return false;
+    if (s.id === seance.id || s.classeId !== seance.classeId || s.isAS) return false;
     if (!memePeriode(s, seance)) return false;
     const ecart = ecartEntreSeances(seance, s);
     return ecart > 0 && ecart < 24;

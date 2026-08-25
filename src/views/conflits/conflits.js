@@ -11,7 +11,7 @@ import { seanceStore } from '../../db/store.js';
 
 export async function renderConflits(container) {
   const [seances, classes, installations, lieux, periodes, activites, enseignants, indisponibilites,
-    reservations, maxHeures, ctMax, ctEcart, ct1prof] = await Promise.all([
+    reservations, maxHeures, ctMax, ctEcart, ct1prof, asBloqueRessources] = await Promise.all([
     db.seances.toArray(),
     db.classes.toArray(),
     db.installations.toArray(),
@@ -25,10 +25,15 @@ export async function renderConflits(container) {
     getConfig('contrainte_max_heures_actif'),
     getConfig('contrainte_ecart_24h_actif'),
     getConfig('contrainte_1prof_1classe_actif'),
+    getConfig('as_bloque_ressources_actif'),
   ]);
 
+  // L'AS peut être configurée pour ne pas bloquer les ressources (installation/enseignant) —
+  // cf. réglage "L'AS bloque les ressources" dans Données > Contraintes.
+  const seancesPourConflits = (asBloqueRessources ?? true) ? seances : seances.filter(s => !s.isAS);
+
   const context = {
-    seances, classes, installations, lieux, periodes, activites, enseignants, indisponibilites,
+    seances: seancesPourConflits, classes, installations, lieux, periodes, activites, enseignants, indisponibilites,
     reservations,
     maxHeuresJour: maxHeures ?? 6,
     contrainte_max_heures_actif: ctMax ?? true,

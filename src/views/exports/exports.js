@@ -1037,7 +1037,7 @@ async function exportCsvMairie(periodeId) {
       Période: per?.nom || '',
       Jour: s.jour ? s.jour.charAt(0).toUpperCase() + s.jour.slice(1) : '',
       Créneau: creneau,
-      Classe: cls?.nom || '',
+      Classe: cls?.nom || (s.isAS ? `AS ${s.intitule || ''}`.trim() : ''),
       Activité: act?.nom || '',
       Enseignant: ens ? `${ens.prenom} ${ens.nom}`.trim() : '',
     });
@@ -1156,7 +1156,7 @@ async function exportCsvTransport(periodeId) {
       BUS_RETOUR: retourBus,
       DATES: datesArr.join(' ; '),
       PERIODE: per?.nom || '',
-      CLASSE: cls?.nom || '',
+      CLASSE: cls?.nom || (s.isAS ? `AS ${s.intitule || ''}`.trim() : ''),
       EFFECTIF: cls?.effectif || '',
       ENSEIGNANT: ens ? `${ens.prenom} ${ens.nom}` : '',
       NB_ROTATIONS: datesArr.length,
@@ -1581,7 +1581,7 @@ function buildTransportSheet(wb, titre, sheetName, installations, lieux, classes
         s.jour ? s.jour.charAt(0).toUpperCase() + s.jour.slice(1) : '',
         `${s.heureDebut}-${s.heureFin}`,
         lieu?.nom || '',
-        cls?.nom || '',
+        cls?.nom || (s.isAS ? `AS ${s.intitule || ''}`.trim() : ''),
         minToHeure(startMin + 15),
         minToHeure(endMin - 15),
         ens ? `${ens.prenom} ${ens.nom}` : '',
@@ -1745,7 +1745,8 @@ async function exportSyntheses() {
 
       let totalHeures = 0;
       for (const per of periodesTriees) {
-        const perSeances = seances.filter(s => s.enseignantId === ens.id && s.periodeId === per.id);
+        // AS hors ORS : exclue de la charge horaire d'enseignement
+        const perSeances = seances.filter(s => s.enseignantId === ens.id && s.periodeId === per.id && !s.isAS);
         let heures = 0;
         for (const s of perSeances) {
           const dureeMin = heureToMin(s.heureFin) - heureToMin(s.heureDebut);
@@ -1938,7 +1939,7 @@ async function afficherSyntheseOccupation(periodeId) {
           const cls = classes.find(cc => cc.id === s.classeId);
           const ens = enseignants.find(e => e.id === s.enseignantId);
           return `<div class="bloc" style="border-left:3px solid ${c.border};">
-            <span class="bloc-cls">${cls?.nom || '?'}</span>
+            <span class="bloc-cls">${cls?.nom || (s.isAS ? `AS ${s.intitule || ''}`.trim() : '?')}</span>
             <span class="bloc-ens">${ensLabel(ens)}</span>
           </div>`;
         }).join('');

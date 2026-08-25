@@ -296,7 +296,8 @@ export function buildMiniGrid(seances, refs, opts = {}) {
         const cls = refs.classes.find(c => c.id === s0.classeId);
         const ens = refs.enseignants.find(e => e.id === s0.enseignantId);
         const lines = [];
-        if (opts.showClasse    && cls) lines.push(`<strong style="font-size:10px;">${cls.nom}</strong>`);
+        if (opts.showClasse && s0.isAS) lines.push(`<strong style="font-size:10px;">🏃 ${s0.intitule || 'AS'}</strong>`);
+        else if (opts.showClasse && cls) lines.push(`<strong style="font-size:10px;">${cls.nom}</strong>`);
         if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
         // Déterminer le système (trimestre ou semestre) selon les périodes réelles du créneau
         const usedIds = new Set(grp.map(x => x.periodeId).filter(Boolean));
@@ -337,7 +338,8 @@ export function buildMiniGrid(seances, refs, opts = {}) {
         const partialLabel = opts.partialCreneaux?.get(creneauKey(s)) ?? null;
 
         const lines = [];
-        if (opts.showClasse    && cls)  lines.push(`<strong>${cls.nom}</strong>`);
+        if (opts.showClasse && s.isAS) lines.push(`<strong>🏃 ${s.intitule || 'AS'}</strong>`);
+        else if (opts.showClasse && cls)  lines.push(`<strong>${cls.nom}</strong>`);
         if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
         if (act && height >= 28)        lines.push(`<span style="font-size:9px;opacity:.85;">${act.nom.length > 14 ? act.nom.slice(0, 13) + '…' : act.nom}</span>`);
         if (opts.showInstallation && allInstIds.length > 0 && height >= 38) {
@@ -401,11 +403,14 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
   return `<div class="vues-cards-wrap" style="display:flex;flex-wrap:wrap;gap:var(--sp-5);">` +
     ensAvecSeances.map(ens => {
       const ensSeances = seances.filter(s => s.enseignantId === ens.id);
+      const ensSeancesOrs = ensSeances.filter(s => !s.isAS);
+      const ensSeancesAS = ensSeances.filter(s => s.isAS);
       const nom = [ens.prenom, ens.nom].filter(Boolean).join(' ');
-      const partialCreneaux = showPeriodeLabel ? new Map() : getPartialCreneauxMap(ensSeances, periodes);
+      const partialCreneaux = showPeriodeLabel ? new Map() : getPartialCreneauxMap(ensSeancesOrs, periodes);
       const { str: totalH, isWeighted } = showPeriodeLabel
-        ? totalHAnnualise(ensSeances, periodes)
-        : { str: totalHStr(ensSeances), isWeighted: false };
+        ? totalHAnnualise(ensSeancesOrs, periodes)
+        : { str: totalHStr(ensSeancesOrs), isWeighted: false };
+      const totalHAS = ensSeancesAS.length ? totalHStr(ensSeancesAS) : null;
       return `
         <div class="card vue-card" style="cursor:default;min-width:400px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--sp-3);">
@@ -413,7 +418,10 @@ function renderVueEnseignants(seances, data, showPeriodeLabel = false) {
               <div style="font-weight:600;font-size:var(--fs-base);">${nom}</div>
               ${ens.ors ? `<div style="font-size:var(--fs-sm);color:var(--c-text-secondary);">ORS : ${ens.ors}h</div>` : ''}
             </div>
-            <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;" title="${isWeighted ? 'Moyenne annualisée — certaines classes n\'ont cours qu\'une partie de l\'année' : ''}">${totalH} / sem.${isWeighted ? ' *' : ''}</span>
+            <div style="display:flex;flex-direction:column;gap:2px;align-items:flex-end;">
+              <span class="badge badge-info" style="font-size:var(--fs-sm);white-space:nowrap;position:static;" title="${isWeighted ? 'Moyenne annualisée — certaines classes n\'ont cours qu\'une partie de l\'année' : ''}">${totalH} / sem.${isWeighted ? ' *' : ''}</span>
+              ${totalHAS ? `<span style="font-size:var(--fs-xs);color:var(--c-text-secondary);white-space:nowrap;" title="Heures d'AS — hors ORS, non comptées dans le total ci-dessus">+ ${totalHAS} AS</span>` : ''}
+            </div>
           </div>
           <div class="mini-grid-scroll" style="overflow-x:auto;">
             ${buildMiniGrid(ensSeances, refs, { showClasse: true, showInstallation: !showPeriodeLabel, partialCreneaux, allPeriodesMode: showPeriodeLabel, rootPeriodes, patternsEnabled, instPatternMap })}
@@ -490,7 +498,7 @@ function renderVueInstallations(seances, data, showPeriodeLabel = false) {
       const instSeances = seances.filter(s => s.installationId === inst.id);
       const lieu = lieux.find(l => l.id === inst.lieuId);
       const colors = getColors(inst, lieux);
-      const nbClasses = new Set(instSeances.map(s => s.classeId)).size;
+      const nbClasses = new Set(instSeances.map(s => s.classeId).filter(Boolean)).size;
       return `
         <div class="card vue-card" style="cursor:default;min-width:400px;border-top:3px solid ${colors.border};">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--sp-3);">

@@ -342,6 +342,30 @@
   outline-color: #818CF8;
 }
 
+/* Association Sportive : bordure pointillée + badge "AS" — hors ORS, distincte
+   des séances d'enseignement mais garde la couleur/motif de l'installation. */
+.edt-bloc.is-as {
+  border-style: dashed;
+  border-width: 2px;
+}
+
+.edt-bloc .bloc-as-badge {
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--c-primary, #6366F1);
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .edt-bloc .bloc-as-badge {
+  background: #818CF8;
+  color: #1E1B4B;
+}
+
 /* Réservation refusée : fond rouge vif + bordure épaisse, sans badge */
 .edt-bloc.resa-refusee {
   background: #EF4444 !important;
@@ -485,7 +509,8 @@
 .edt-container.edt-patterns .edt-legend-color[data-pattern="8"] { background-image: var(--pat-8); background-size: 6px 6px; }
 
 /* Bouton toggle actif */
-#edt-btn-patterns.is-active {
+#edt-btn-patterns.is-active,
+#edt-btn-as.is-active {
   background: var(--c-primary-bg, #EFF6FF);
   border-color: var(--c-primary);
   color: var(--c-primary);

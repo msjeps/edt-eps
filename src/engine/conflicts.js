@@ -75,12 +75,15 @@ function suggestionsDeplacements(conflit, context, maxResults = Infinity) {
   const suggestions = [];
   const jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
   const duree = heureToMinutes(seance.heureFin) - heureToMinutes(seance.heureDebut);
+  // L'AS vit précisément sur le méridien et peut se prolonger en fin de journée
+  // (cf. help-tooltip "as") : fenêtre élargie et pas d'exclusion du méridien.
+  const fenetreFin = seance.isAS ? 1200 : 1020; // AS : jusqu'à 20h, cours : jusqu'à 17h
 
   // Tester chaque créneau possible
   for (const jour of jours) {
-    for (let startMin = 480; startMin <= 1020 - duree; startMin += 30) { // 8h à 17h
-      // Exclure le temps méridien (tout créneau qui chevauche 12h-14h)
-      if (chevauche_meridien(startMin, startMin + duree)) continue;
+    for (let startMin = 480; startMin <= fenetreFin - duree; startMin += 30) { // 8h à fenetreFin
+      // Exclure le temps méridien (tout créneau qui chevauche 12h-14h) — sauf pour l'AS
+      if (!seance.isAS && chevauche_meridien(startMin, startMin + duree)) continue;
 
       const hDebut = minutesToHeure(startMin);
       const hFin = minutesToHeure(startMin + duree);

@@ -27,6 +27,8 @@ let state = {
   // Second canal d'information (motifs/textures) pour distinguer les installations
   // sans dépendre de la seule couleur — accessibilité daltonisme.
   patterns: (typeof localStorage !== 'undefined' && localStorage.getItem('edt-patterns')) === '1',
+  // Masque les séances d'Association Sportive (hors ORS) de la grille
+  masquerAS: (typeof localStorage !== 'undefined' && localStorage.getItem('edt-masquer-as')) === '1',
 };
 
 // Géométrie des blocs selon la densité d'affichage.
@@ -152,21 +154,24 @@ export async function renderEdt(container) {
   ]);
 
   const jours = joursOuvres || ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
-  const hStart = heureToMinutes(heureDebut || '08:00');
-  const hEnd = heureToMinutes(heureFin || '17:00');
+  let hStart = heureToMinutes(heureDebut || '08:00');
+  let hEnd = heureToMinutes(heureFin || '17:00');
   const PAS = 30; // 30-minute slots
-  const slots = genererSlots(hStart, hEnd, PAS);
 
   // Détecter et afficher les conflits
-  const [ctMax, ctEcart, ct1prof, maxHeures] = await Promise.all([
+  const [ctMax, ctEcart, ct1prof, maxHeures, asBloqueRessources] = await Promise.all([
     getConfig('contrainte_max_heures_actif'),
     getConfig('contrainte_ecart_24h_actif'),
     getConfig('contrainte_1prof_1classe_actif'),
     getConfig('maxHeuresJourProf'),
+    getConfig('as_bloque_ressources_actif'),
   ]);
   const indisponibilites = await db.indisponibilites.toArray();
+  // L'AS peut être configurée pour ne pas bloquer les ressources (installation/enseignant) :
+  // dans ce cas elle est entièrement invisible au moteur de contraintes.
+  const seancesPourConflits = (asBloqueRessources ?? true) ? seances : seances.filter(s => !s.isAS);
   const conflits = validerToutesSeances({
-    seances, classes, installations, activites, enseignants, indisponibilites,
+    seances: seancesPourConflits, classes, installations, activites, enseignants, indisponibilites,
     reservations,
     maxHeuresJour: maxHeures ?? 6,
     contrainte_max_heures_actif: ctMax ?? true,
@@ -222,6 +227,20 @@ export async function renderEdt(container) {
   if (state.filtreClasse) {
     seancesFiltrees = seancesFiltrees.filter(s => s.classeId === state.filtreClasse);
   }
+  if (state.masquerAS) {
+    seancesFiltrees = seancesFiltrees.filter(s => !s.isAS);
+  }
+
+  // Étendre la plage horaire de la grille aux séances hors horaires établissement
+  // (l'AS peut être placée à midi ou après la fin des cours, cf. help-tooltip "as").
+  // Sans cela, findSlotIndex() renvoie un index hors grille et le bloc disparaît.
+  for (const s of seancesFiltrees) {
+    const sStart = heureToMinutes(s.heureDebut);
+    const sEnd = heureToMinutes(s.heureFin);
+    if (sStart < hStart) hStart = Math.floor(sStart / PAS) * PAS;
+    if (sEnd > hEnd) hEnd = Math.ceil(sEnd / PAS) * PAS;
+  }
+  const slots = genererSlots(hStart, hEnd, PAS);
 
   // Sort periodes by ordre
   periodes.sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
@@ -335,6 +354,11 @@ export async function renderEdt(container) {
               <line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
             </svg>
             Motifs
+          </button>
+          <button class="btn btn-sm btn-ghost ${state.masquerAS ? 'is-active' : ''}" id="edt-btn-as"
+                  title="Afficher / masquer les séances d'Association Sportive"
+                  aria-pressed="${state.masquerAS}">
+            ${state.masquerAS ? 'AS masquée' : 'AS visible'}
           </button>
           <button class="btn btn-sm btn-primary" id="edt-btn-add">+ Séance</button>
           <button class="btn btn-sm btn-ghost btn-print-trigger" id="edt-btn-print" title="Imprimer l'EDT (Ctrl+P)">
@@ -502,15 +526,19 @@ function renderAllPeriodesRows(jours, periodes, slots, seances, hStart, pas, ctx
     const periodesAvecSeances = periodes.filter(per =>
       jourSeances.some(s => s.periodeId === per.id)
     );
+    // Séances sans période (ex : AS à l'année) : valables sur TOUTES les périodes,
+    // donc affichées sur chaque ligne de période — même logique que le fallback
+    // "!periodeId = toujours visible" utilisé en mode 1-période (cf. renderEdt).
+    const seancesSansPeriode = jourSeances.filter(s => !s.periodeId);
 
-    // Si aucune séance ce jour, afficher 1 ligne vide
+    // Si aucune séance de période ce jour, afficher 1 ligne (séances sans période ou vide)
     const periodesAffichees = periodesAvecSeances.length > 0 ? periodesAvecSeances : [null];
 
     for (let pi = 0; pi < periodesAffichees.length; pi++) {
       const per = periodesAffichees[pi];
       const perSeances = per
-        ? jourSeances.filter(s => s.periodeId === per.id)
-        : [];
+        ? jourSeances.filter(s => s.periodeId === per.id || !s.periodeId)
+        : seancesSansPeriode;
 
       // Assigner les niveaux de pile par coloration de graphe d'intervalles
       const stackLevels = assignStackLevels(perSeances);
@@ -593,17 +621,20 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
   const hasConflit = conflitSeanceIds?.has(seance.id);
   const hasNoInstall = manqueInstallIds?.has(seance.id);
   const hasResaRefusee = resaRefuseeIds?.has(seance.id);
+  const isAS = !!seance.isAS;
+  const classeLabel = isAS ? (seance.intitule || 'AS') : (cls?.nom || '?');
 
   return `
-    <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''} ${hasConflit ? 'has-conflit' : ''} ${hasNoInstall ? 'no-install' : ''} ${hasResaRefusee ? 'resa-refusee' : ''}"
+    <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''} ${hasConflit ? 'has-conflit' : ''} ${hasNoInstall ? 'no-install' : ''} ${hasResaRefusee ? 'resa-refusee' : ''} ${isAS ? 'is-as' : ''}"
          data-seance-id="${seance.id}"
          data-install="${slug}"
          ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
          draggable="${seance.verrouille ? 'false' : 'true'}"
          style="width:${widthPct}%; top:${topOffset}px; height:${densite().blocH}px;"
-         title="${cls?.nom || ''} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}${hasResaRefusee ? '\n🚫 Réservation refusée' : ''}">
+         title="${isAS ? 'AS — ' : ''}${classeLabel} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}${hasResaRefusee ? '\n🚫 Réservation refusée' : ''}">
       <div class="bloc-line bloc-line-top">
-        <span class="bloc-class">${cls?.nom || '?'}</span>
+        ${isAS ? '<span class="bloc-as-badge" aria-label="Association Sportive">AS</span>' : ''}
+        <span class="bloc-class">${classeLabel}</span>
         <span class="bloc-activity">${act?.nom || ''}</span>
         ${hasConflit ? '<span class="bloc-conflit-icon" aria-label="Conflit">⚠</span>' : ''}
         ${hasNoInstall ? '<span class="bloc-no-install-icon" aria-label="Installation non affectée" title="Installation non affectée">📍</span>' : ''}
@@ -657,6 +688,13 @@ function bindEdtEvents(container, seancesFiltrees, ctx) {
   container.querySelector('#edt-btn-patterns')?.addEventListener('click', () => {
     state.patterns = !state.patterns;
     try { localStorage.setItem('edt-patterns', state.patterns ? '1' : '0'); } catch { /* mode privé */ }
+    renderEdt(container);
+  });
+
+  // Bascule affichage AS (mémorisée)
+  container.querySelector('#edt-btn-as')?.addEventListener('click', () => {
+    state.masquerAS = !state.masquerAS;
+    try { localStorage.setItem('edt-masquer-as', state.masquerAS ? '1' : '0'); } catch { /* mode privé */ }
     renderEdt(container);
   });
 
@@ -1081,13 +1119,26 @@ async function openSeanceModal(seance, context, edtContainer) {
   const { close } = openModal({
     title: isEdit ? 'Modifier la séance' : 'Nouvelle séance',
     content: `
+      <div class="form-group">
+        <label class="period-cb-label" style="font-size:var(--fs-base);font-weight:600;">
+          <input type="checkbox" id="md-seance-as" ${seance?.isAS ? 'checked' : ''}>
+          <span>Séance d'Association Sportive (AS)</span>
+        </label>
+        <p class="u-hint" style="margin-top:var(--sp-1);margin-bottom:0;">
+          Hors ORS (ne compte pas dans les 6h/jour), pas de contrainte d'écart 24h. Peut être placée sur le méridien ou après les cours.
+        </p>
+      </div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Classe <span class="required">*</span></label>
+        <div class="form-group" id="md-seance-classe-wrap">
+          <label class="form-label">Classe <span class="required" id="md-seance-classe-req">*</span></label>
           <select class="form-select" id="md-seance-classe">
             <option value="">-- Choisir --</option>
             ${classes.map(c => `<option value="${c.id}" ${seance?.classeId === c.id ? 'selected' : ''}>${c.nom} (${c.niveau})</option>`).join('')}
           </select>
+        </div>
+        <div class="form-group" id="md-seance-intitule-wrap" style="display:none;">
+          <label class="form-label">Groupe AS <span class="required">*</span></label>
+          <input type="text" class="form-input" id="md-seance-intitule" placeholder="Ex : AS Badminton mixte" value="${seance?.intitule || ''}">
         </div>
         <div class="form-group">
           <label class="form-label">Enseignant <span class="required">*</span></label>
@@ -1221,6 +1272,22 @@ async function openSeanceModal(seance, context, edtContainer) {
   // Appel initial : vérifier les indispos pour la séance existante
   checkIndispoWarning();
 
+  // === Bascule AS : Classe devient facultative, remplacée par un intitulé libre ===
+  function updateASVisibility() {
+    const isAS = !!document.getElementById('md-seance-as')?.checked;
+    const classeWrap = document.getElementById('md-seance-classe-wrap');
+    const intituleWrap = document.getElementById('md-seance-intitule-wrap');
+    const classeReq = document.getElementById('md-seance-classe-req');
+    if (classeWrap) classeWrap.style.display = isAS ? 'none' : '';
+    if (intituleWrap) intituleWrap.style.display = isAS ? '' : 'none';
+    if (classeReq) classeReq.style.display = isAS ? 'none' : '';
+  }
+  updateASVisibility();
+  document.getElementById('md-seance-as')?.addEventListener('change', async () => {
+    updateASVisibility();
+    await refreshActSelect(); // AS n'étant pas rattachée à une classe → toutes activités non restreintes
+  });
+
   // Rafraîchit les cases d'installations selon le lieu et l'activité courants
   function refreshInstCheckboxes() {
     const lieuId = parseInt(document.getElementById('md-seance-lieu')?.value) || null;
@@ -1279,8 +1346,12 @@ async function openSeanceModal(seance, context, edtContainer) {
     renderEdt(edtContainer);
   });
   document.getElementById('md-seance-save')?.addEventListener('click', async () => {
+    const isAS = !!document.getElementById('md-seance-as')?.checked;
+    const intitule = document.getElementById('md-seance-intitule')?.value.trim() || '';
     const data = {
-      classeId: parseInt(document.getElementById('md-seance-classe').value) || null,
+      classeId: isAS ? null : (parseInt(document.getElementById('md-seance-classe').value) || null),
+      isAS,
+      intitule: isAS ? intitule : '',
       enseignantId: parseInt(document.getElementById('md-seance-ens').value) || null,
       activiteId: parseInt(document.getElementById('md-seance-act').value) || null,
       ...(() => {
@@ -1297,7 +1368,15 @@ async function openSeanceModal(seance, context, edtContainer) {
       verrouille: seance?.verrouille || false,
     };
 
-    if (!data.classeId || !data.enseignantId) {
+    if (!data.enseignantId) {
+      toast.warning('L\'enseignant est obligatoire');
+      return;
+    }
+    if (isAS && !intitule) {
+      toast.warning('L\'intitulé du groupe AS est obligatoire');
+      return;
+    }
+    if (!isAS && !data.classeId) {
       toast.warning('Classe et enseignant sont obligatoires');
       return;
     }
@@ -1306,13 +1385,15 @@ async function openSeanceModal(seance, context, edtContainer) {
     if (isEdit) {
       await db.seances.update(seance.id, data);
       // Si lié à une programmation : mettre à jour les overrides sur la prog, pas le créneau partagé
-      if (seance.programmationId) {
+      // (l'AS n'est jamais rattachée à une programmation annuelle — on ne synchronise pas si elle
+      //  vient d'être basculée en AS, même si la séance d'origine était liée)
+      if (!data.isAS && seance.programmationId) {
         const creneau = seance.creneauClasseId ? await db.creneauxClasses.get(seance.creneauClasseId) : null;
         const jourOvr = (!creneau || data.jour       !== creneau.jour)      ? data.jour       : null;
         const hDeb    = (!creneau || data.heureDebut !== creneau.heureDebut) ? data.heureDebut : null;
         const hFin    = (!creneau || data.heureFin   !== creneau.heureFin)  ? data.heureFin   : null;
         await db.programmations.update(seance.programmationId, { jour: jourOvr, heureDebut: hDeb, heureFin: hFin });
-      } else if (seance.creneauClasseId) {
+      } else if (!data.isAS && seance.creneauClasseId) {
         // Séance manuelle sans programmation : mettre à jour le créneau partagé
         await db.creneauxClasses.update(seance.creneauClasseId, {
           enseignantId: data.enseignantId,
@@ -1322,7 +1403,7 @@ async function openSeanceModal(seance, context, edtContainer) {
         });
       }
       // Mettre à jour la programmation liée si elle existe
-      if (seance.programmationId) {
+      if (!data.isAS && seance.programmationId) {
         await db.programmations.update(seance.programmationId, {
           activiteId: data.activiteId,
           installationId: data.installationId,
@@ -1401,7 +1482,7 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
     title: 'Dupliquer la séance',
     content: `
       <div class="seance-summary-card">
-        <strong>${cls?.nom || '?'}</strong> — ${act?.nom || '?'} — ${instLabel || '?'}<br>
+        <strong>${seance.isAS ? '🏃 ' + (seance.intitule || 'AS') : (cls?.nom || '?')}</strong> — ${act?.nom || '?'} — ${instLabel || '?'}<br>
         <span class="u-muted">
           ${ens ? ens.prenom + ' ' + ens.nom + ' · ' : ''}${seance.jour ? seance.jour.charAt(0).toUpperCase() + seance.jour.slice(1) : ''} ${seance.heureDebut}–${seance.heureFin} · ${curPer?.nom || 'Toutes périodes'}
         </span>
@@ -1457,6 +1538,8 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
     for (const periodeId of selectedPeriodeIds) {
       const data = {
         classeId:      seance.classeId,
+        isAS:          !!seance.isAS,
+        intitule:      seance.intitule || '',
         enseignantId:  seance.enseignantId,
         activiteId:    seance.activiteId,
         installationId: seance.installationId,
@@ -1469,37 +1552,44 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
         verrouille:    false,
       };
 
-      // Réutiliser ou créer un creneauClasse
-      const allCreneaux = await db.creneauxClasses.toArray();
-      const existingCreneau = allCreneaux.find(cc =>
-        cc.classeId   === data.classeId &&
-        cc.jour       === data.jour &&
-        cc.heureDebut === data.heureDebut
-      );
-      const creneauClasseId = existingCreneau
-        ? existingCreneau.id
-        : await db.creneauxClasses.add({
-            classeId:    data.classeId,
-            enseignantId: data.enseignantId,
-            jour:        data.jour,
-            heureDebut:  data.heureDebut,
-            heureFin:    data.heureFin,
-          });
+      // L'AS n'est jamais rattachée à la programmation annuelle (pas de classe) :
+      // on l'enregistre directement, sans creneauClasse ni programmation.
+      let creneauClasseId = null;
+      let programmationId = null;
 
-      // Réutiliser ou créer une programmation
-      const existingProg = await db.programmations
-        .where({ creneauClasseId, periodeId })
-        .first();
-      const programmationId = existingProg
-        ? existingProg.id
-        : await db.programmations.add({
-            creneauClasseId,
-            periodeId,
-            activiteId:    data.activiteId,
-            installationId: data.installationId,
-            classeId:      data.classeId,
-            statut:        'propose',
-          });
+      if (!data.isAS) {
+        // Réutiliser ou créer un creneauClasse
+        const allCreneaux = await db.creneauxClasses.toArray();
+        const existingCreneau = allCreneaux.find(cc =>
+          cc.classeId   === data.classeId &&
+          cc.jour       === data.jour &&
+          cc.heureDebut === data.heureDebut
+        );
+        creneauClasseId = existingCreneau
+          ? existingCreneau.id
+          : await db.creneauxClasses.add({
+              classeId:    data.classeId,
+              enseignantId: data.enseignantId,
+              jour:        data.jour,
+              heureDebut:  data.heureDebut,
+              heureFin:    data.heureFin,
+            });
+
+        // Réutiliser ou créer une programmation
+        const existingProg = await db.programmations
+          .where({ creneauClasseId, periodeId })
+          .first();
+        programmationId = existingProg
+          ? existingProg.id
+          : await db.programmations.add({
+              creneauClasseId,
+              periodeId,
+              activiteId:    data.activiteId,
+              installationId: data.installationId,
+              classeId:      data.classeId,
+              statut:        'propose',
+            });
+      }
 
       await db.seances.add({ ...data, creneauClasseId, programmationId });
       created++;
