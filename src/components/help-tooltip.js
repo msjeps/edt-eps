@@ -11,7 +11,7 @@ const HELP_TOPICS = {
   },
   as: {
     titre: 'Association Sportive (AS)',
-    corps: 'L\'AS est hors ORS : elle ne compte pas dans la limite journalière de 6h EPS. Ses créneaux peuvent toutefois bloquer les ressources (installation, enseignant) s\'ils sont activés. L\'AS peut être placée le mercredi, sur le créneau méridien ou après les cours selon l\'organisation de l\'établissement.',
+    corps: 'Ce champ ne sert qu\'à déclarer le volume horaire statutaire (ex : 3h). Pour placer les créneaux d\'AS dans l\'emploi du temps : allez dans Emploi du temps > + Séance et cochez « Séance d\'Association Sportive ».\n\nL\'AS est hors ORS : elle ne compte pas dans la limite journalière de 6h EPS. Ses créneaux peuvent toutefois bloquer les ressources (installation, enseignant) s\'ils sont activés (réglage dans Données > Contraintes). L\'AS peut être placée le mercredi, sur le créneau méridien ou après les cours selon l\'organisation de l\'établissement.',
   },
   creneau24h: {
     titre: 'Contrainte 24h (collège)',

@@ -100,6 +100,12 @@ async function renderEnseignantsTab(container) {
         <span class="card-title">Enseignants EPS (${enseignants.length})</span>
         <button class="btn btn-sm btn-primary" id="btn-add-ens">+ Ajouter</button>
       </div>
+      <div class="callout callout--info" style="margin-bottom:var(--sp-3);">
+        <span class="callout-icon" aria-hidden="true">💡</span>
+        <div class="callout-body">
+          La colonne <strong>AS</strong> ci-dessous ne fait que déclarer le volume horaire statutaire. Pour placer les créneaux d'AS dans la grille, direction <strong>Emploi du temps &gt; + Séance</strong> puis cochez « Séance d'Association Sportive ».
+        </div>
+      </div>
       ${enseignants.length === 0 ? '<div class="empty-state"><p>Aucun enseignant</p></div>' : `
         <table class="data-table">
           <thead>

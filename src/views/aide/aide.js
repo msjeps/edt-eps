@@ -72,6 +72,7 @@ const SECTIONS = [
         <li><strong>Verrou</strong> — cliquez l'icône 🔒 d'un bloc pour l'empêcher d'être déplacé accidentellement.</li>
         <li><strong>Filtre période</strong> — changez la période dans la barre d'outils pour naviguer entre T1, T2, T3…</li>
         <li><strong>Filtre vue</strong> — affichez l'EDT d'un enseignant, d'une classe ou d'une installation spécifique.</li>
+        <li><strong>Séance d'AS</strong> — dans le bouton <em>+ Séance</em>, cochez « Séance d'Association Sportive » tout en haut du formulaire : le champ Classe est remplacé par un intitulé libre (ex. « AS Badminton »). L'AS ne compte pas dans les 6h/jour ORS mais occupe bien l'installation. Bouton <em>AS visible/masquée</em> dans la barre d'outils pour l'afficher ou non.</li>
         <li>Les séances en conflit apparaissent avec une bordure rouge. Consultez l'onglet <em>Conflits</em> pour le détail.</li>
       </ul>
     `,
@@ -190,6 +191,10 @@ const SECTIONS = [
         <details>
           <summary>Les séances créées manuellement dans l'EDT sont-elles visibles dans Programmation ?</summary>
           <p>Oui — toute séance ajoutée directement dans la grille EDT crée automatiquement une entrée de programmation correspondante (créneau classe + programmation annuelle).</p>
+        </details>
+        <details>
+          <summary>Où déclarer l'Association Sportive (AS) ? Je ne la trouve pas dans Données.</summary>
+          <p>L'AS ne se déclare pas comme une classe ou une activité : c'est un type de séance qu'on place directement dans la grille. Allez dans <strong>Emploi du temps &gt; + Séance</strong> et cochez « Séance d'Association Sportive » tout en haut du formulaire — le champ Classe est alors remplacé par un intitulé libre. Le champ « AS (heures) » dans Données &gt; Enseignants ne sert lui qu'à déclarer le volume horaire statutaire, pas à placer les créneaux.</p>
         </details>
       </div>
     `,
