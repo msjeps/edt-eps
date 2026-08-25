@@ -72,7 +72,7 @@ const SECTIONS = [
         <li><strong>Verrou</strong> — cliquez l'icône 🔒 d'un bloc pour l'empêcher d'être déplacé accidentellement.</li>
         <li><strong>Filtre période</strong> — changez la période dans la barre d'outils pour naviguer entre T1, T2, T3…</li>
         <li><strong>Filtre vue</strong> — affichez l'EDT d'un enseignant, d'une classe ou d'une installation spécifique.</li>
-        <li><strong>Séance d'AS</strong> — dans le bouton <em>+ Séance</em>, cochez « Séance d'Association Sportive » tout en haut du formulaire : le champ Classe est remplacé par un intitulé libre (ex. « AS Badminton »). L'AS ne compte pas dans les 6h/jour ORS mais occupe bien l'installation. Bouton <em>AS visible/masquée</em> dans la barre d'outils pour l'afficher ou non.</li>
+        <li><strong>Séance d'AS</strong> — dans le bouton <em>+ Séance</em>, cochez « Séance d'Association Sportive » tout en haut du formulaire : le champ Classe est remplacé par un intitulé libre (ex. « AS Badminton ») et le champ Activité par une saisie libre (l'AS peut proposer des activités hors programmation des classes). L'AS ne compte pas dans les 6h/jour ORS mais occupe bien l'installation. Bouton <em>AS visible/masquée</em> dans la barre d'outils pour l'afficher ou non.</li>
         <li>Les séances en conflit apparaissent avec une bordure rouge. Consultez l'onglet <em>Conflits</em> pour le détail.</li>
       </ul>
     `,

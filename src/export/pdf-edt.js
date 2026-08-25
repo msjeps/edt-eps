@@ -254,7 +254,8 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false) {
   const inst = installations.find(i => i.id === seance.installationId);
   const cls  = classes.find(c => c.id === seance.classeId);
   const ens  = enseignants.find(e => e.id === seance.enseignantId);
-  const act  = activites.find(a => a.id === seance.activiteId);
+  const act  = seance.isAS ? null : activites.find(a => a.id === seance.activiteId);
+  const actNom = seance.isAS ? (seance.activiteLibre || '') : (act?.nom || '');
   const colors = instColors(inst, lieux);
 
   const bgRgb     = hexToRgb(colors.bg);
@@ -276,7 +277,7 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false) {
     : (seance.isAS ? `AS ${seance.intitule || ''}`.trim() : (cls?.nom || ''));
 
   if (h < 7) {
-    const actName = act ? (act.nom.length > 14 ? act.nom.substring(0, 13) + '…' : act.nom) : '';
+    const actName = actNom ? (actNom.length > 14 ? actNom.substring(0, 13) + '…' : actNom) : '';
     const label = primaryLabel && actName ? `${primaryLabel} — ${actName}` : primaryLabel || actName;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(5.5);
@@ -291,11 +292,11 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false) {
       doc.text(primaryLabel, x + pad, textY, { maxWidth: maxW });
       textY += 2.8;
     }
-    if (act) {
+    if (actNom) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(5.2);
       doc.setTextColor(...textRgb);
-      const nomAct = act.nom.length > 18 ? act.nom.substring(0, 16) + '…' : act.nom;
+      const nomAct = actNom.length > 18 ? actNom.substring(0, 16) + '…' : actNom;
       doc.text(nomAct, x + pad, textY, { maxWidth: maxW });
       textY += 2.4;
     }

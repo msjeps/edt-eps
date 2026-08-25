@@ -623,6 +623,7 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
   const hasResaRefusee = resaRefuseeIds?.has(seance.id);
   const isAS = !!seance.isAS;
   const classeLabel = isAS ? (seance.intitule || 'AS') : (cls?.nom || '?');
+  const actLabel = isAS ? (seance.activiteLibre || '') : (act?.nom || '');
 
   return `
     <div class="edt-bloc ${seance.verrouille ? 'locked' : ''} ${isFromProg ? 'from-prog' : ''} ${hasConflit ? 'has-conflit' : ''} ${hasNoInstall ? 'no-install' : ''} ${hasResaRefusee ? 'resa-refusee' : ''} ${isAS ? 'is-as' : ''}"
@@ -631,11 +632,11 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
          ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
          draggable="${seance.verrouille ? 'false' : 'true'}"
          style="width:${widthPct}%; top:${topOffset}px; height:${densite().blocH}px;"
-         title="${isAS ? 'AS — ' : ''}${classeLabel} — ${act?.nom || ''}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}${hasResaRefusee ? '\n🚫 Réservation refusée' : ''}">
+         title="${isAS ? 'AS — ' : ''}${classeLabel} — ${actLabel}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}${hasResaRefusee ? '\n🚫 Réservation refusée' : ''}">
       <div class="bloc-line bloc-line-top">
         ${isAS ? '<span class="bloc-as-badge" aria-label="Association Sportive">AS</span>' : ''}
         <span class="bloc-class">${classeLabel}</span>
-        <span class="bloc-activity">${act?.nom || ''}</span>
+        <span class="bloc-activity">${actLabel}</span>
         ${hasConflit ? '<span class="bloc-conflit-icon" aria-label="Conflit">⚠</span>' : ''}
         ${hasNoInstall ? '<span class="bloc-no-install-icon" aria-label="Installation non affectée" title="Installation non affectée">📍</span>' : ''}
         ${seance.verrouille ? '<span class="bloc-lock-icon">&#128274;</span>' : ''}
@@ -1149,12 +1150,17 @@ async function openSeanceModal(seance, context, edtContainer) {
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group" id="md-seance-act-wrap">
           <label class="form-label">Activité</label>
           <select class="form-select" id="md-seance-act">
             ${buildActOptions(initNiveau, initActId, currentUsedInfo)}
           </select>
           <div id="md-act-warning" class="${initWarningClass}" style="display:${initInSame || initInOther ? 'block' : 'none'};">${initWarningText}</div>
+        </div>
+        <div class="form-group" id="md-seance-act-libre-wrap" style="display:none;">
+          <label class="form-label">Activité</label>
+          <input type="text" class="form-input" id="md-seance-act-libre" placeholder="Ex : Tournoi inter-clubs" value="${seance?.activiteLibre || ''}">
+          <p class="u-hint" style="margin-top:var(--sp-1);margin-bottom:0;">L'AS peut proposer des activités hors programmation des classes.</p>
         </div>
         <div class="form-group">
           <label class="form-label">Lieu</label>
@@ -1272,28 +1278,45 @@ async function openSeanceModal(seance, context, edtContainer) {
   // Appel initial : vérifier les indispos pour la séance existante
   checkIndispoWarning();
 
-  // === Bascule AS : Classe devient facultative, remplacée par un intitulé libre ===
+  // === Bascule AS : Classe → intitulé libre, Activité programmée → activité libre ===
   function updateASVisibility() {
     const isAS = !!document.getElementById('md-seance-as')?.checked;
     const classeWrap = document.getElementById('md-seance-classe-wrap');
     const intituleWrap = document.getElementById('md-seance-intitule-wrap');
     const classeReq = document.getElementById('md-seance-classe-req');
+    const actWrap = document.getElementById('md-seance-act-wrap');
+    const actLibreWrap = document.getElementById('md-seance-act-libre-wrap');
     if (classeWrap) classeWrap.style.display = isAS ? 'none' : '';
     if (intituleWrap) intituleWrap.style.display = isAS ? '' : 'none';
     if (classeReq) classeReq.style.display = isAS ? 'none' : '';
+    if (actWrap) actWrap.style.display = isAS ? 'none' : '';
+    if (actLibreWrap) actLibreWrap.style.display = isAS ? '' : 'none';
   }
   updateASVisibility();
   document.getElementById('md-seance-as')?.addEventListener('change', async () => {
     updateASVisibility();
     await refreshActSelect(); // AS n'étant pas rattachée à une classe → toutes activités non restreintes
+    // L'activité (libre) ne filtre plus les lieux/installations compatibles
+    const lieuSel = document.getElementById('md-seance-lieu');
+    if (lieuSel) {
+      const prevLieu = parseInt(lieuSel.value) || null;
+      lieuSel.innerHTML = buildLieuOptions(currentActId(), prevLieu);
+    }
+    refreshInstCheckboxes();
   });
+
+  // Valeur courante de l'activité programmée — null en mode AS (activité libre,
+  // pas de filtrage de compatibilité installation possible sur du texte libre)
+  function currentActId() {
+    if (document.getElementById('md-seance-as')?.checked) return null;
+    return parseInt(document.getElementById('md-seance-act')?.value) || null;
+  }
 
   // Rafraîchit les cases d'installations selon le lieu et l'activité courants
   function refreshInstCheckboxes() {
     const lieuId = parseInt(document.getElementById('md-seance-lieu')?.value) || null;
-    const actId = parseInt(document.getElementById('md-seance-act')?.value) || null;
     const box = document.getElementById('md-inst-checkboxes');
-    if (box) box.innerHTML = renderInstCheckboxes(lieuId, [], actId);
+    if (box) box.innerHTML = renderInstCheckboxes(lieuId, [], currentActId());
   }
 
   // === Filtrage dynamique : classe → activités, lieu → installations ===
@@ -1348,12 +1371,14 @@ async function openSeanceModal(seance, context, edtContainer) {
   document.getElementById('md-seance-save')?.addEventListener('click', async () => {
     const isAS = !!document.getElementById('md-seance-as')?.checked;
     const intitule = document.getElementById('md-seance-intitule')?.value.trim() || '';
+    const activiteLibre = document.getElementById('md-seance-act-libre')?.value.trim() || '';
     const data = {
       classeId: isAS ? null : (parseInt(document.getElementById('md-seance-classe').value) || null),
       isAS,
       intitule: isAS ? intitule : '',
       enseignantId: parseInt(document.getElementById('md-seance-ens').value) || null,
-      activiteId: parseInt(document.getElementById('md-seance-act').value) || null,
+      activiteId: isAS ? null : (parseInt(document.getElementById('md-seance-act').value) || null),
+      activiteLibre: isAS ? activiteLibre : '',
       ...(() => {
         const checked = [...document.querySelectorAll('input[name="md-inst-cb"]:checked')].map(el => parseInt(el.value));
         const hidden = [...document.querySelectorAll('input[name="md-inst-cb"][type="hidden"]')].map(el => parseInt(el.value));
@@ -1482,7 +1507,7 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
     title: 'Dupliquer la séance',
     content: `
       <div class="seance-summary-card">
-        <strong>${seance.isAS ? '🏃 ' + (seance.intitule || 'AS') : (cls?.nom || '?')}</strong> — ${act?.nom || '?'} — ${instLabel || '?'}<br>
+        <strong>${seance.isAS ? '🏃 ' + (seance.intitule || 'AS') : (cls?.nom || '?')}</strong> — ${seance.isAS ? (seance.activiteLibre || '?') : (act?.nom || '?')} — ${instLabel || '?'}<br>
         <span class="u-muted">
           ${ens ? ens.prenom + ' ' + ens.nom + ' · ' : ''}${seance.jour ? seance.jour.charAt(0).toUpperCase() + seance.jour.slice(1) : ''} ${seance.heureDebut}–${seance.heureFin} · ${curPer?.nom || 'Toutes périodes'}
         </span>
@@ -1542,6 +1567,7 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
         intitule:      seance.intitule || '',
         enseignantId:  seance.enseignantId,
         activiteId:    seance.activiteId,
+        activiteLibre: seance.activiteLibre || '',
         installationId: seance.installationId,
         installationsIds: seance.installationsIds?.length ? seance.installationsIds : (seance.installationId ? [seance.installationId] : []),
         jour:          targetJour,

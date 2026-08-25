@@ -1038,7 +1038,7 @@ async function exportCsvMairie(periodeId) {
       Jour: s.jour ? s.jour.charAt(0).toUpperCase() + s.jour.slice(1) : '',
       Créneau: creneau,
       Classe: cls?.nom || (s.isAS ? `AS ${s.intitule || ''}`.trim() : ''),
-      Activité: act?.nom || '',
+      Activité: act?.nom || (s.isAS ? s.activiteLibre || '' : ''),
       Enseignant: ens ? `${ens.prenom} ${ens.nom}`.trim() : '',
     });
   }
@@ -1377,13 +1377,15 @@ async function exportExcelEdt(periodeId) {
           const cellContent = slotSeances.map(s => {
             const cls = classes.find(c => c.id === s.classeId);
             const ens = enseignants.find(e => e.id === s.enseignantId);
-            const act = activites.find(a => a.id === s.activiteId);
+            const act = s.isAS ? null : activites.find(a => a.id === s.activiteId);
             const inst = installations.find(i => i.id === s.installationId);
             const lieu = inst ? lieux.find(l => l.id === inst.lieuId) : null;
 
             const parts = [];
-            if (cls) parts.push(cls.nom);
+            if (s.isAS) parts.push(`AS ${s.intitule || ''}`.trim());
+            else if (cls) parts.push(cls.nom);
             if (act) parts.push(act.nom);
+            else if (s.isAS && s.activiteLibre) parts.push(s.activiteLibre);
             if (lieu) parts.push(lieu.nom);
             if (inst && inst.nom !== lieu?.nom) parts.push(inst.nom);
             if (ens) parts.push(`(${ens.prenom?.[0] || ''}. ${ens.nom})`);
@@ -1442,13 +1444,15 @@ async function exportExcelEdt(periodeId) {
           } else {
             const cellContent = slotSeances.map(s => {
               const cls = classes.find(c => c.id === s.classeId);
-              const act = activites.find(a => a.id === s.activiteId);
+              const act = s.isAS ? null : activites.find(a => a.id === s.activiteId);
               const inst = installations.find(i => i.id === s.installationId);
               const lieu = inst ? lieux.find(l => l.id === inst.lieuId) : null;
 
               const parts = [];
-              if (cls) parts.push(cls.nom);
+              if (s.isAS) parts.push(`AS ${s.intitule || ''}`.trim());
+              else if (cls) parts.push(cls.nom);
               if (act) parts.push(act.nom);
+              else if (s.isAS && s.activiteLibre) parts.push(s.activiteLibre);
               if (lieu) parts.push(lieu.nom);
               if (inst && inst.nom !== lieu?.nom) parts.push(inst.nom);
               return parts.join(' — ');

@@ -331,7 +331,8 @@ export function buildMiniGrid(seances, refs, opts = {}) {
         const inst   = refs.installations.find(i => i.id === primaryInstId);
         const cls    = refs.classes.find(c => c.id === s.classeId);
         const ens    = refs.enseignants.find(e => e.id === s.enseignantId);
-        const act    = refs.activites.find(a => a.id === s.activiteId);
+        const act    = s.isAS ? null : refs.activites.find(a => a.id === s.activiteId);
+        const actNom = s.isAS ? (s.activiteLibre || '') : (act?.nom || '');
         const colors = getColors(inst, refs.lieux);
         const patternIdx = instPatternMap?.get(primaryInstId);
 
@@ -341,7 +342,7 @@ export function buildMiniGrid(seances, refs, opts = {}) {
         if (opts.showClasse && s.isAS) lines.push(`<strong>🏃 ${s.intitule || 'AS'}</strong>`);
         else if (opts.showClasse && cls)  lines.push(`<strong>${cls.nom}</strong>`);
         if (opts.showEnseignant && ens) lines.push(`<span style="font-size:9px;">${ens.prenom ? ens.prenom[0] + '. ' : ''}${ens.nom}</span>`);
-        if (act && height >= 28)        lines.push(`<span style="font-size:9px;opacity:.85;">${act.nom.length > 14 ? act.nom.slice(0, 13) + '…' : act.nom}</span>`);
+        if (actNom && height >= 28)     lines.push(`<span style="font-size:9px;opacity:.85;">${actNom.length > 14 ? actNom.slice(0, 13) + '…' : actNom}</span>`);
         if (opts.showInstallation && allInstIds.length > 0 && height >= 38) {
           const instNoms = allInstIds.map(id => refs.installations.find(i => i.id === id)?.nom).filter(Boolean).join('+');
           lines.push(`<span style="font-size:8px;opacity:.75;">${instNoms.length > 12 ? instNoms.slice(0, 11) + '…' : instNoms}</span>`);
