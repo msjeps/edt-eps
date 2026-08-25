@@ -204,8 +204,7 @@ async function loadData() {
  * Chaque ligne = { jour, ens, per, seances[] }
  * Ordre : Jour (LUNDI→VEN) > Enseignant (ordre DB) > Période (ordre croissant)
  */
-function buildRows(seances, enseignants, periodes, periodeId) {
-  const targetPeriodeIds = new Set(periodes.map(p => p.id));
+function buildRows(seances, enseignants, periodes) {
   const rows = [];
 
   for (const jour of JOURS) {
@@ -223,18 +222,23 @@ function buildRows(seances, enseignants, periodes, periodeId) {
       const ensSeances = jourSeances.filter(s => s.enseignantId === ensId);
       const ens = enseignants.find(e => e.id === ensId);
 
-      const perIds = [...new Set(ensSeances.map(s => s.periodeId))]
-        .filter(pid => targetPeriodeIds.has(pid))
-        .sort((a, b) => {
-          const pa = periodes.find(p => p.id === a);
-          const pb = periodes.find(p => p.id === b);
-          return (pa?.ordre ?? pa?.id ?? a) - (pb?.ordre ?? pb?.id ?? b);
-        });
+      // Périodes (parmi celles exportées) ayant ≥1 séance ce jour pour cet enseignant
+      const periodesAvecSeances = periodes
+        .filter(per => ensSeances.some(s => s.periodeId === per.id))
+        .sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
-      for (const pId of perIds) {
-        const perSeances = ensSeances.filter(s => s.periodeId === pId);
+      // Séances sans période (ex : AS à l'année) : valables sur TOUTES les périodes,
+      // donc affichées sur chaque ligne de période — même logique que
+      // renderAllPeriodesRows (grid.js) et le fallback "!periodeId = toujours visible".
+      const seancesSansPeriode = ensSeances.filter(s => !s.periodeId);
+
+      const periodesAffichees = periodesAvecSeances.length > 0 ? periodesAvecSeances : [null];
+
+      for (const per of periodesAffichees) {
+        const perSeances = per
+          ? ensSeances.filter(s => s.periodeId === per.id || !s.periodeId)
+          : seancesSansPeriode;
         if (!perSeances.length) continue;
-        const per = periodes.find(p => p.id === pId);
         rows.push({ jour, ens, per, seances: perSeances });
       }
     }
@@ -608,7 +612,8 @@ export async function exportPdfEquipe(periodeId) {
 
   if (!targetPeriodes.length) { toast.warning('Aucune période sélectionnée'); return; }
 
-  const seances = seancesAll.filter(s => targetPeriodes.some(p => p.id === s.periodeId));
+  // Séances sans période (ex : AS à l'année) : toujours incluses, quelle que soit la période exportée.
+  const seances = seancesAll.filter(s => !s.periodeId || targetPeriodes.some(p => p.id === s.periodeId));
   if (!seances.length) { toast.warning('Aucune séance à exporter'); return; }
 
   // Axe temps unique sur toutes les séances
@@ -720,8 +725,9 @@ export async function exportPdfEnseignants(periodeId, enseignantIdFilter) {
   let firstPage = true;
 
   for (const ens of targetEnseignants) {
+    // Séances sans période (ex : AS à l'année) : toujours incluses.
     const ensSeances = seancesAll.filter(
-      s => s.enseignantId === ens.id && targetPeriodes.some(p => p.id === s.periodeId)
+      s => s.enseignantId === ens.id && (!s.periodeId || targetPeriodes.some(p => p.id === s.periodeId))
     );
     if (!ensSeances.length) continue;
 
