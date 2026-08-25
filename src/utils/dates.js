@@ -248,6 +248,41 @@ export function genererDatesJour(jour, dateDebut, dateFin, vacances = []) {
 }
 
 /**
+ * Génère les dates ISO (YYYY-MM-DD) pour un jour de semaine donné entre deux dates,
+ * en excluant les périodes fournies (vacances/fériés). Variante ISO de genererDatesJour :
+ * nécessaire pour comparer avec des dates ponctuelles (exclusions/ajouts manuels transport).
+ * @param {string} jour - 'lundi' | 'mardi' | etc.
+ * @param {Date} dateDebut
+ * @param {Date} dateFin
+ * @param {Array} exclusionsCalendaires - Liste de périodes [{debut, fin}]
+ * @returns {Array<string>} Dates au format YYYY-MM-DD
+ */
+export function genererDatesJourISO(jour, dateDebut, dateFin, exclusionsCalendaires = []) {
+  const jourLower = (jour || '').toLowerCase().trim();
+  const jourIndex = {
+    dimanche: 0, lundi: 1, mardi: 2, mercredi: 3, jeudi: 4, vendredi: 5, samedi: 6,
+  }[jourLower];
+
+  if (jourIndex === undefined) return [];
+
+  const dates = [];
+  const current = new Date(dateDebut);
+
+  while (current.getDay() !== jourIndex) {
+    current.setDate(current.getDate() + 1);
+  }
+
+  while (current <= dateFin) {
+    const currentStr = toISOLocal(current);
+    const estExclue = exclusionsCalendaires.some(v => currentStr >= v.debut && currentStr <= v.fin);
+    if (!estExclue) dates.push(currentStr);
+    current.setDate(current.getDate() + 7);
+  }
+
+  return dates;
+}
+
+/**
  * Convertit une Date en chaîne YYYY-MM-DD (heure locale, pas UTC)
  * Évite le décalage de timezone de toISOString()
  */

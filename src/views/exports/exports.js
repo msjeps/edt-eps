@@ -5,7 +5,7 @@ import db from '../../db/schema.js';
 import { getConfig, setConfig } from '../../db/schema.js';
 import { toast } from '../../components/toast.js';
 import { openModal } from '../../components/modal.js';
-import { genererDatesJour, getCalendrierExclusions } from '../../utils/dates.js';
+import { genererDatesJourISO, getCalendrierExclusions } from '../../utils/dates.js';
 import { JOURS_OUVRES, slugify, dateHeure } from '../../utils/helpers.js';
 import Papa from 'papaparse';
 import { saveExportFile } from '../../utils/filesystem.js';
@@ -37,6 +37,23 @@ function jourOrdre(jour) {
 // ============================================================
 
 // ============================================================
+// DATES TRANSPORT — helpers communs (exclusions + ajouts)
+// ============================================================
+
+/** "YYYY-MM-DD" → "DD/MM" */
+function isoToDDMM(iso) {
+  const [, m, d] = iso.split('-');
+  return `${d}/${m}`;
+}
+
+/** Retourne la période (avec dateDebut/dateFin) dans laquelle tombe une date ISO, ou null. */
+function findPeriodeForDate(iso, periodes) {
+  return periodes.find(p => p.dateDebut && p.dateFin && iso >= p.dateDebut && iso <= p.dateFin) || null;
+}
+
+const JOURS_NOMS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+// ============================================================
 // EXCLUSIONS TRANSPORT — helpers
 // ============================================================
 async function loadExclusions() {
@@ -44,6 +61,16 @@ async function loadExclusions() {
 }
 async function saveExclusions(list) {
   await setConfig('exclusionsTransport', list);
+}
+
+// ============================================================
+// AJOUTS EXCEPTIONNELS TRANSPORT — helpers
+// ============================================================
+async function loadAjouts() {
+  return (await getConfig('ajoutsTransport')) || [];
+}
+async function saveAjouts(list) {
+  await setConfig('ajoutsTransport', list);
 }
 
 function renderExclusionsList(exclusions, classes, containerId) {
@@ -77,6 +104,36 @@ function renderExclusionsList(exclusions, classes, containerId) {
   el.innerHTML = `<div style="border:1px solid var(--c-border);border-radius:6px;overflow:hidden;">${rows}</div>`;
 }
 
+function renderAjoutsList(ajouts, classes, lieux, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (ajouts.length === 0) {
+    el.innerHTML = `<p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin:0;">Aucune date ajoutée pour l'instant.</p>`;
+    return;
+  }
+  const rows = [...ajouts]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(a => {
+      const d   = new Date(a.date + 'T00:00:00');
+      const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+      const label = `${days[d.getDay()]} ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      const clsNom  = classes.find(c => c.id === a.classeId)?.nom || '?';
+      const lieuNom = lieux.find(l => l.id === a.lieuId)?.nom || '?';
+      return `
+        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);
+                    border-bottom:1px solid var(--c-border);font-size:var(--fs-sm);">
+          <span style="font-weight:600;min-width:110px;">${label}</span>
+          <span style="min-width:90px;font-style:italic;">${clsNom}</span>
+          <span style="min-width:140px;color:var(--c-text-secondary);">${lieuNom}</span>
+          <span style="min-width:100px;color:var(--c-text-secondary);">${a.heureDebut}-${a.heureFin}</span>
+          <span style="flex:1;color:var(--c-text-secondary);">${a.raison || '<em>sans raison</em>'}</span>
+          <button class="btn btn-outline btn-sm" data-del-ajout="${a.id}"
+                  style="padding:2px 8px;font-size:11px;">✕</button>
+        </div>`;
+    }).join('');
+  el.innerHTML = `<div style="border:1px solid var(--c-border);border-radius:6px;overflow:hidden;">${rows}</div>`;
+}
+
 // ============================================================
 // RENDER PRINCIPAL
 // ============================================================
@@ -85,6 +142,8 @@ export async function renderExports(container) {
   const periodes = await db.periodes.toArray();
   const enseignants = await db.enseignants.toArray();
   const classes = await db.classes.toArray();
+  const lieux = await db.lieux.toArray();
+  const lieuxBus = lieux.filter(l => l.necessiteBus).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   const dirPath = fsSupported ? await getExportsDirPath() : null;
 
   container.innerHTML = `
@@ -345,6 +404,71 @@ export async function renderExports(container) {
           <div id="exclusions-list"></div>
         </div>
 
+        <!-- Dates à ajouter aux transports (exceptionnel) -->
+        <div class="card export-card export-card-wide" style="cursor:default;grid-column:1/-1;">
+          <div class="export-card-head">
+            <div class="export-card-icon" aria-hidden="true">➕</div>
+            <h3>Dates à ajouter aux transports</h3>
+            <span class="export-card-meta">Sorties, compétitions, rattrapages…</span>
+          </div>
+          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
+            Pour un besoin de bus <strong>ponctuel</strong>, en dehors du planning hebdomadaire habituel (ex&nbsp;: une sortie
+            piscine exceptionnelle, un rattrapage). Ces dates s'ajoutent à l'export CSV et au planning PDF, avec une page
+            récapitulative si des ajouts sont appliqués. Une date tombant un week-end n'apparaîtra pas dans le planning PDF
+            (regroupé par jour de semaine lun-ven) mais figurera bien dans le CSV.
+          </p>
+
+          <!-- Formulaire ajout -->
+          <div style="display:flex;gap:var(--sp-2);align-items:flex-end;flex-wrap:wrap;
+                      background:var(--c-surface-alt);border-radius:8px;padding:var(--sp-3);
+                      margin-bottom:var(--sp-3);">
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:var(--fs-sm);font-weight:600;">Date</label>
+              <input type="date" class="form-input" id="ajout-date" style="width:150px;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:var(--fs-sm);font-weight:600;">Classe</label>
+              <select class="form-select" id="ajout-classe" aria-label="Classe concernée par l'ajout de transport" style="min-width:130px;">
+                <option value="">— Choisir —</option>
+                ${classes.sort((a,b) => a.nom.localeCompare(b.nom,'fr')).map(c =>
+                  `<option value="${c.id}">${c.nom}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:var(--fs-sm);font-weight:600;">Lieu</label>
+              <select class="form-select" id="ajout-lieu" aria-label="Lieu concerné par l'ajout de transport" style="min-width:160px;">
+                <option value="">— Choisir —</option>
+                ${lieuxBus.map(l => `<option value="${l.id}">${l.nom}</option>`).join('')}
+              </select>
+              ${lieuxBus.length === 0 ? `<small style="color:var(--c-text-secondary);font-size:10px;">Aucun lieu ne nécessite de bus (voir Données &gt; Installations).</small>` : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:var(--fs-sm);font-weight:600;">Heure début</label>
+              <input type="time" class="form-input" id="ajout-hdebut" value="08:00" style="width:110px;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:var(--fs-sm);font-weight:600;">Heure fin</label>
+              <input type="time" class="form-input" id="ajout-hfin" value="10:00" style="width:110px;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:var(--fs-sm);font-weight:600;">Enseignant <span style="font-weight:400;color:var(--c-text-secondary);">(optionnel)</span></label>
+              <select class="form-select" id="ajout-enseignant" aria-label="Enseignant concerné par l'ajout de transport" style="min-width:150px;">
+                <option value="">— Aucun —</option>
+                ${enseignants.map(e => `<option value="${e.id}">${e.prenom ? e.prenom + ' ' : ''}${e.nom}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px;">
+              <label style="font-size:var(--fs-sm);font-weight:600;">Raison</label>
+              <input type="text" class="form-input" id="ajout-raison"
+                     placeholder="ex : Sortie compétition, Rattrapage piscine…">
+            </div>
+            <button class="btn btn-primary" id="btn-add-ajout" ${lieuxBus.length === 0 ? 'disabled' : ''}>+ Ajouter</button>
+          </div>
+
+          <!-- Liste des ajouts -->
+          <div id="ajouts-list"></div>
+        </div>
+
         <!-- Réservation transports (CSV) -->
         <div class="card export-card" style="cursor:default;">
           <div class="export-card-icon">&#128652;</div>
@@ -459,6 +583,10 @@ export async function renderExports(container) {
   // === Exclusions transport — init liste ===
   let exclusions = await loadExclusions();
   renderExclusionsList(exclusions, classes, 'exclusions-list');
+
+  // === Ajouts exceptionnels transport — init liste ===
+  let ajoutsTransport = await loadAjouts();
+  renderAjoutsList(ajoutsTransport, classes, lieux, 'ajouts-list');
 
   // === Exclusions transport — "Toutes les classes" mutuellement exclusif ===
   // Par défaut "Toutes les classes" est sélectionné ; en multi-select natif, un
@@ -708,11 +836,63 @@ export async function renderExports(container) {
     toast.success('Exclusion supprimée');
   });
 
+  // === Ajouts exceptionnels transport — ajout ===
+  document.getElementById('btn-add-ajout')?.addEventListener('click', async () => {
+    const date       = document.getElementById('ajout-date')?.value;
+    const classeId   = parseInt(document.getElementById('ajout-classe')?.value);
+    const lieuId     = parseInt(document.getElementById('ajout-lieu')?.value);
+    const heureDebut = document.getElementById('ajout-hdebut')?.value;
+    const heureFin    = document.getElementById('ajout-hfin')?.value;
+    const ensVal     = document.getElementById('ajout-enseignant')?.value;
+    const enseignantId = ensVal ? parseInt(ensVal) : null;
+    const raison     = document.getElementById('ajout-raison')?.value.trim();
+
+    if (!date)      { toast.warning('Veuillez saisir une date'); return; }
+    if (!classeId)  { toast.warning('Veuillez choisir une classe'); return; }
+    if (!lieuId)    { toast.warning('Veuillez choisir un lieu'); return; }
+    if (!heureDebut || !heureFin) { toast.warning('Veuillez saisir les horaires'); return; }
+    if (heureFin <= heureDebut) { toast.warning("L'heure de fin doit être postérieure à l'heure de début"); return; }
+
+    ajoutsTransport.push({
+      id: crypto.randomUUID(),
+      date, classeId, lieuId, heureDebut, heureFin, enseignantId, raison,
+    });
+    await saveAjouts(ajoutsTransport);
+    renderAjoutsList(ajoutsTransport, classes, lieux, 'ajouts-list');
+
+    // Reset form
+    document.getElementById('ajout-date').value = '';
+    document.getElementById('ajout-classe').value = '';
+    document.getElementById('ajout-lieu').value = '';
+    document.getElementById('ajout-hdebut').value = '08:00';
+    document.getElementById('ajout-hfin').value = '10:00';
+    document.getElementById('ajout-enseignant').value = '';
+    document.getElementById('ajout-raison').value = '';
+
+    const jourSemaine = new Date(date + 'T00:00:00').getDay();
+    if (jourSemaine === 0 || jourSemaine === 6) {
+      toast.warning("Date ajoutée — attention, elle tombe un week-end et n'apparaîtra pas dans le planning PDF");
+    } else {
+      toast.success('Date ajoutée');
+    }
+  });
+
+  // === Ajouts exceptionnels transport — suppression (délégation) ===
+  document.getElementById('ajouts-list')?.addEventListener('click', async (e) => {
+    const id = e.target.dataset.delAjout;
+    if (!id) return;
+    ajoutsTransport = ajoutsTransport.filter(a => a.id !== id);
+    await saveAjouts(ajoutsTransport);
+    renderAjoutsList(ajoutsTransport, classes, lieux, 'ajouts-list');
+    toast.success('Ajout supprimé');
+  });
+
   // === Export Transport PDF ===
   document.getElementById('btn-export-transport-pdf')?.addEventListener('click', async () => {
     const periodeId = document.getElementById('export-transport-pdf-per')?.value || null;
     const excl      = await loadExclusions();
-    await exportPdfTransport(periodeId, excl);
+    const adds      = await loadAjouts();
+    await exportPdfTransport(periodeId, excl, adds);
   });
 
   // === Export Excel EDT ===
@@ -907,7 +1087,9 @@ async function exportCsvTransport(periodeId) {
   const anneeScolaire = await getConfig('anneeScolaire') || '2025-2026';
   const transportAller = await getConfig('delaiTransportAllerMin') || 15;
   const transportRetour = await getConfig('delaiTransportRetourMin') || 15;
-  const exclusions = await getCalendrierExclusions(zone, anneeScolaire);
+  const exclusionsCalendaires = await getCalendrierExclusions(zone, anneeScolaire);
+  const exclusionsManuelles = await getConfig('exclusionsTransport') || [];
+  const ajoutsManuels = await getConfig('ajoutsTransport') || [];
 
   // Index des ordres de périodes pour le tri
   const periodeOrdreMap = {};
@@ -916,14 +1098,14 @@ async function exportCsvTransport(periodeId) {
   }
 
   let data = seances;
-  if (periodeId) {
-    const pid = parseInt(periodeId);
-    const visibleIds = getOverlappingPeriodeIds(pid, periodes);
+  const visibleIds = periodeId ? getOverlappingPeriodeIds(parseInt(periodeId), periodes) : null;
+  if (visibleIds) {
     data = data.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
 
   // Filtrer seulement les séances qui nécessitent un transport
   let nbDatesMissing = 0;
+  let nbDatesExclues = 0;
   const rows = [];
   for (const s of data) {
     const inst = installations.find(i => i.id === s.installationId);
@@ -941,12 +1123,23 @@ async function exportCsvTransport(periodeId) {
     const retourBus = minToHeure(endMin - transportRetour);    // Bus retour : fin cours - délai transport retour
 
     // Dates — chaque date = 1 rotation (1 aller-retour bus)
-    let datesArr = [];
+    let datesISO = [];
     if (per?.dateDebut && per?.dateFin) {
-      datesArr = genererDatesJour(s.jour, new Date(per.dateDebut), new Date(per.dateFin), exclusions);
+      const allISO = genererDatesJourISO(s.jour, new Date(per.dateDebut), new Date(per.dateFin), exclusionsCalendaires);
+      // Appliquer les exclusions transport manuelles propres à cette classe
+      const relevant = exclusionsManuelles.filter(ex =>
+        ex.classesIds === 'all' ||
+        (Array.isArray(ex.classesIds) && ex.classesIds.includes(cls?.id))
+      );
+      datesISO = allISO.filter(iso => {
+        const hit = relevant.some(ex => ex.date === iso);
+        if (hit) nbDatesExclues++;
+        return !hit;
+      });
     } else {
       nbDatesMissing++;
     }
+    const datesArr = datesISO.map(isoToDDMM);
 
     rows.push({
       // Champs de tri internes
@@ -968,6 +1161,46 @@ async function exportCsvTransport(periodeId) {
       ENSEIGNANT: ens ? `${ens.prenom} ${ens.nom}` : '',
       NB_ROTATIONS: datesArr.length,
     });
+  }
+
+  // Ajouts exceptionnels — dates ponctuelles indépendantes de la récurrence hebdomadaire.
+  // Chaque ajout devient sa propre ligne (1 date = 1 rotation).
+  let nbAjoutsInclus = 0;
+  for (const a of ajoutsManuels) {
+    const cls  = classes.find(c => c.id === a.classeId);
+    const lieu = lieux.find(l => l.id === a.lieuId);
+    if (!cls || !lieu) continue; // classe/lieu supprimé depuis → référence orpheline, on ignore
+
+    const perMatch = findPeriodeForDate(a.date, periodes);
+    if (visibleIds && (!perMatch || !visibleIds.has(perMatch.id))) continue; // hors période sélectionnée
+
+    const ens = enseignants.find(e => e.id === a.enseignantId);
+    const startMin = heureToMin(a.heureDebut);
+    const endMin = heureToMin(a.heureFin);
+    const departBus = minToHeure(startMin + transportAller);
+    const retourBus = minToHeure(endMin - transportRetour);
+    const jourNom = JOURS_NOMS[new Date(a.date + 'T00:00:00').getDay()];
+    const periodeNom = perMatch?.nom || 'Ajouts exceptionnels';
+
+    rows.push({
+      _sortPeriode: perMatch ? (periodeOrdreMap[perMatch.id] || 99) : 999,
+      _sortJour: jourOrdre(jourNom),
+      _sortLieu: (lieu.nom || '').toLowerCase(),
+      _sortHeure: a.heureDebut || '',
+      _periodeNom: periodeNom,
+      JOUR: jourNom.charAt(0).toUpperCase() + jourNom.slice(1),
+      CRENEAU: `${a.heureDebut}-${a.heureFin}`,
+      LIEU: lieu.nom || '',
+      BUS_ALLER: departBus,
+      BUS_RETOUR: retourBus,
+      DATES: isoToDDMM(a.date),
+      PERIODE: periodeNom,
+      CLASSE: cls.nom || '',
+      EFFECTIF: cls.effectif || '',
+      ENSEIGNANT: ens ? `${ens.prenom} ${ens.nom}` : '',
+      NB_ROTATIONS: 1,
+    });
+    nbAjoutsInclus++;
   }
 
   if (rows.length === 0) {
@@ -1066,8 +1299,14 @@ async function exportCsvTransport(periodeId) {
   const per = periodeId ? periodes.find(p => p.id === parseInt(periodeId))?.nom || '' : 'annuel';
   await saveExportFile(blob, `Transport_EPS_${per}_${dateHeure()}.csv`);
 
+  const notes = [];
+  if (nbDatesExclues > 0) notes.push(`${nbDatesExclues} date(s) exclue(s)`);
+  if (nbAjoutsInclus > 0) notes.push(`${nbAjoutsInclus} date(s) ajoutée(s)`);
+
   if (nbDatesMissing > 0) {
     toast.warning(`Export transport sauvegardé — ${nbDatesMissing} séance(s) sans dates (période non configurée)`);
+  } else if (notes.length > 0) {
+    toast.success(`Export transport sauvegardé (${notes.join(', ')})`);
   } else {
     toast.success('Export transport sauvegardé');
   }
@@ -1298,12 +1537,16 @@ function buildOccupationSheet(wb, titre, sheetName, installations, lieux, seance
 
 // Construit une feuille transport.
 // seancesFiltered : séances déjà filtrées (toutes, collège seul, lycée seul)
+// scope : 'all' | 'college' | 'lycee' — utilisé pour filtrer les ajouts exceptionnels au même périmètre
+// Le nombre de rotations tient compte des exclusions calendaires (vacances/fériés) et manuelles.
+// Les ajouts exceptionnels apparaissent en lignes supplémentaires (1 rotation chacun).
 // Tri : période → jour → créneau → lieu
-function buildTransportSheet(wb, titre, sheetName, installations, lieux, classes, enseignants, periodesTriees, seancesFiltered) {
+function buildTransportSheet(wb, titre, sheetName, installations, lieux, classes, enseignants, periodesTriees, seancesFiltered,
+                              scope = 'all', exclusionsCalendaires = [], exclusionsManuelles = [], ajouts = []) {
   const periodeOrdreMap = {};
   for (const per of periodesTriees) periodeOrdreMap[per.id] = per.ordre ?? per.id;
 
-  const headerRow = ['Période', 'Jour', 'Créneau', 'Lieu', 'Classe', 'Bus Aller', 'Bus Retour', 'Enseignant'];
+  const headerRow = ['Période', 'Jour', 'Créneau', 'Lieu', 'Classe', 'Bus Aller', 'Bus Retour', 'Enseignant', 'Nb rotations'];
   const rows = [];
 
   for (const s of seancesFiltered) {
@@ -1316,6 +1559,17 @@ function buildTransportSheet(wb, titre, sheetName, installations, lieux, classes
     const ens = enseignants.find(e => e.id === s.enseignantId);
     const startMin = heureToMin(s.heureDebut);
     const endMin   = heureToMin(s.heureFin);
+
+    // Nb rotations réel = dates générées par récurrence hebdo, hors vacances/fériés, moins les exclusions manuelles
+    let nbRot = '';
+    if (per?.dateDebut && per?.dateFin) {
+      const allISO = genererDatesJourISO(s.jour, new Date(per.dateDebut), new Date(per.dateFin), exclusionsCalendaires);
+      const relevant = exclusionsManuelles.filter(ex =>
+        ex.classesIds === 'all' ||
+        (Array.isArray(ex.classesIds) && ex.classesIds.includes(cls?.id))
+      );
+      nbRot = allISO.filter(iso => !relevant.some(ex => ex.date === iso)).length;
+    }
 
     rows.push({
       _sortPer:  periodeOrdreMap[s.periodeId] ?? 99,
@@ -1331,6 +1585,44 @@ function buildTransportSheet(wb, titre, sheetName, installations, lieux, classes
         minToHeure(startMin + 15),
         minToHeure(endMin - 15),
         ens ? `${ens.prenom} ${ens.nom}` : '',
+        nbRot,
+      ],
+    });
+  }
+
+  // Ajouts exceptionnels concernant le même périmètre (toutes classes / collège / lycée)
+  const ajoutsScope = ajouts.filter(a => {
+    const cls = classes.find(c => c.id === a.classeId);
+    if (!cls) return false;
+    if (scope === 'college') return isCollege(cls.niveau);
+    if (scope === 'lycee')   return isLycee(cls.niveau);
+    return true;
+  });
+  for (const a of ajoutsScope) {
+    const lieu = lieux.find(l => l.id === a.lieuId);
+    if (!lieu) continue;
+    const cls = classes.find(c => c.id === a.classeId);
+    const ens = enseignants.find(e => e.id === a.enseignantId);
+    const perMatch = findPeriodeForDate(a.date, periodesTriees);
+    const startMin = heureToMin(a.heureDebut);
+    const endMin   = heureToMin(a.heureFin);
+    const jourNom  = JOURS_NOMS[new Date(a.date + 'T00:00:00').getDay()];
+
+    rows.push({
+      _sortPer:  perMatch ? (periodeOrdreMap[perMatch.id] ?? 99) : 999,
+      _sortJour: jourOrdre(jourNom),
+      _sortHre:  a.heureDebut || '',
+      _sortLieu: (lieu.nom || '').toLowerCase(),
+      data: [
+        (perMatch?.nom || 'Ajout exceptionnel') + ` (${isoToDDMM(a.date)})`,
+        jourNom.charAt(0).toUpperCase() + jourNom.slice(1),
+        `${a.heureDebut}-${a.heureFin}`,
+        lieu.nom || '',
+        cls?.nom || '',
+        minToHeure(startMin + 15),
+        minToHeure(endMin - 15),
+        ens ? `${ens.prenom} ${ens.nom}` : '',
+        1,
       ],
     });
   }
@@ -1345,8 +1637,8 @@ function buildTransportSheet(wb, titre, sheetName, installations, lieux, classes
 
   const wsData = [[titre], [], headerRow, ...rows.map(r => r.data)];
   addSheetFromAoa(wb, sheetName, wsData,
-    [{ wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 25 }],
-    [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }],
+    [{ wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 12 }],
+    [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }],
   );
 }
 
@@ -1358,6 +1650,13 @@ async function exportSyntheses() {
 
   const etablissementType = await getConfig('etablissementType') || 'mixte';
   const isMixte = etablissementType === 'mixte';
+
+  // Exclusions/ajouts transport — pour calculer le vrai nombre de rotations dans la synthèse
+  const zone = await getConfig('etablissementZone') || 'B';
+  const anneeScolaire = await getConfig('anneeScolaire') || '2025-2026';
+  const exclusionsCalendaires = await getCalendrierExclusions(zone, anneeScolaire);
+  const exclusionsManuelles = await getConfig('exclusionsTransport') || [];
+  const ajoutsManuels = await getConfig('ajoutsTransport') || [];
 
   const periodesTriees = [...periodes].sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
@@ -1512,13 +1811,16 @@ async function exportSyntheses() {
 
   // ── Feuilles Transport ──
   buildTransportSheet(wb, 'Synthèse transport', 'Transport',
-    installations, lieux, classes, enseignants, periodesTriees, seances);
+    installations, lieux, classes, enseignants, periodesTriees, seances,
+    'all', exclusionsCalendaires, exclusionsManuelles, ajoutsManuels);
 
   if (isMixte) {
     buildTransportSheet(wb, 'Synthèse transport — Collège', 'Transport Collège',
-      installations, lieux, classes, enseignants, periodesTriees, seancesCollege);
+      installations, lieux, classes, enseignants, periodesTriees, seancesCollege,
+      'college', exclusionsCalendaires, exclusionsManuelles, ajoutsManuels);
     buildTransportSheet(wb, 'Synthèse transport — Lycée', 'Transport Lycée',
-      installations, lieux, classes, enseignants, periodesTriees, seancesLycee);
+      installations, lieux, classes, enseignants, periodesTriees, seancesLycee,
+      'lycee', exclusionsCalendaires, exclusionsManuelles, ajoutsManuels);
   }
 
   // Télécharger

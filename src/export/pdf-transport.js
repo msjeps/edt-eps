@@ -13,7 +13,7 @@ import { jsPDF } from 'jspdf';
 import db, { getConfig } from '../db/schema.js';
 import { saveExportFile } from '../utils/filesystem.js';
 import { toast } from '../components/toast.js';
-import { getCalendrierExclusions } from '../utils/dates.js';
+import { getCalendrierExclusions, genererDatesJourISO } from '../utils/dates.js';
 import { getOverlappingPeriodeIds } from '../utils/period-store.js';
 import { dateHeure } from '../utils/helpers.js';
 
@@ -77,29 +77,12 @@ function minToHLabel(m) {
 function isCollege(niv) { return NIVEAUX_COLLEGE.has(niv); }
 function isLycee(niv)   { return NIVEAUX_LYCEE.has(niv);   }
 
-/**
- * Génère les dates (format YYYY-MM-DD) pour un jour de semaine donné
- * entre dateDebut et dateFin, en excluant les vacances scolaires.
- * Distinct de genererDatesJour qui retourne DD/MM — ici on garde ISO
- * pour pouvoir comparer avec les exclusions transport.
- */
-function genDatesISO(jour, dateDebut, dateFin, vacances) {
-  const JI = { dimanche:0, lundi:1, mardi:2, mercredi:3, jeudi:4, vendredi:5, samedi:6 };
-  const ji = JI[(jour || '').toLowerCase()];
-  if (ji === undefined) return [];
-
-  const cur = new Date(dateDebut);
-  while (cur.getDay() !== ji) cur.setDate(cur.getDate() + 1);
-
-  const result = [];
-  while (cur <= dateFin) {
-    const iso = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
-    const exclu = (vacances || []).some(v => iso >= v.debut && iso <= v.fin);
-    if (!exclu) result.push(iso);
-    cur.setDate(cur.getDate() + 7);
-  }
-  return result;
+/** Retourne la période (avec dateDebut/dateFin) dans laquelle tombe une date ISO, ou null. */
+function findPeriodeForDate(iso, periodes) {
+  return periodes.find(p => p.dateDebut && p.dateFin && iso >= p.dateDebut && iso <= p.dateFin) || null;
 }
+
+const JOURS_NOMS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
 /** "YYYY-MM-DD" → "DD/MM" */
 function isoToDDMM(iso) {
@@ -156,10 +139,12 @@ function drawRect(doc, x, y, w, h, fill) {
 /**
  * @param {string|number|null} periodeId
  * @param {Array}              exclusions  — [{id, date:"YYYY-MM-DD", raison, classesIds:"all"|[id,...]}]
- * @returns {{ rows, etab, annee, periodes, appliedExcl }}
+ * @param {Array}              ajouts      — [{id, date:"YYYY-MM-DD", classeId, lieuId, heureDebut, heureFin, enseignantId, raison}]
+ * @returns {{ rows, etab, annee, periodes, appliedExcl, appliedAdd }}
  *   appliedExcl : [{date, raison, classesIds, classe}] — exclusions ayant supprimé ≥1 date
+ *   appliedAdd  : [{date, raison, classe, lieu, horaire}] — ajouts exceptionnels effectivement inclus
  */
-async function buildData(periodeId, exclusions = []) {
+async function buildData(periodeId, exclusions = [], ajouts = []) {
   const [seances, insts, lieux, classes, enseignants, periodes] = await Promise.all([
     db.seances.toArray(),
     db.installations.toArray(),
@@ -175,14 +160,14 @@ async function buildData(periodeId, exclusions = []) {
   const excl  = await getCalendrierExclusions(zone, annee);
 
   let src = seances;
-  if (periodeId) {
-    const pid = parseInt(periodeId);
-    const visibleIds = getOverlappingPeriodeIds(pid, periodes);
+  const visibleIds = periodeId ? getOverlappingPeriodeIds(parseInt(periodeId), periodes) : null;
+  if (visibleIds) {
     src = src.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
 
   const rows       = [];
   const appliedExcl = []; // exclusions transport effectivement appliquées
+  const appliedAdd  = []; // ajouts exceptionnels effectivement inclus
 
   for (const s of src) {
     const inst = insts.find(i => i.id === s.installationId);
@@ -196,7 +181,7 @@ async function buildData(periodeId, exclusions = []) {
     // 1. Dates ISO hors vacances scolaires
     let allISO = [];
     if (per?.dateDebut && per?.dateFin) {
-      allISO = genDatesISO(s.jour, new Date(per.dateDebut), new Date(per.dateFin), excl);
+      allISO = genererDatesJourISO(s.jour, new Date(per.dateDebut), new Date(per.dateFin), excl);
     }
 
     // 2. Appliquer les exclusions transport propres à cette classe
@@ -242,6 +227,45 @@ async function buildData(periodeId, exclusions = []) {
     });
   }
 
+  // 3. Ajouts exceptionnels — dates ponctuelles indépendantes de la récurrence hebdomadaire.
+  //    Chaque ajout devient sa propre ligne (1 date = 1 rotation).
+  for (const a of ajouts) {
+    const cls  = classes.find(c => c.id === a.classeId);
+    const lieu = lieux.find(l => l.id === a.lieuId);
+    if (!cls || !lieu) continue; // classe/lieu supprimé depuis → référence orpheline, on ignore
+
+    const perMatch = findPeriodeForDate(a.date, periodes);
+    if (visibleIds && (!perMatch || !visibleIds.has(perMatch.id))) continue; // hors période sélectionnée
+
+    const ens = enseignants.find(e => e.id === a.enseignantId);
+    const sm  = hToMin(a.heureDebut);
+    const em  = hToMin(a.heureFin);
+    const horaire = `${a.heureDebut}-${a.heureFin}`;
+
+    let profLabel = '';
+    if (ens) {
+      const ini = ens.prenom ? ens.prenom[0].toUpperCase() + '.' : '';
+      profLabel  = ini + ens.nom.toUpperCase();
+    }
+
+    rows.push({
+      jour:      JOURS_NOMS[new Date(a.date + 'T00:00:00').getDay()],
+      lieu:      lieu.nom?.toUpperCase() || '',
+      depart:    minToHLabel(sm + 15),
+      retour:    minToHLabel(em - 15),
+      departMin: sm + 15,
+      classe:    cls.nom || '',
+      niveau:    cls.niveau || '',
+      effectif:  cls.effectif != null ? String(cls.effectif) : '',
+      prof:      profLabel,
+      dates:     [isoToDDMM(a.date)],
+      nbRot:     1,
+      periodeNom: perMatch?.nom || 'Ajout exceptionnel',
+    });
+
+    appliedAdd.push({ date: a.date, raison: a.raison || '', classe: cls.nom || '', lieu: lieu.nom || '', horaire });
+  }
+
   // Tri : jour calendaire → heure départ (numérique) → lieu (alpha)
   rows.sort((a, b) => {
     const jo = JOURS_ORDRE.indexOf(a.jour) - JOURS_ORDRE.indexOf(b.jour);
@@ -251,7 +275,7 @@ async function buildData(periodeId, exclusions = []) {
     return a.lieu.localeCompare(b.lieu, 'fr');
   });
 
-  return { rows, etab, annee, periodes, appliedExcl };
+  return { rows, etab, annee, periodes, appliedExcl, appliedAdd };
 }
 
 // ============================================================
@@ -535,17 +559,116 @@ function drawSummaryPage(doc, appliedExcl, etab, periodeNom, annee) {
 }
 
 // ============================================================
+// PAGE RÉCAPITULATIF DES AJOUTS EXCEPTIONNELS
+// ============================================================
+
+/**
+ * Dessine une page récapitulative des dates ajoutées exceptionnellement au transport.
+ * @param {jsPDF} doc
+ * @param {Array} appliedAdd  — [{date, raison, classe, lieu, horaire}]
+ * @param {string} etab
+ * @param {string} periodeNom
+ * @param {string} annee
+ */
+function drawAdditionsSummaryPage(doc, appliedAdd, etab, periodeNom, annee) {
+  const usableW = PW - ML - MR;
+
+  const summaryRows = [...appliedAdd]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(r => ({
+      dateLabel: formatSummaryDate(r.date),
+      classe:    r.classe,
+      lieu:      r.lieu,
+      horaire:   r.horaire,
+      raison:    r.raison,
+    }));
+
+  let y = MT;
+
+  // Supra-header
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 80);
+  doc.text(`${etab.toUpperCase()} — ${periodeNom.toUpperCase()} — ANNEE SCOLAIRE ${annee}`, ML, y - 4);
+  doc.setTextColor(0, 0, 0);
+
+  // Titre
+  const TITLE_H = 8;
+  drawRect(doc, ML, y, usableW, TITLE_H, C_TITLE_BG);
+  drawCellText(doc, ['Récapitulatif des dates ajoutées — Export Transport'], ML, y, usableW, TITLE_H, 10, true, [0, 0, 0]);
+  y += TITLE_H;
+
+  // Sous-titre
+  const SUBTITLE_H = 6;
+  drawRect(doc, ML, y, usableW, SUBTITLE_H, [245, 245, 245]);
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(80, 80, 80);
+  const sub = `Ces dates ont été ajoutées manuellement au planning transport (sorties, compétitions, rattrapages...).`;
+  const subLines = doc.splitTextToSize(sub, usableW - 4);
+  doc.text(subLines[0], ML + 2, y + SUBTITLE_H / 2 + 1.5);
+  doc.setTextColor(0, 0, 0);
+  y += SUBTITLE_H;
+
+  // En-têtes colonnes
+  const COLS_SUMM = [
+    { label: 'DATE', w: 45 },
+    { label: 'CLASSE', w: 30 },
+    { label: 'LIEU', w: 55 },
+    { label: 'HORAIRE', w: 30 },
+    { label: 'RAISON', w: 121 },
+  ];
+  const HDR_H = 9;
+  let xc = ML;
+  for (const col of COLS_SUMM) {
+    drawRect(doc, xc, y, col.w, HDR_H, C_HDR_BG);
+    drawCellText(doc, [col.label], xc, y, col.w, HDR_H, 7, true, C_HDR_FG);
+    xc += col.w;
+  }
+  y += HDR_H;
+
+  // Lignes de données
+  const ROW_H = 8;
+  for (let i = 0; i < summaryRows.length; i++) {
+    const row  = summaryRows[i];
+    const fill = i % 2 === 0 ? C_WHITE : [248, 248, 248];
+    let xr = ML;
+    const vals = [row.dateLabel, row.classe, row.lieu, row.horaire, row.raison];
+
+    for (let ci = 0; ci < COLS_SUMM.length; ci++) {
+      drawRect(doc, xr, y, COLS_SUMM[ci].w, ROW_H, fill);
+      drawCellText(doc, [vals[ci]], xr, y, COLS_SUMM[ci].w, ROW_H, 7.5, ci === 0, [0, 0, 0]);
+      xr += COLS_SUMM[ci].w;
+    }
+
+    y += ROW_H;
+    if (y > PH - MB - ROW_H) {
+      // Sécurité : nouvelle page si débordement
+      doc.addPage();
+      y = MT;
+    }
+  }
+
+  // Pied de page : total
+  y += 4;
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Total : ${summaryRows.length} date(s) ajoutée(s)`, ML, y);
+}
+
+// ============================================================
 // EXPORT PRINCIPAL
 // ============================================================
 
 /**
- * Génère le PDF transport (1 page collège + 1 page lycée + 1 page récap exclusions).
+ * Génère le PDF transport (1 page collège + 1 page lycée + 1 page récap exclusions + 1 page récap ajouts).
  * @param {string|number|null} periodeId  — null = toutes les périodes
  * @param {Array}              exclusions — [{id, date, raison, classesIds}]
+ * @param {Array}              ajouts     — [{id, date, classeId, lieuId, heureDebut, heureFin, enseignantId, raison}]
  */
-export async function exportPdfTransport(periodeId, exclusions = []) {
+export async function exportPdfTransport(periodeId, exclusions = [], ajouts = []) {
   try {
-    const { rows, etab, annee, periodes, appliedExcl } = await buildData(periodeId, exclusions);
+    const { rows, etab, annee, periodes, appliedExcl, appliedAdd } = await buildData(periodeId, exclusions, ajouts);
 
     if (rows.length === 0) {
       toast.warning('Aucune séance nécessitant un transport');
@@ -610,13 +733,22 @@ export async function exportPdfTransport(periodeId, exclusions = []) {
       drawSummaryPage(doc, appliedExcl, etab, perNom, annee);
     }
 
+    // ── Page récapitulatif ajouts exceptionnels (si des dates ont été ajoutées) ──
+    if (appliedAdd.length > 0) {
+      doc.addPage();
+      drawAdditionsSummaryPage(doc, appliedAdd, etab, perNom, annee);
+    }
+
     const blob  = doc.output('blob');
     const fname = `Transport_PDF_${etab}_${perNom}_${dateHeure()}.pdf`
       .replace(/\s+/g, '_');
     await saveExportFile(blob, fname);
 
-    const msg = appliedExcl.length > 0
-      ? `PDF Transport sauvegardé (${[...new Set(appliedExcl.map(e => e.date))].length} date(s) exclue(s))`
+    const parts = [];
+    if (appliedExcl.length > 0) parts.push(`${[...new Set(appliedExcl.map(e => e.date))].length} date(s) exclue(s)`);
+    if (appliedAdd.length  > 0) parts.push(`${appliedAdd.length} date(s) ajoutée(s)`);
+    const msg = parts.length > 0
+      ? `PDF Transport sauvegardé (${parts.join(', ')})`
       : 'PDF Transport sauvegardé';
     toast.success(msg);
 
