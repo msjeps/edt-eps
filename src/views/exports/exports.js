@@ -4,6 +4,7 @@
 import db from '../../db/schema.js';
 import { getConfig, setConfig } from '../../db/schema.js';
 import { toast } from '../../components/toast.js';
+import { openModal } from '../../components/modal.js';
 import { genererDatesJour, getCalendrierExclusions } from '../../utils/dates.js';
 import { JOURS_OUVRES, slugify, dateHeure } from '../../utils/helpers.js';
 import Papa from 'papaparse';
@@ -291,7 +292,8 @@ export async function renderExports(container) {
           </div>
           <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
             Ces dates sont retirées du planning PDF transport. Une page récapitulative est ajoutée au PDF si des exclusions sont appliquées.
-            Renseignez une <strong>date de fin</strong> pour exclure une période entière (ex&nbsp;: une semaine) en une seule saisie.
+            Renseignez une <strong>date de fin</strong> pour exclure une période entière (ex&nbsp;: une semaine), ou utilisez la
+            <strong>sélection multiple sur calendrier</strong> pour ne cocher que certains jours (ex&nbsp;: tous les vendredis de septembre).
           </p>
 
           <!-- Formulaire ajout -->
@@ -301,6 +303,11 @@ export async function renderExports(container) {
             <div style="display:flex;flex-direction:column;gap:4px;">
               <label style="font-size:var(--fs-sm);font-weight:600;">Date</label>
               <input type="date" class="form-input" id="excl-date" style="width:150px;">
+              <button type="button" id="btn-cal-multi"
+                      style="background:none;border:none;padding:0;color:var(--c-primary);text-decoration:underline;
+                             cursor:pointer;font-size:11px;text-align:left;">
+                📅 Sélection multiple sur calendrier
+              </button>
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;">
               <label style="font-size:var(--fs-sm);font-weight:600;">Date de fin <span style="font-weight:400;color:var(--c-text-secondary);">(optionnel)</span></label>
@@ -328,6 +335,10 @@ export async function renderExports(container) {
               Jours ouvrés uniquement (lun-ven)
             </label>
             <button class="btn btn-primary" id="btn-add-exclusion">+ Ajouter</button>
+
+            <!-- Résumé de la sélection multiple sur calendrier (masqué tant que rien n'est sélectionné) -->
+            <div id="excl-calendar-summary" style="display:none;flex-basis:100%;
+                        border-top:1px dashed var(--c-border);padding-top:var(--sp-2);margin-top:4px;"></div>
           </div>
 
           <!-- Liste des exclusions -->
@@ -474,6 +485,148 @@ export async function renderExports(container) {
     exclClassesPrev = next;
   });
 
+  // === Exclusions transport — sélection multiple sur calendrier ===
+  // Dates cochées individuellement dans le mini-calendrier (ex : tous les vendredis
+  // de septembre). Quand cet ensemble n'est pas vide, il est PRIORITAIRE sur les
+  // champs Date / Date de fin, qui sont désactivés pour éviter toute confusion —
+  // la date de fin n'intervient alors plus du tout, comme demandé.
+  let calendarDates = new Set();
+
+  function updateCalendarSummary() {
+    const box        = document.getElementById('excl-calendar-summary');
+    const dateInput   = document.getElementById('excl-date');
+    const dateFinInput = document.getElementById('excl-date-fin');
+    if (!box) return;
+
+    if (calendarDates.size === 0) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      if (dateInput)   dateInput.disabled = false;
+      if (dateFinInput) dateFinInput.disabled = false;
+      return;
+    }
+
+    const sorted = [...calendarDates].sort();
+    const joursAbrev = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    const chips = sorted.map(d => {
+      const dt = new Date(d + 'T00:00:00');
+      const label = `${joursAbrev[dt.getDay()]} ${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}`;
+      return `<button type="button" class="btn btn-outline btn-sm" data-cal-remove="${d}"
+                      style="padding:2px 8px;font-size:11px;" title="Retirer cette date">${label} ✕</button>`;
+    }).join(' ');
+
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div style="font-size:var(--fs-sm);margin-bottom:6px;">
+        <strong>${sorted.length} date${sorted.length > 1 ? 's' : ''} sélectionnée${sorted.length > 1 ? 's' : ''}</strong>
+        via le calendrier — la date de fin est ignorée.
+        <button type="button" id="excl-cal-clear"
+                style="background:none;border:none;padding:0;margin-left:6px;color:var(--c-primary);
+                       text-decoration:underline;cursor:pointer;font-size:var(--fs-sm);">tout effacer</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${chips}</div>
+    `;
+    if (dateInput)   dateInput.disabled = true;
+    if (dateFinInput) dateFinInput.disabled = true;
+  }
+
+  document.getElementById('excl-calendar-summary')?.addEventListener('click', (e) => {
+    if (e.target.id === 'excl-cal-clear') {
+      calendarDates = new Set();
+      updateCalendarSummary();
+      return;
+    }
+    const d = e.target.dataset.calRemove;
+    if (d) {
+      calendarDates.delete(d);
+      updateCalendarSummary();
+    }
+  });
+
+  function openCalendarMultiPicker() {
+    const today = new Date();
+    let viewYear  = today.getFullYear();
+    let viewMonth = today.getMonth();
+    const localSelected = new Set(calendarDates); // copie de travail, validée au clic sur "Valider"
+
+    const body = document.createElement('div');
+    const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+    function fmt(y, m, d) { return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; }
+
+    function render() {
+      const first       = new Date(viewYear, viewMonth, 1);
+      const startOffset = (first.getDay() + 6) % 7; // grille commençant le lundi
+      const nbJours     = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+      let cells = '';
+      for (let i = 0; i < startOffset; i++) cells += '<div></div>';
+      for (let d = 1; d <= nbJours; d++) {
+        const dateStr = fmt(viewYear, viewMonth, d);
+        const isSel   = localSelected.has(dateStr);
+        cells += `<button type="button" class="cal-day" data-date="${dateStr}" style="
+          padding:6px 0;border-radius:6px;cursor:pointer;font-size:var(--fs-sm);
+          border:1px solid ${isSel ? 'var(--c-primary)' : 'var(--c-border)'};
+          background:${isSel ? 'var(--c-primary)' : 'var(--c-surface)'};
+          color:${isSel ? '#fff' : 'var(--c-text)'};
+          font-weight:${isSel ? '600' : '400'};">${d}</button>`;
+      }
+
+      body.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);">
+          <button type="button" class="btn btn-outline btn-sm" id="cal-prev">‹</button>
+          <strong>${moisNoms[viewMonth]} ${viewYear}</strong>
+          <button type="button" class="btn btn-outline btn-sm" id="cal-next">›</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:var(--fs-sm);
+                    text-align:center;margin-bottom:4px;color:var(--c-text-secondary);">
+          <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">${cells}</div>
+        <p style="margin-top:var(--sp-3);margin-bottom:0;font-size:var(--fs-sm);color:var(--c-text-secondary);">
+          <strong>${localSelected.size}</strong> date(s) sélectionnée(s). Cliquez sur un jour pour le cocher/décocher —
+          naviguez d'un mois à l'autre, la sélection est conservée.
+        </p>
+      `;
+      body.querySelector('#cal-prev').addEventListener('click', () => {
+        viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+        render();
+      });
+      body.querySelector('#cal-next').addEventListener('click', () => {
+        viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+        render();
+      });
+      body.querySelectorAll('.cal-day').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const d = btn.dataset.date;
+          if (localSelected.has(d)) localSelected.delete(d); else localSelected.add(d);
+          render();
+        });
+      });
+    }
+    render();
+
+    const footer = document.createElement('div');
+    footer.style.cssText = 'display:flex;gap:var(--sp-2);justify-content:flex-end;';
+    const btnCancel = document.createElement('button');
+    btnCancel.className = 'btn btn-outline';
+    btnCancel.textContent = 'Annuler';
+    const btnOk = document.createElement('button');
+    btnOk.className = 'btn btn-primary';
+    btnOk.textContent = 'Valider la sélection';
+    footer.append(btnCancel, btnOk);
+
+    const { close } = openModal({ title: 'Sélectionner plusieurs dates', content: body, footer });
+    btnCancel.addEventListener('click', close);
+    btnOk.addEventListener('click', () => {
+      calendarDates = new Set(localSelected);
+      updateCalendarSummary();
+      close();
+    });
+  }
+
+  document.getElementById('btn-cal-multi')?.addEventListener('click', openCalendarMultiPicker);
+
   // === Exclusions transport — ajout ===
   document.getElementById('btn-add-exclusion')?.addEventListener('click', async () => {
     const date        = document.getElementById('excl-date')?.value;
@@ -483,8 +636,10 @@ export async function renderExports(container) {
     const sel          = document.getElementById('excl-classes');
     const opts         = [...(sel?.selectedOptions || [])].map(o => o.value);
 
-    if (!date) { toast.warning('Veuillez saisir une date'); return; }
-    if (dateFin && dateFin < date) { toast.warning('La date de fin doit être postérieure à la date de début'); return; }
+    if (calendarDates.size === 0 && !date) { toast.warning('Veuillez saisir une date'); return; }
+    if (calendarDates.size === 0 && dateFin && dateFin < date) {
+      toast.warning('La date de fin doit être postérieure à la date de début'); return;
+    }
 
     // Déterminer classesIds (filet de sécurité : si "all" et des classes précises sont
     // sélectionnés en même temps, on privilégie les classes précises plutôt que de tout
@@ -495,10 +650,14 @@ export async function renderExports(container) {
       classesIds = optsSpecifiques.map(v => parseInt(v)).filter(Boolean);
     }
 
-    // Construire la liste des dates à exclure (une seule si pas de date de fin,
-    // sinon toutes les dates de la plage — éventuellement filtrées aux jours ouvrés)
-    const dates = [];
-    if (dateFin) {
+    // Construire la liste des dates à exclure :
+    // 1) sélection multiple sur calendrier (prioritaire, date de fin ignorée)
+    // 2) sinon plage continue Date → Date de fin (éventuellement filtrée aux jours ouvrés)
+    // 3) sinon une seule date
+    let dates = [];
+    if (calendarDates.size > 0) {
+      dates = [...calendarDates].sort();
+    } else if (dateFin) {
       const cur = new Date(date + 'T00:00:00');
       const fin = new Date(dateFin + 'T00:00:00');
       while (cur <= fin) {
@@ -534,6 +693,8 @@ export async function renderExports(container) {
     // Reset select : remettre "Toutes" sélectionné
     if (sel) { [...sel.options].forEach(o => { o.selected = o.value === 'all'; }); }
     exclClassesPrev = ['all'];
+    calendarDates = new Set();
+    updateCalendarSummary();
     toast.success(dates.length > 1 ? `${dates.length} dates exclues ajoutées` : 'Date exclue ajoutée');
   });
 
