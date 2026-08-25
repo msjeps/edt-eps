@@ -1542,11 +1542,14 @@ async function openImportLieuxModal(parentContainer) {
       </tr>`;
     }).join('');
     return `
-      <div class="callout callout-info" style="margin-bottom:var(--sp-3);">
-        <strong>${data.lieux.length} lieux</strong> —
-        <strong>${data.lieux.reduce((s, l) => s + l.installations.length, 0)} installations</strong>
-        à importer.
-        ${data.source ? `<br><span style="color:var(--c-text-muted);font-size:var(--fs-sm);">Source : ${h(data.source)}</span>` : ''}
+      <div class="callout callout--info" style="margin-bottom:var(--sp-3);">
+        <span class="callout-icon" aria-hidden="true">💡</span>
+        <div class="callout-body">
+          <strong>${data.lieux.length} lieux</strong> —
+          <strong>${data.lieux.reduce((s, l) => s + l.installations.length, 0)} installations</strong>
+          à importer.
+          ${data.source ? `<br><span style="color:var(--c-text-muted);font-size:var(--fs-sm);">Source : ${h(data.source)}</span>` : ''}
+        </div>
       </div>
       <div style="max-height:280px;overflow-y:auto;">
         <table class="data-table">
@@ -1554,8 +1557,11 @@ async function openImportLieuxModal(parentContainer) {
           <tbody>${lignes}</tbody>
         </table>
       </div>
-      <div class="callout callout-warn" style="margin-top:var(--sp-3);">
-        Les lieux dont le nom existe déjà seront ignorés. Les installations nouvelles seront ajoutées aux lieux existants.
+      <div class="callout callout--warning" style="margin-top:var(--sp-3);">
+        <span class="callout-icon" aria-hidden="true">⚠️</span>
+        <div class="callout-body">
+          Les lieux dont le nom existe déjà seront ignorés. Les installations nouvelles seront ajoutées aux lieux existants.
+        </div>
       </div>`;
   };
 
