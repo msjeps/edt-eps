@@ -274,7 +274,9 @@ function buildRows(seances, enseignants, periodes) {
 // ============================================================
 
 // showTeacher = true → affiche le nom de l'enseignant à la place de la classe (fiches par classe)
-function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder = false) {
+// instMode = true → fiche par installation : l'installation est déjà connue (fixée par la page),
+// donc son nom n'est pas répété dans le bloc ; le nom de l'enseignant est affiché à la place.
+function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder = false, instMode = false) {
   const { classes, enseignants, activites, installations, lieux } = refs;
   if (w < 1) return;
 
@@ -283,6 +285,7 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder
   const ens  = enseignants.find(e => e.id === seance.enseignantId);
   const act  = seance.isAS ? null : activites.find(a => a.id === seance.activiteId);
   const actNom = seance.isAS ? (seance.activiteLibre || '') : (act?.nom || '');
+  const teacherName = ens ? [ens.prenom, ens.nom].filter(Boolean).join(' ') : '';
   const colors = instColors(inst, lieux);
 
   // Export équipe (flatBorder) : fond = couleur pleine de l'installation (identique à la légende),
@@ -310,7 +313,9 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder
     : (seance.isAS ? `AS ${seance.intitule || ''}`.trim() : (cls?.nom || ''));
 
   if (h < 7) {
-    const actName = actNom ? (actNom.length > 14 ? actNom.substring(0, 13) + '…' : actNom) : '';
+    // instMode : peu de place → on affiche l'enseignant plutôt que l'activité (l'installation est déjà connue)
+    const secondaryRaw = instMode ? teacherName : actNom;
+    const actName = secondaryRaw ? (secondaryRaw.length > 14 ? secondaryRaw.substring(0, 13) + '…' : secondaryRaw) : '';
     const label = primaryLabel && actName ? `${primaryLabel} — ${actName}` : primaryLabel || actName;
     const size = 5.5;
     doc.setFont('helvetica', 'bold');
@@ -323,12 +328,16 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder
       : y + bandH + (h - bandH) / 2 + 1;
     doc.text(label, x + pad, baseline, { maxWidth: maxW });
   } else {
-    const showInst = inst && h >= 11;
+    // instMode : l'installation est déjà connue (fixée par la page) → on affiche l'enseignant
+    // à la place, dans le même style (3e ligne, italique).
+    const showInst = !instMode && inst && h >= 11;
+    const showTeacherLine = instMode && teacherName && h >= 11;
     const nomAct = actNom.length > 18 ? actNom.substring(0, 16) + '…' : actNom;
     const parts = [];
     if (primaryLabel) parts.push({ text: primaryLabel, size: 6,   font: 'bold',   color: textRgb, gapAfter: 2.8 });
     if (actNom)       parts.push({ text: nomAct,        size: 5.2, font: 'normal', color: textRgb, gapAfter: 2.4 });
     if (showInst)     parts.push({ text: inst.nom.substring(0, 14), size: 5, font: 'italic', color: flatBorder ? textRgb : hexToRgb(colors.border), gapAfter: 0 });
+    if (showTeacherLine) parts.push({ text: teacherName.substring(0, 16), size: 5, font: 'italic', color: flatBorder ? textRgb : hexToRgb(colors.border), gapAfter: 0 });
 
     let textY;
     if (flatBorder && parts.length) {
@@ -374,6 +383,7 @@ function drawGrid(doc, {
   showEnsCol,                 // false pour fiches individuelles
   showTeacher = false,        // true pour fiches par classe
   accent = false,             // true pour l'export équipe : quadrillage horaires accentué + blocs à bordure plate
+  instMode = false,           // true pour fiches par installation : masque le nom d'installation dans le bloc, affiche l'enseignant
 }) {
   const gridW = (showEnsCol
     ? jourColW + ensColW + perColW
@@ -481,7 +491,7 @@ function drawGrid(doc, {
 
       const bX = colTimeX + (xCoords[startIdx] - xCoords[0]) + 0.3;
       const bW = (xCoords[endIdx] - xCoords[startIdx]) - 0.6;
-      drawBloc(doc, bX, y + 0.4, bW, rowH - 0.8, s, refs, showTeacher, accent);
+      drawBloc(doc, bX, y + 0.4, bW, rowH - 0.8, s, refs, showTeacher, accent, instMode);
     }
   });
 
@@ -1008,4 +1018,140 @@ export async function exportPdfClasses(periodeId, classeIdFilter) {
   const blob = doc.output('blob');
   await saveExportFile(blob, `Fiches_Classes_${clsLabel}_${dateHeure()}.pdf`);
   toast.success(`Fiches classes PDF exportées (${doc.getNumberOfPages()} page(s))`);
+}
+
+// ============================================================
+// EXPORT PDF FICHES PAR INSTALLATION (PORTRAIT A4)
+// ============================================================
+
+export async function exportPdfInstallations(periodeId, installationIdFilter) {
+  const {
+    seances: seancesAll, enseignants, classes, activites,
+    installations, lieux, periodes, etablissement, anneeScolaire,
+  } = await loadData();
+
+  const refs = { classes, enseignants, activites, installations, lieux };
+
+  const lieuNomDe = (inst) => lieux.find(l => l.id === inst.lieuId)?.nom || '';
+
+  const targetInstallations = installationIdFilter
+    ? installations.filter(i => i.id === parseInt(installationIdFilter))
+    : [...installations].sort((a, b) =>
+        lieuNomDe(a).localeCompare(lieuNomDe(b), 'fr') || a.nom.localeCompare(b.nom, 'fr')
+      );
+
+  const targetPeriodes = periodeId
+    ? periodes.filter(p => getOverlappingPeriodeIds(parseInt(periodeId), periodes).has(p.id))
+    : periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
+
+  if (!targetPeriodes.length || !targetInstallations.length) {
+    toast.warning('Aucune donnée à exporter');
+    return;
+  }
+
+  const PW = 210, PH = 297;
+  const M = 9;
+  const TITLE_H  = 20;
+  const HEADER_H = 8;
+  const ROW_H    = 10;
+  const JOUR_COL_W = 14;
+  const PER_COL_W  = 10;
+  const FIXED_W = JOUR_COL_W + PER_COL_W;
+  const TIME_AVAIL = PW - 2 * M - FIXED_W;
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  let firstPage = true;
+
+  for (const inst of targetInstallations) {
+    // Séances sans période (ex : AS à l'année) : toujours incluses, même logique que exportPdfEnseignants.
+    const instSeances = seancesAll.filter(
+      s => s.installationId === inst.id && (!s.periodeId || targetPeriodes.some(p => p.id === s.periodeId))
+    );
+    if (!instSeances.length) continue;
+
+    if (!firstPage) doc.addPage('a4', 'portrait');
+    firstPage = false;
+
+    const timeAxis = buildTimeAxis(instSeances);
+    if (timeAxis.length < 2) continue;
+    const xCoords = buildXCoords(timeAxis, 0, TIME_AVAIL);
+
+    const rows = buildRows(instSeances, enseignants, targetPeriodes, periodeId);
+    if (!rows.length) continue;
+
+    const periodeLabel = periodeId
+      ? (targetPeriodes[0]?.nom || '')
+      : 'Toutes les périodes';
+
+    // Enseignant(s) utilisant cette installation (liste courte, sinon comptage)
+    const ensIds = [...new Set(instSeances.map(s => s.enseignantId))].filter(Boolean);
+    const ensNoms = ensIds
+      .map(id => {
+        const e = enseignants.find(en => en.id === id);
+        return e ? [e.prenom, e.nom].filter(Boolean).join(' ') : null;
+      })
+      .filter(Boolean);
+    const ensLabel = ensNoms.length > 3 ? `${ensNoms.length} enseignants` : ensNoms.join(' / ');
+
+    const lieu = lieux.find(l => l.id === inst.lieuId);
+    const lieuLabel = lieu ? `${lieu.nom}${lieu.type === 'extra' ? ' (extra-muros)' : ''}` : '';
+
+    // ---- EN-TÊTE ----
+    doc.setFillColor(...HEADER_BG);
+    doc.rect(M, M, PW - 2 * M, TITLE_H, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(255, 255, 255);
+    doc.text(inst.nom, M + 5, M + 8);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(190, 210, 245);
+    const lieuLine = lieuLabel ? `${lieuLabel}  ·  ` : '';
+    doc.text(`${lieuLine}${periodeLabel}  ·  ${anneeScolaire}`, M + 5, M + 14.5);
+
+    const { str: hebdoStr, isWeighted: hebdoWeighted } = periodeId
+      ? { str: totalHebdoStr(instSeances), isWeighted: false }
+      : totalHebdoAnnualise(instSeances, periodes);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(220, 235, 255);
+    doc.text(`${hebdoStr} / sem.`, PW - M - 5, M + 8, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(160, 185, 225);
+    const ensLabelLine = [ensLabel, hebdoWeighted ? 'moy. annuelle' : ''].filter(Boolean).join('  ·  ');
+    if (ensLabelLine) doc.text(ensLabelLine, PW - M - 5, M + 14.5, { align: 'right' });
+
+    // ---- GRILLE ----
+    const gX = M;
+    const gY = M + TITLE_H;
+    // Pas de légende : l'installation est fixe sur la page, sa couleur ne varie pas d'un bloc à l'autre.
+    drawGrid(doc, {
+      gX, gY,
+      jourColW: JOUR_COL_W,
+      ensColW: 0,
+      perColW: PER_COL_W,
+      timeAxis,
+      xCoords: xCoords.map(x => x + M + FIXED_W),
+      rows,
+      refs,
+      rowH: ROW_H,
+      headerH: HEADER_H,
+      showEnsCol: false,
+      instMode: true,
+    });
+
+    drawFooter(doc, PW, PH);
+  }
+
+  if (firstPage) { toast.warning('Aucune séance trouvée'); return; }
+
+  const instLabel = installationIdFilter ? (targetInstallations[0]?.nom || 'installation') : 'toutes';
+  const blob = doc.output('blob');
+  await saveExportFile(blob, `Fiches_Installations_${instLabel}_${dateHeure()}.pdf`);
+  toast.success(`Fiches installations PDF exportées (${doc.getNumberOfPages()} page(s))`);
 }
