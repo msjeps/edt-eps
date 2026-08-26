@@ -9,6 +9,7 @@ import { captureUndo } from '../../utils/undo.js';
 import { openModal, confirmModal } from '../../components/modal.js';
 import { toast } from '../../components/toast.js';
 import { JOURS_OUVRES, JOURS_COURTS, NIVEAUX, COULEURS_INSTALLATIONS } from '../../utils/helpers.js';
+import { isEdtVerrouille } from '../../utils/edt-lock.js';
 
 // ============================
 // MODÈLES HORAIRES PRÉDÉFINIS
@@ -34,6 +35,7 @@ let filtreEnseignant = 'tous';
 export async function renderProgrammation(container) {
   const data = await loadAllData();
   const niveauxDispos = getNiveauxDispos(data.etabType);
+  const edtVerrouille = await isEdtVerrouille();
 
   container.innerHTML = `
     <div class="prog-container">
@@ -43,6 +45,15 @@ export async function renderProgrammation(container) {
           Configurez les créneaux de chaque classe puis assignez activités et installations par période
         </p>
       </div>
+
+      ${edtVerrouille ? `
+        <div class="callout callout--warning u-mb-4">
+          <span class="callout-icon" aria-hidden="true">&#128274;</span>
+          <div class="callout-body">
+            <strong>EDT verrouillé</strong> — vous pouvez continuer à modifier la programmation, mais les changements ne seront répercutés sur la grille Emploi du temps qu'après son déverrouillage.
+          </div>
+        </div>
+      ` : ''}
 
       <div class="prog-toolbar">
         <div class="prog-filters">

@@ -15,6 +15,7 @@ import { updateConflictBadge } from '../../app.js';
 import { JOURS_COURTS } from '../../utils/helpers.js';
 import { slugify } from '../../utils/helpers.js';
 import { getPeriodeGlobale, setPeriodeGlobale, getOverlappingPeriodeIds } from '../../utils/period-store.js';
+import { isEdtVerrouille, setEdtVerrouille, assertEdtEditable } from '../../utils/edt-lock.js';
 
 // État local
 let state = {
@@ -51,6 +52,11 @@ function densite() {
  * Crée/met à jour/supprime les séances automatiques.
  */
 async function syncSeancesFromProgrammation() {
+  // EDT verrouillé : on gèle la synchro pour ne pas laisser des changements faits
+  // dans la Programmation se répercuter silencieusement sur l'EDT figé. La
+  // Programmation reste utilisable ; le rattrapage se fera au déverrouillage.
+  if (await isEdtVerrouille()) return;
+
   const [creneauxClasses, programmations, seances] = await Promise.all([
     db.creneauxClasses.toArray(),
     db.programmations.toArray(),
@@ -152,6 +158,7 @@ export async function renderEdt(container) {
     getConfig('heureFin'),
     getConfig('etablissementNom'),
   ]);
+  const edtVerrouille = await isEdtVerrouille();
 
   const jours = joursOuvres || ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
   let hStart = heureToMinutes(heureDebut || '08:00');
@@ -280,7 +287,15 @@ export async function renderEdt(container) {
 
   container.removeAttribute('aria-busy');
   container.innerHTML = `
-    <div class="edt-container ${state.patterns ? 'edt-patterns' : ''}">
+    <div class="edt-container ${state.patterns ? 'edt-patterns' : ''} ${edtVerrouille ? 'edt-verrouille' : ''}">
+      ${edtVerrouille ? `
+        <div class="callout callout--warning edt-lock-banner">
+          <span class="callout-icon" aria-hidden="true">&#128274;</span>
+          <div class="callout-body">
+            <strong>EDT verrouillé</strong> — aucune modification possible (glisser-déposer, ajout, édition, Annuler). Cliquez sur « EDT verrouillé » dans la barre d'outils pour le déverrouiller.
+          </div>
+        </div>
+      ` : ''}
 
       <!-- Header visible uniquement à l'impression -->
       <div class="print-header">
@@ -360,13 +375,23 @@ export async function renderEdt(container) {
                   aria-pressed="${state.masquerAS}">
             ${state.masquerAS ? 'AS masquée' : 'AS visible'}
           </button>
-          <button class="btn btn-sm btn-primary" id="edt-btn-add">+ Séance</button>
+          <button class="btn btn-sm btn-primary" id="edt-btn-add" ${edtVerrouille ? 'disabled' : ''} title="${edtVerrouille ? 'EDT verrouillé — déverrouillez-le pour ajouter une séance' : ''}">+ Séance</button>
           <button class="btn btn-sm btn-ghost btn-print-trigger" id="edt-btn-print" title="Imprimer l'EDT (Ctrl+P)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
               <rect x="6" y="14" width="12" height="8"/>
             </svg>
             Imprimer
+          </button>
+        </div>
+
+        <div class="toolbar-separator"></div>
+
+        <div class="toolbar-group">
+          <button class="btn btn-sm ${edtVerrouille ? 'btn-lock-active' : 'btn-ghost'}" id="edt-btn-lock"
+                  title="${edtVerrouille ? 'EDT verrouillé — cliquez pour déverrouiller' : "Verrouiller l'EDT pour empêcher toute modification accidentelle"}"
+                  aria-pressed="${edtVerrouille}">
+            ${edtVerrouille ? '&#128274; EDT verrouillé' : '&#128275; Verrouiller l\'EDT'}
           </button>
         </div>
       </div>
@@ -392,8 +417,8 @@ export async function renderEdt(container) {
 
           <!-- Lignes par jour -->
           ${state.showAllPeriodes && periodes.length > 1
-            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds })
-            : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds })
+            ? renderAllPeriodesRows(jours, periodes, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds, edtVerrouille })
+            : renderSinglePeriodeRows(jours, slots, seancesFiltrees, hStart, PAS, { enseignants, classes, activites, installations, lieux, periodes, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds, edtVerrouille })
           }
         </div>
       </div>
@@ -407,7 +432,7 @@ export async function renderEdt(container) {
   `;
 
   // === Bind events ===
-  bindEdtEvents(container, seancesFiltrees, { enseignants, classes, activites, installations, lieux, periodes });
+  bindEdtEvents(container, seancesFiltrees, { enseignants, classes, activites, installations, lieux, periodes, edtVerrouille });
 }
 
 // ============================
@@ -595,7 +620,7 @@ function renderAllPeriodesRows(jours, periodes, slots, seances, hStart, pas, ctx
 // ============================
 
 function renderBloc(seance, stackIndex, hStart, pas, ctx) {
-  const { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds } = ctx;
+  const { enseignants, classes, activites, installations, lieux, instPatternMap, conflitSeanceIds, manqueInstallIds, resaRefuseeIds, edtVerrouille } = ctx;
   const ens = enseignants.find(e => e.id === seance.enseignantId);
   const cls = classes.find(c => c.id === seance.classeId);
   const act = activites.find(a => a.id === seance.activiteId);
@@ -630,7 +655,7 @@ function renderBloc(seance, stackIndex, hStart, pas, ctx) {
          data-seance-id="${seance.id}"
          data-install="${slug}"
          ${patternIdx != null ? `data-pattern="${patternIdx}"` : ''}
-         draggable="${seance.verrouille ? 'false' : 'true'}"
+         draggable="${(seance.verrouille || edtVerrouille) ? 'false' : 'true'}"
          style="width:${widthPct}%; top:${topOffset}px; height:${densite().blocH}px;"
          title="${isAS ? 'AS — ' : ''}${classeLabel} — ${actLabel}\n${ens ? ens.prenom + ' ' + ens.nom : ''}\n${instLabel || '—'}\n${formatHeureLabel(seance.heureDebut)}-${formatHeureLabel(seance.heureFin)}${hasConflit ? '\n⚠ Conflit détecté' : ''}${hasNoInstall ? '\n📍 Installation non affectée' : ''}${hasResaRefusee ? '\n🚫 Réservation refusée' : ''}">
       <div class="bloc-line bloc-line-top">
@@ -674,7 +699,8 @@ function bindEdtEvents(container, seancesFiltrees, ctx) {
   });
 
   // Ajout séance
-  container.querySelector('#edt-btn-add')?.addEventListener('click', () => {
+  container.querySelector('#edt-btn-add')?.addEventListener('click', async () => {
+    if (!(await assertEdtEditable())) return;
     openSeanceModal(null, ctx, container);
   });
 
@@ -702,6 +728,18 @@ function bindEdtEvents(container, seancesFiltrees, ctx) {
   // Impression
   container.querySelector('#edt-btn-print')?.addEventListener('click', () => {
     window.print();
+  });
+
+  // Verrouillage global de l'EDT
+  container.querySelector('#edt-btn-lock')?.addEventListener('click', async () => {
+    const locked = await isEdtVerrouille();
+    await setEdtVerrouille(!locked);
+    if (locked) {
+      toast.success('EDT déverrouillé — modifications à nouveau possibles.');
+    } else {
+      toast.warning('EDT verrouillé — plus aucune modification possible.');
+    }
+    renderEdt(container);
   });
 
   // Click bloc → éditer
@@ -814,6 +852,9 @@ function setupDragDrop(container, seances, context) {
       state.dragSeance = null;
       const seance = await db.seances.get(seanceId);
       if (!seance) return;
+      // Garde-fou : les blocs verrouillés (EDT global ou séance) ne sont normalement
+      // pas draggable, mais on protège aussi le point d'écriture par prudence.
+      if (!(await assertEdtEditable())) return;
 
       const newJour      = slot.dataset.jour;
       const newHeureDebut = slot.dataset.heure;
@@ -980,8 +1021,11 @@ function clearHighlights(container) {
 // ============================
 
 async function openSeanceModal(seance, context, edtContainer) {
-  const { enseignants, classes, activites, installations, lieux, periodes } = context;
+  const { enseignants, classes, activites, installations, lieux, periodes, edtVerrouille } = context;
   const isEdit = seance !== null;
+  // EDT verrouillé : on autorise la consultation d'une séance existante, mais
+  // pas sa modification — champs désactivés, pas de bouton Enregistrer/Supprimer/Copier.
+  const readOnly = !!edtVerrouille;
 
   // === Helpers pour filtrage dynamique ===
   function getActivitesForNiveau(niveau) {
@@ -1117,9 +1161,15 @@ async function openSeanceModal(seance, context, edtContainer) {
       ? `ℹ Activité déjà utilisée pour cette classe dans une autre période : ${(currentUsedInfo.details[initActId] || []).map(d => `${d.periodeNom} (${d.jour})`).join(', ')}.`
       : '';
 
-  const { close } = openModal({
+  const { close, body: modalBody } = openModal({
     title: isEdit ? 'Modifier la séance' : 'Nouvelle séance',
     content: `
+      ${readOnly ? `
+        <div class="callout callout--warning" style="margin-bottom:var(--sp-3);">
+          <span class="callout-icon" aria-hidden="true">&#128274;</span>
+          <div class="callout-body">EDT verrouillé — consultation seule.</div>
+        </div>
+      ` : ''}
       <div class="form-group">
         <label class="period-cb-label" style="font-size:var(--fs-base);font-weight:600;">
           <input type="checkbox" id="md-seance-as" ${seance?.isAS ? 'checked' : ''}>
@@ -1211,7 +1261,12 @@ async function openSeanceModal(seance, context, edtContainer) {
       </div>
       ${seance?.programmationId ? '<p class="linked-prog-note">&#9432; Cette séance est liée à la programmation annuelle.</p>' : ''}
     `,
-    footer: `
+    footer: readOnly ? `
+      <span></span>
+      <div class="modal-footer-row">
+        <button class="btn btn-outline" id="md-seance-cancel">Fermer</button>
+      </div>
+    ` : `
       ${isEdit ? '<button class="btn btn-danger" id="md-seance-del">Supprimer</button>' : '<span></span>'}
       <div class="modal-footer-row">
         ${isEdit ? '<button class="btn btn-ghost" id="md-seance-copy" title="Dupliquer cette séance vers un autre jour ou une autre période">⧉ Copier</button>' : ''}
@@ -1221,6 +1276,13 @@ async function openSeanceModal(seance, context, edtContainer) {
     `,
     wide: true,
   });
+
+  // EDT verrouillé : désactive tous les champs du formulaire (consultation seule).
+  // Fait en JS plutôt qu'avec un <fieldset disabled> — ce dernier a un rendu
+  // incohérent selon les moteurs de rendu (contenu qui devient transparent).
+  if (readOnly) {
+    modalBody.querySelectorAll('input, select, textarea').forEach(el => { el.disabled = true; });
+  }
 
   // Vérifie les indisponibilités de l'enseignant sélectionné sur le créneau
   async function checkIndispoWarning() {
@@ -1358,6 +1420,7 @@ async function openSeanceModal(seance, context, edtContainer) {
 
   document.getElementById('md-seance-cancel')?.addEventListener('click', close);
   document.getElementById('md-seance-del')?.addEventListener('click', async () => {
+    if (!(await assertEdtEditable())) return;
     await captureUndo('Suppression séance');
     await db.seances.delete(seance.id);
     // Also delete linked programmation if exists
@@ -1405,6 +1468,7 @@ async function openSeanceModal(seance, context, edtContainer) {
       toast.warning('Classe et enseignant sont obligatoires');
       return;
     }
+    if (!(await assertEdtEditable())) return;
 
     await captureUndo(isEdit ? 'Modification séance' : 'Ajout séance');
     if (isEdit) {
@@ -1556,6 +1620,7 @@ async function openDuplicateModal(seance, ctx, edtContainer) {
       toast.warning('Sélectionnez au moins une période de destination');
       return;
     }
+    if (!(await assertEdtEditable())) return;
 
     await captureUndo('Duplication séance');
 

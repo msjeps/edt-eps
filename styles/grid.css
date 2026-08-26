@@ -37,6 +37,30 @@
   align-items: center;
 }
 
+/* ---- Verrouillage global de l'EDT ---- */
+.edt-lock-banner {
+  margin-bottom: var(--sp-3);
+}
+
+#edt-btn-lock.btn-lock-active {
+  background: var(--c-warning-bg);
+  border-color: var(--c-warning);
+  color: var(--c-warning-text);
+}
+#edt-btn-lock.btn-lock-active:hover {
+  background: var(--c-warning-bg);
+  filter: brightness(0.97);
+}
+
+/* Grille figée : les blocs restent lisibles mais ne se comportent plus comme
+   des poignées de glisser-déposer (curseur neutre). */
+.edt-verrouille .edt-bloc {
+  cursor: default;
+}
+.edt-verrouille .edt-bloc:hover {
+  transform: none;
+}
+
 .edt-filters select {
   padding: 0 var(--sp-3);
   height: 32px;
