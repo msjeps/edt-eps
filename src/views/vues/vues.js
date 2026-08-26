@@ -546,67 +546,57 @@ export async function renderVues(container) {
   const data = { seances, enseignants, classes, activites, installations, lieux, periodes, patternsEnabled, instPatternMap };
   const periodesPrincipales = periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
-  /** Options du menu déroulant d'entité, dépendant de l'onglet actif. */
-  function buildEntityOptions() {
-    const selId = selectedEntityId[currentTab];
-    if (currentTab === 'enseignant') {
-      return `<option value="">Tous les enseignants</option>` +
-        [...enseignants]
-          .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr') || (a.prenom || '').localeCompare(b.prenom || '', 'fr'))
-          .map(e => `<option value="${e.id}" ${selId === e.id ? 'selected' : ''}>${e.prenom ? e.prenom + ' ' : ''}${e.nom}</option>`).join('');
-    }
-    if (currentTab === 'classe') {
-      return `<option value="">Toutes les classes</option>` +
-        [...classes]
-          .sort((a, b) => (NIVEAU_ORDRE[a.niveau] ?? 99) - (NIVEAU_ORDRE[b.niveau] ?? 99) || (a.nom || '').localeCompare(b.nom || '', 'fr'))
-          .map(c => `<option value="${c.id}" ${selId === c.id ? 'selected' : ''}>${c.nom}</option>`).join('');
-    }
-    // installation
-    return `<option value="">Toutes les installations</option>` +
-      [...installations]
-        .sort((a, b) => {
-          const la = lieux.find(l => l.id === a.lieuId)?.nom || '';
-          const lb = lieux.find(l => l.id === b.lieuId)?.nom || '';
-          return la.localeCompare(lb, 'fr') || (a.nom || '').localeCompare(b.nom || '', 'fr');
-        })
-        .map(i => {
-          const lieu = lieux.find(l => l.id === i.lieuId);
-          return `<option value="${i.id}" ${selId === i.id ? 'selected' : ''}>${lieu ? lieu.nom + ' — ' : ''}${i.nom}</option>`;
-        }).join('');
-  }
+  /**
+   * Options du menu déroulant unique combinant type de vue (onglet) + entité :
+   * un seul <select> avec un <optgroup> par type, chacun démarrant par
+   * « Tous/Toutes les X » (équivalent de l'ancien onglet) puis une entrée par entité.
+   */
+  function buildTypeEntityOptions() {
+    const currentValue = selectedEntityId[currentTab] != null
+      ? `${currentTab}:${selectedEntityId[currentTab]}`
+      : currentTab;
+    const opt = (value, label) => `<option value="${value}" ${value === currentValue ? 'selected' : ''}>${label}</option>`;
 
-  const ENTITY_ARIA_LABEL = { enseignant: 'Enseignant', classe: 'Classe', installation: 'Installation' };
+    const ensOptions = [...enseignants]
+      .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr') || (a.prenom || '').localeCompare(b.prenom || '', 'fr'))
+      .map(e => opt(`enseignant:${e.id}`, `${e.prenom ? e.prenom + ' ' : ''}${e.nom}`)).join('');
+
+    const clsOptions = [...classes]
+      .sort((a, b) => (NIVEAU_ORDRE[a.niveau] ?? 99) - (NIVEAU_ORDRE[b.niveau] ?? 99) || (a.nom || '').localeCompare(b.nom || '', 'fr'))
+      .map(c => opt(`classe:${c.id}`, c.nom)).join('');
+
+    const instOptions = [...installations]
+      .sort((a, b) => {
+        const la = lieux.find(l => l.id === a.lieuId)?.nom || '';
+        const lb = lieux.find(l => l.id === b.lieuId)?.nom || '';
+        return la.localeCompare(lb, 'fr') || (a.nom || '').localeCompare(b.nom || '', 'fr');
+      })
+      .map(i => {
+        const lieu = lieux.find(l => l.id === i.lieuId);
+        return opt(`installation:${i.id}`, `${lieu ? lieu.nom + ' — ' : ''}${i.nom}`);
+      }).join('');
+
+    return `
+      <optgroup label="&#128100; Enseignants">${opt('enseignant', 'Tous les enseignants')}${ensOptions}</optgroup>
+      <optgroup label="&#127979; Classes">${opt('classe', 'Toutes les classes')}${clsOptions}</optgroup>
+      <optgroup label="&#127968; Installations">${opt('installation', 'Toutes les installations')}${instOptions}</optgroup>
+    `;
+  }
 
   container.innerHTML = `
     <div style="max-width:1400px;margin:0 auto;">
 
       <!-- Contrôles écran (masqués à l'impression) -->
       <div class="vues-toolbar" style="display:flex;gap:var(--sp-4);margin-bottom:var(--sp-5);align-items:center;flex-wrap:wrap;">
-        <!-- Tabs -->
-        <div style="display:flex;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius);padding:2px;gap:2px;">
-          <button class="vue-tab-btn ${currentTab==='enseignant'?'vue-tab-active':''}" data-tab="enseignant"
-            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='enseignant'?'var(--c-surface-alt)':'transparent'};color:${currentTab==='enseignant'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='enseignant'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
-            &#128100; Par enseignant
-          </button>
-          <button class="vue-tab-btn ${currentTab==='classe'?'vue-tab-active':''}" data-tab="classe"
-            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='classe'?'var(--c-surface-alt)':'transparent'};color:${currentTab==='classe'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='classe'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
-            &#127979; Par classe
-          </button>
-          <button class="vue-tab-btn ${currentTab==='installation'?'vue-tab-active':''}" data-tab="installation"
-            style="padding:var(--sp-2) var(--sp-4);border:none;border-radius:calc(var(--radius) - 2px);cursor:pointer;font-size:var(--fs-sm);font-weight:500;background:${currentTab==='installation'?'var(--c-surface-alt)':'transparent'};color:${currentTab==='installation'?'var(--c-text)':'var(--c-text-secondary)'};box-shadow:${currentTab==='installation'?'0 1px 3px rgba(0,0,0,.1)':''};transition:all .15s;">
-            &#127968; Par installation
-          </button>
-        </div>
+        <!-- Vue : type (enseignant/classe/installation) + entité, dans un seul menu -->
+        <select class="form-select" id="vue-type-entity" aria-label="Vue" style="width:auto;min-width:220px;">
+          ${buildTypeEntityOptions()}
+        </select>
 
-        <!-- Filtre période (synchronisé avec le sélecteur global du header) -->
+        <!-- Filtre période (local à cet écran — le sélecteur du header est masqué ici) -->
         <select class="form-select" id="vue-periode" aria-label="Période" style="width:auto;min-width:180px;">
           <option value="" ${getPeriodeGlobale() === 'all' ? 'selected' : ''}>Toutes les périodes</option>
           ${periodesPrincipales.map(p => `<option value="${p.id}" ${getPeriodeGlobale() === String(p.id) ? 'selected' : ''}>${p.nom}</option>`).join('')}
-        </select>
-
-        <!-- Filtre entité (dépend de l'onglet actif : un seul enseignant/classe/installation, ou tous/toutes) -->
-        <select class="form-select" id="vue-entity" aria-label="${ENTITY_ARIA_LABEL[currentTab]}" style="width:auto;min-width:180px;">
-          ${buildEntityOptions()}
         </select>
 
         <!-- Bouton Imprimer -->
@@ -685,23 +675,18 @@ export async function renderVues(container) {
     updatePrintHeader();
   }
 
-  container.querySelectorAll('.vue-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentTab = btn.dataset.tab;
-      // Re-render complet pour mettre à jour l'état des boutons
-      renderVues(container);
-    });
+  // Changement de type de vue + entité (menu combiné) → re-render complet
+  // (le type change les cartes affichées ; la sélection d'entité reste mémorisée par type)
+  container.querySelector('#vue-type-entity')?.addEventListener('change', (e) => {
+    const [tab, idStr] = e.target.value.split(':');
+    currentTab = tab;
+    selectedEntityId[tab] = idStr ? parseInt(idStr, 10) : null;
+    renderVues(container);
   });
 
   // Changement de période → on met à jour le store global (le re-render est piloté par app.js)
   container.querySelector('#vue-periode')?.addEventListener('change', (e) => {
     setPeriodeGlobale(e.target.value);
-  });
-
-  // Changement d'entité (enseignant/classe/installation) → local à l'onglet actif
-  container.querySelector('#vue-entity')?.addEventListener('change', (e) => {
-    selectedEntityId[currentTab] = e.target.value ? parseInt(e.target.value, 10) : null;
-    renderContent();
   });
 
   renderContent();
