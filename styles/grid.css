@@ -38,10 +38,6 @@
 }
 
 /* ---- Verrouillage global de l'EDT ---- */
-.edt-lock-banner {
-  margin-bottom: var(--sp-3);
-}
-
 #edt-btn-lock.btn-lock-active {
   background: var(--c-warning-bg);
   border-color: var(--c-warning);
