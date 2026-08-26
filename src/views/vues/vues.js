@@ -13,13 +13,13 @@ const JOURS_COURTS = { lundi: 'Lun', mardi: 'Mar', mercredi: 'Mer', jeudi: 'Jeu'
 // px par 30 minutes dans la mini-grille
 const SLOT_PX = 24;
 
-let currentTab = 'enseignant';
-
-// Sélection d'entité par onglet (null = « Tous/Toutes »), mémorisée en changeant d'onglet
+// Sélection courante des 4 filtres indépendants (null = « Tous/Toutes »).
+// La période est gérée à part, via le store global (period-store.js).
 let selectedEntityId = { enseignant: null, classe: null, installation: null };
 
 const ENTITY_FIELD = { enseignant: 'enseignantId', classe: 'classeId', installation: 'installationId' };
 const NIVEAU_ORDRE = { '6e': 1, '5e': 2, '4e': 3, '3e': 4, '2nde': 5, '1ere': 6, 'term': 7 };
+const GROUPING_LABELS = { enseignant: 'Par enseignant', classe: 'Par classe', installation: 'Par installation' };
 
 // ============================================================
 // UTILITAIRES
@@ -546,26 +546,22 @@ export async function renderVues(container) {
   const data = { seances, enseignants, classes, activites, installations, lieux, periodes, patternsEnabled, instPatternMap };
   const periodesPrincipales = periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
-  /**
-   * Options du menu déroulant unique combinant type de vue (onglet) + entité :
-   * un seul <select> avec un <optgroup> par type, chacun démarrant par
-   * « Tous/Toutes les X » (équivalent de l'ancien onglet) puis une entrée par entité.
-   */
-  function buildTypeEntityOptions() {
-    const currentValue = selectedEntityId[currentTab] != null
-      ? `${currentTab}:${selectedEntityId[currentTab]}`
-      : currentTab;
-    const opt = (value, label) => `<option value="${value}" ${value === currentValue ? 'selected' : ''}>${label}</option>`;
+  /** Génère un groupe label+select autonome pour la toolbar. */
+  function filterGroup(id, label, optionsHtml) {
+    return `
+      <div style="display:flex;flex-direction:column;gap:var(--sp-1);">
+        <label class="form-label" for="${id}" style="margin-bottom:0;font-size:var(--fs-xs);color:var(--c-text-secondary);">${label}</label>
+        <select class="form-select" id="${id}" style="width:auto;min-width:170px;">${optionsHtml}</select>
+      </div>`;
+  }
 
-    const ensOptions = [...enseignants]
+  const ensOptionsHtml = `<option value="" ${selectedEntityId.enseignant == null ? 'selected' : ''}>Tous</option>` +
+    [...enseignants]
       .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr') || (a.prenom || '').localeCompare(b.prenom || '', 'fr'))
-      .map(e => opt(`enseignant:${e.id}`, `${e.prenom ? e.prenom + ' ' : ''}${e.nom}`)).join('');
+      .map(e => `<option value="${e.id}" ${selectedEntityId.enseignant === e.id ? 'selected' : ''}>${e.prenom ? e.prenom + ' ' : ''}${e.nom}</option>`).join('');
 
-    const clsOptions = [...classes]
-      .sort((a, b) => (NIVEAU_ORDRE[a.niveau] ?? 99) - (NIVEAU_ORDRE[b.niveau] ?? 99) || (a.nom || '').localeCompare(b.nom || '', 'fr'))
-      .map(c => opt(`classe:${c.id}`, c.nom)).join('');
-
-    const instOptions = [...installations]
+  const instOptionsHtml = `<option value="" ${selectedEntityId.installation == null ? 'selected' : ''}>Toutes</option>` +
+    [...installations]
       .sort((a, b) => {
         const la = lieux.find(l => l.id === a.lieuId)?.nom || '';
         const lb = lieux.find(l => l.id === b.lieuId)?.nom || '';
@@ -573,31 +569,27 @@ export async function renderVues(container) {
       })
       .map(i => {
         const lieu = lieux.find(l => l.id === i.lieuId);
-        return opt(`installation:${i.id}`, `${lieu ? lieu.nom + ' — ' : ''}${i.nom}`);
+        return `<option value="${i.id}" ${selectedEntityId.installation === i.id ? 'selected' : ''}>${lieu ? lieu.nom + ' — ' : ''}${i.nom}</option>`;
       }).join('');
 
-    return `
-      <optgroup label="&#128100; Enseignants">${opt('enseignant', 'Tous les enseignants')}${ensOptions}</optgroup>
-      <optgroup label="&#127979; Classes">${opt('classe', 'Toutes les classes')}${clsOptions}</optgroup>
-      <optgroup label="&#127968; Installations">${opt('installation', 'Toutes les installations')}${instOptions}</optgroup>
-    `;
-  }
+  const periodeOptionsHtml = `<option value="" ${getPeriodeGlobale() === 'all' ? 'selected' : ''}>Toutes</option>` +
+    periodesPrincipales.map(p => `<option value="${p.id}" ${getPeriodeGlobale() === String(p.id) ? 'selected' : ''}>${p.nom}</option>`).join('');
+
+  const clsOptionsHtml = `<option value="" ${selectedEntityId.classe == null ? 'selected' : ''}>Toutes</option>` +
+    [...classes]
+      .sort((a, b) => (NIVEAU_ORDRE[a.niveau] ?? 99) - (NIVEAU_ORDRE[b.niveau] ?? 99) || (a.nom || '').localeCompare(b.nom || '', 'fr'))
+      .map(c => `<option value="${c.id}" ${selectedEntityId.classe === c.id ? 'selected' : ''}>${c.nom}</option>`).join('');
 
   container.innerHTML = `
     <div style="max-width:1400px;margin:0 auto;">
 
       <!-- Contrôles écran (masqués à l'impression) -->
-      <div class="vues-toolbar" style="display:flex;gap:var(--sp-4);margin-bottom:var(--sp-5);align-items:center;flex-wrap:wrap;">
-        <!-- Vue : type (enseignant/classe/installation) + entité, dans un seul menu -->
-        <select class="form-select" id="vue-type-entity" aria-label="Vue" style="width:auto;min-width:220px;">
-          ${buildTypeEntityOptions()}
-        </select>
-
-        <!-- Filtre période (local à cet écran — le sélecteur du header est masqué ici) -->
-        <select class="form-select" id="vue-periode" aria-label="Période" style="width:auto;min-width:180px;">
-          <option value="" ${getPeriodeGlobale() === 'all' ? 'selected' : ''}>Toutes les périodes</option>
-          ${periodesPrincipales.map(p => `<option value="${p.id}" ${getPeriodeGlobale() === String(p.id) ? 'selected' : ''}>${p.nom}</option>`).join('')}
-        </select>
+      <div class="vues-toolbar" style="display:flex;gap:var(--sp-4);margin-bottom:var(--sp-5);align-items:flex-end;flex-wrap:wrap;">
+        <!-- 4 filtres indépendants, combinables (Tous/Toutes par défaut) -->
+        ${filterGroup('vue-filter-enseignant', 'Enseignants', ensOptionsHtml)}
+        ${filterGroup('vue-filter-installation', 'Installations', instOptionsHtml)}
+        ${filterGroup('vue-periode', 'Périodes', periodeOptionsHtml)}
+        ${filterGroup('vue-filter-classe', 'Classes', clsOptionsHtml)}
 
         <!-- Bouton Imprimer -->
         <button class="btn btn-secondary btn-print-trigger" onclick="window.print()"
@@ -629,59 +621,77 @@ export async function renderVues(container) {
     return seances.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
 
-  /** Nom lisible de l'entité sélectionnée pour l'onglet actif, ou null si « Tous/Toutes ». */
-  function selectedEntityLabel() {
-    const id = selectedEntityId[currentTab];
-    if (id == null) return null;
-    if (currentTab === 'enseignant') {
-      const e = enseignants.find(x => x.id === id);
-      return e ? `${e.prenom ? e.prenom + ' ' : ''}${e.nom}` : null;
-    }
-    if (currentTab === 'classe') {
-      return classes.find(x => x.id === id)?.nom || null;
-    }
-    return installations.find(x => x.id === id)?.nom || null;
+  /**
+   * Regroupement des cartes : déterminé automatiquement par le premier filtre
+   * précis renseigné (priorité enseignant > classe > installation). Si les
+   * 3 filtres sont sur « Tous/Toutes », on regroupe par enseignant par défaut.
+   * Fixer plusieurs filtres en même temps (ex: Installations=Gymnase +
+   * Classes=6A) reste possible : les séances sont filtrées par TOUS les
+   * critères choisis, seul l'angle d'affichage (le regroupement en cartes)
+   * suit ce classement de priorité.
+   */
+  function getGrouping() {
+    if (selectedEntityId.enseignant != null) return 'enseignant';
+    if (selectedEntityId.classe != null) return 'classe';
+    if (selectedEntityId.installation != null) return 'installation';
+    return 'enseignant';
   }
-
-  const TAB_LABELS = { enseignant: 'Par enseignant', classe: 'Par classe', installation: 'Par installation' };
 
   function updatePrintHeader() {
     const titleEl = container.querySelector('#vues-print-title');
     const subtitleEl = container.querySelector('#vues-print-subtitle');
-    if (titleEl) titleEl.textContent = `EDT EPS — ${TAB_LABELS[currentTab] || currentTab}`;
+    if (titleEl) titleEl.textContent = `EDT EPS — ${GROUPING_LABELS[getGrouping()]}`;
     if (subtitleEl) {
+      const parts = [];
       const id = getPeriodeGlobaleId();
-      let txt = id != null
-        ? (periodesPrincipales.find(p => p.id === id)?.nom || '')
-        : 'Toutes les périodes';
-      const entityLabel = selectedEntityLabel();
-      if (entityLabel) txt += ' · ' + entityLabel;
-      subtitleEl.textContent = txt;
+      parts.push(id != null ? (periodesPrincipales.find(p => p.id === id)?.nom || '') : 'Toutes les périodes');
+      if (selectedEntityId.enseignant != null) {
+        const e = enseignants.find(x => x.id === selectedEntityId.enseignant);
+        if (e) parts.push(`${e.prenom ? e.prenom + ' ' : ''}${e.nom}`);
+      }
+      if (selectedEntityId.classe != null) {
+        const c = classes.find(x => x.id === selectedEntityId.classe);
+        if (c) parts.push(c.nom);
+      }
+      if (selectedEntityId.installation != null) {
+        const i = installations.find(x => x.id === selectedEntityId.installation);
+        if (i) parts.push(i.nom);
+      }
+      subtitleEl.textContent = parts.join(' · ');
     }
   }
 
   function renderContent() {
-    const sf = getSeancesFiltrees();
-    const entityId = selectedEntityId[currentTab];
-    const entityField = ENTITY_FIELD[currentTab];
-    const sfEntity = entityId != null ? sf.filter(s => s[entityField] === entityId) : sf;
+    // Période, puis les 3 filtres d'entité s'appliquent ensemble (cumulatifs)
+    let filtered = getSeancesFiltrees();
+    for (const type of ['enseignant', 'classe', 'installation']) {
+      const id = selectedEntityId[type];
+      if (id != null) filtered = filtered.filter(s => s[ENTITY_FIELD[type]] === id);
+    }
+
     const content = container.querySelector('#vue-content');
     if (!content) return;
     // Afficher les étiquettes de période seulement quand on voit TOUTES les périodes
     const showPeriodeLabel = getPeriodeGlobaleId() == null;
-    if (currentTab === 'enseignant')    content.innerHTML = renderVueEnseignants(sfEntity, data, showPeriodeLabel);
-    else if (currentTab === 'classe')   content.innerHTML = renderVueClasses(sfEntity, data, showPeriodeLabel);
-    else                                content.innerHTML = renderVueInstallations(sfEntity, data, showPeriodeLabel);
+    const grouping = getGrouping();
+    if (grouping === 'enseignant')      content.innerHTML = renderVueEnseignants(filtered, data, showPeriodeLabel);
+    else if (grouping === 'classe')     content.innerHTML = renderVueClasses(filtered, data, showPeriodeLabel);
+    else                                content.innerHTML = renderVueInstallations(filtered, data, showPeriodeLabel);
     updatePrintHeader();
   }
 
-  // Changement de type de vue + entité (menu combiné) → re-render complet
-  // (le type change les cartes affichées ; la sélection d'entité reste mémorisée par type)
-  container.querySelector('#vue-type-entity')?.addEventListener('change', (e) => {
-    const [tab, idStr] = e.target.value.split(':');
-    currentTab = tab;
-    selectedEntityId[tab] = idStr ? parseInt(idStr, 10) : null;
-    renderVues(container);
+  // Chaque filtre d'entité est indépendant et se combine avec les autres
+  container.querySelector('#vue-filter-enseignant')?.addEventListener('change', (e) => {
+    selectedEntityId.enseignant = e.target.value ? parseInt(e.target.value, 10) : null;
+    renderContent();
+  });
+  container.querySelector('#vue-filter-classe')?.addEventListener('change', (e) => {
+    selectedEntityId.classe = e.target.value ? parseInt(e.target.value, 10) : null;
+    renderContent();
+  });
+  container.querySelector('#vue-filter-installation')?.addEventListener('change', (e) => {
+    selectedEntityId.installation = e.target.value ? parseInt(e.target.value, 10) : null;
+    renderContent();
   });
 
   // Changement de période → on met à jour le store global (le re-render est piloté par app.js)
