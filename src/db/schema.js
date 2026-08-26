@@ -173,6 +173,7 @@ export async function initDefaultConfig() {
     contrainte_max_heures_actif: true,
     contrainte_ecart_24h_actif: true,
     contrainte_1prof_1classe_actif: true,
+    edtVerrouille: false,
   };
 
   for (const [cle, valeur] of Object.entries(defaults)) {

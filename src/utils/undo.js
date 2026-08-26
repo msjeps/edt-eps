@@ -3,6 +3,8 @@
  * Utilise exportAllData/importAllData existants pour capturer et restaurer l'état.
  */
 import { exportAllData, importAllData } from '../db/store.js';
+import { isEdtVerrouille } from './edt-lock.js';
+import { toast } from '../components/toast.js';
 
 const MAX_STACK = 20;
 const _stack = [];
@@ -38,6 +40,10 @@ export async function captureUndo(label) {
  */
 export async function undo(rerenderFn) {
   if (!canUndo()) return null;
+  if (await isEdtVerrouille()) {
+    toast.warning('EDT verrouillé — déverrouillez-le avant d\'annuler.');
+    return null;
+  }
   const entry = _stack.pop();
   await importAllData(entry.snapshot);
   _onStackChange?.();
