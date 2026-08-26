@@ -1096,6 +1096,13 @@ export async function exportPdfInstallations(periodeId, installationIdFilter) {
     const lieu = lieux.find(l => l.id === inst.lieuId);
     const lieuLabel = lieu ? `${lieu.nom}${lieu.type === 'extra' ? ' (extra-muros)' : ''}` : '';
 
+    // Période précise sélectionnée → dates de la période plutôt que l'année scolaire ;
+    // "Toutes les périodes" → l'année scolaire reste le repère le plus lisible.
+    const perDates = targetPeriodes[0];
+    const subtitleRight = (periodeId && perDates?.dateDebut && perDates?.dateFin)
+      ? `du ${formatDateCourteAnnee(perDates.dateDebut)} au ${formatDateCourteAnnee(perDates.dateFin)}`
+      : anneeScolaire;
+
     // ---- EN-TÊTE ----
     doc.setFillColor(...HEADER_BG);
     doc.rect(M, M, PW - 2 * M, TITLE_H, 'F');
@@ -1109,7 +1116,7 @@ export async function exportPdfInstallations(periodeId, installationIdFilter) {
     doc.setFontSize(7.5);
     doc.setTextColor(190, 210, 245);
     const lieuLine = lieuLabel ? `${lieuLabel}  ·  ` : '';
-    doc.text(`${lieuLine}${periodeLabel}  ·  ${anneeScolaire}`, M + 5, M + 14.5);
+    doc.text(`${lieuLine}${periodeLabel}  ·  ${subtitleRight}`, M + 5, M + 14.5);
 
     const { str: hebdoStr, isWeighted: hebdoWeighted } = periodeId
       ? { str: totalHebdoStr(instSeances), isWeighted: false }
