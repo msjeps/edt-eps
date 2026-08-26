@@ -30,6 +30,9 @@ let state = {
   patterns: (typeof localStorage !== 'undefined' && localStorage.getItem('edt-patterns')) === '1',
   // Masque les séances d'Association Sportive (hors ORS) de la grille
   masquerAS: (typeof localStorage !== 'undefined' && localStorage.getItem('edt-masquer-as')) === '1',
+  // Légende des installations — masquable pour gagner de la place verticale
+  // (peut prendre 2 lignes complètes avec beaucoup d'installations)
+  showLegend: (typeof localStorage === 'undefined' || localStorage.getItem('edt-legend') !== '0'),
 };
 
 // Géométrie des blocs selon la densité d'affichage.
@@ -288,14 +291,6 @@ export async function renderEdt(container) {
   container.removeAttribute('aria-busy');
   container.innerHTML = `
     <div class="edt-container ${state.patterns ? 'edt-patterns' : ''} ${edtVerrouille ? 'edt-verrouille' : ''}">
-      ${edtVerrouille ? `
-        <div class="callout callout--warning edt-lock-banner">
-          <span class="callout-icon" aria-hidden="true">&#128274;</span>
-          <div class="callout-body">
-            <strong>EDT verrouillé</strong> — aucune modification possible (glisser-déposer, ajout, édition, Annuler). Cliquez sur « EDT verrouillé » dans la barre d'outils pour le déverrouiller.
-          </div>
-        </div>
-      ` : ''}
 
       <!-- Header visible uniquement à l'impression -->
       <div class="print-header">
@@ -375,6 +370,11 @@ export async function renderEdt(container) {
                   aria-pressed="${state.masquerAS}">
             ${state.masquerAS ? 'AS masquée' : 'AS visible'}
           </button>
+          <button class="btn btn-sm btn-ghost ${state.showLegend ? 'is-active' : ''}" id="edt-btn-legend"
+                  title="Afficher / masquer la légende des installations"
+                  aria-pressed="${state.showLegend}">
+            &#127912; Légende
+          </button>
           <button class="btn btn-sm btn-primary" id="edt-btn-add" ${edtVerrouille ? 'disabled' : ''} title="${edtVerrouille ? 'EDT verrouillé — déverrouillez-le pour ajouter une séance' : ''}">+ Séance</button>
           <button class="btn btn-sm btn-ghost btn-print-trigger" id="edt-btn-print" title="Imprimer l'EDT (Ctrl+P)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -397,6 +397,7 @@ export async function renderEdt(container) {
       </div>
 
       <!-- Légende installations (à l'écran) -->
+      ${state.showLegend ? `
       <div class="edt-legend" id="edt-legend">
         ${legendeItems.map(({ inst, slug }) => `
           <div class="edt-legend-item">
@@ -405,6 +406,7 @@ export async function renderEdt(container) {
           </div>
         `).join('')}
       </div>
+      ` : ''}
 
       <!-- Grille EDT -->
       <div class="edt-grid-wrapper">
@@ -722,6 +724,13 @@ function bindEdtEvents(container, seancesFiltrees, ctx) {
   container.querySelector('#edt-btn-as')?.addEventListener('click', () => {
     state.masquerAS = !state.masquerAS;
     try { localStorage.setItem('edt-masquer-as', state.masquerAS ? '1' : '0'); } catch { /* mode privé */ }
+    renderEdt(container);
+  });
+
+  // Bascule légende installations (mémorisée) — gagner de la hauteur d'écran
+  container.querySelector('#edt-btn-legend')?.addEventListener('click', () => {
+    state.showLegend = !state.showLegend;
+    try { localStorage.setItem('edt-legend', state.showLegend ? '1' : '0'); } catch { /* mode privé */ }
     renderEdt(container);
   });
 
