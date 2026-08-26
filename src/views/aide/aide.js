@@ -69,7 +69,9 @@ const SECTIONS = [
       <ul class="aide-list">
         <li><strong>Glisser-déposer</strong> — déplacez un bloc dans la même journée ou vers un autre jour. Un dialogue vous propose de déplacer pour "Cette période uniquement" ou "Toutes les périodes".</li>
         <li><strong>Clic sur un bloc</strong> — ouvre la modale de détail/modification de la séance.</li>
-        <li><strong>Verrou</strong> — cliquez l'icône 🔒 d'un bloc pour l'empêcher d'être déplacé accidentellement.</li>
+        <li><strong>Verrou d'une séance</strong> — dans la modale d'une séance, cochez « Verrouiller » pour l'empêcher d'être déplacée accidentellement (icône 🔒 sur le bloc).</li>
+        <li><strong>Verrouillage global de l'EDT</strong> — le bouton <em>🔓 Verrouiller l'EDT</em> de la barre d'outils fige tout l'emploi du temps une fois accepté : plus aucun ajout, déplacement, modification ou suppression n'est possible (glisser-déposer désactivé, bouton <em>+ Séance</em> grisé, Ctrl+Z bloqué). Le bouton devient ambre (<em>🔒 EDT verrouillé</em>) et le clic sur un bloc ouvre la modale en lecture seule. La <em>Programmation</em> reste modifiable pendant ce temps ; un bandeau y rappelle que la synchro vers l'EDT est différée jusqu'au déverrouillage.</li>
+        <li><strong>Légende</strong> — bouton <em>🎨 Légende</em> dans la barre d'outils pour afficher ou masquer la légende des installations (utile pour gagner de la hauteur d'écran quand il y a beaucoup d'installations).</li>
         <li><strong>Filtre période</strong> — changez la période dans la barre d'outils pour naviguer entre T1, T2, T3…</li>
         <li><strong>Filtre vue</strong> — affichez l'EDT d'un enseignant, d'une classe ou d'une installation spécifique.</li>
         <li><strong>Séance d'AS</strong> — dans le bouton <em>+ Séance</em>, cochez « Séance d'Association Sportive » tout en haut du formulaire : le champ Classe est remplacé par un intitulé libre (ex. « AS Badminton ») et le champ Activité par une saisie libre (l'AS peut proposer des activités hors programmation des classes). L'AS ne compte pas dans les 6h/jour ORS mais occupe bien l'installation. Bouton <em>AS visible/masquée</em> dans la barre d'outils pour l'afficher ou non.</li>
@@ -113,6 +115,22 @@ const SECTIONS = [
     `,
   },
   {
+    id: 'vues',
+    titre: 'Vues individuelles',
+    icone: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="7" height="7" rx="1"/><rect x="11" y="3" width="7" height="7" rx="1"/><rect x="2" y="12" width="7" height="5" rx="1"/><rect x="11" y="12" width="7" height="5" rx="1"/></svg>`,
+    contenu: `
+      <p>L'onglet <em>Vues</em> génère des fiches individuelles (une carte par enseignant, classe ou installation) pratiques à imprimer isolément — par exemple l'occupation d'un seul gymnase.</p>
+      <ul class="aide-list">
+        <li><strong>4 filtres indépendants</strong> — Enseignants, Installations, Périodes, Classes — toujours visibles en haut de l'écran, chacun avec une option « Tous/Toutes » par défaut.</li>
+        <li>Les filtres se <strong>combinent</strong> (ET logique) : par exemple Installations = Gymnase + Classes = 6eA n'affiche que les séances de 6eA au gymnase.</li>
+        <li><strong>Regroupement automatique</strong> — les cartes sont groupées par enseignant, classe ou installation selon le premier filtre précis renseigné (priorité enseignant &gt; classe &gt; installation) ; sans filtre précis, le regroupement se fait par enseignant.</li>
+        <li>En mode « Toutes les périodes », un badge <strong>S1/T2</strong> apparaît sur chaque bloc de la mini-grille, et un badge orange signale une entité dont toutes les séances appartiennent à une seule période. Les heures hebdomadaires affichées sont alors <strong>annualisées</strong> (ex. 2h en S1 seul sur 2 semestres → 1h/sem. affiché, avec astérisque).</li>
+        <li>Le sélecteur de période de cet écran est local (celui du header est masqué ici pour éviter le doublon).</li>
+        <li>Bouton <em>Imprimer</em> — le titre et le sous-titre de la page imprimée reprennent le regroupement actif et la liste des filtres appliqués.</li>
+      </ul>
+    `,
+  },
+  {
     id: 'exports',
     titre: 'Exports',
     icone: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9M6.5 8.5L10 12l3.5-3.5"/><path d="M4 14v1a2 2 0 002 2h8a2 2 0 002-2v-1"/></svg>`,
@@ -122,13 +140,22 @@ const SECTIONS = [
         <tbody>
           <tr><td>CSV Mairie</td><td>Créneaux par installation (format Direction des Sports)</td><td>Service municipal</td></tr>
           <tr><td>CSV Transport</td><td>1 ligne = 1 demande de bus (classe, lieu, départ/retour)</td><td>Service transport</td></tr>
-          <tr><td>PDF EDT</td><td>Grille équipe paysage A4 + fiches individuelles portrait par enseignant</td><td>Affichage / distribution</td></tr>
+          <tr><td>PDF EDT équipe</td><td>Grille équipe paysage A4 (couleurs alignées sur la légende)</td><td>Affichage / distribution</td></tr>
+          <tr><td>PDF EDT enseignants</td><td>Fiches individuelles portrait par enseignant (ORS + total hebdo)</td><td>Distribution aux profs</td></tr>
+          <tr><td>PDF EDT classes</td><td>Fiches individuelles portrait par classe</td><td>Distribution aux classes</td></tr>
+          <tr><td>PDF EDT installation</td><td>Fiche portrait A4 par installation, groupée jour &gt; période (classe/activité + enseignant)</td><td>Gestionnaire d'installation</td></tr>
           <tr><td>Excel EDT</td><td>Tableau EDT complet avec mise en forme couleur</td><td>Administration</td></tr>
-          <tr><td>Excel Synthèses</td><td>Occupation intra/extra, heures par enseignant, bilan transport</td><td>Direction</td></tr>
+          <tr><td>Excel Synthèses</td><td>Occupation intra/extra, heures par enseignant, bilan transport (colonne Nb rotations)</td><td>Direction</td></tr>
           <tr><td>JSON Projet</td><td>Sauvegarde complète de toutes les données (bouton 💾 sidebar)</td><td>Archivage / transfert</td></tr>
         </tbody>
       </table>
       <p style="margin-top: var(--sp-3);">Les fichiers sont enregistrés dans le dossier <code>EDT EPS/EXPORTS/</code> mémorisé (ou dans Téléchargements si l'API Dossier n'est pas disponible).</p>
+      <h3 class="section-title">Dates de transport (exclusions et ajouts)</h3>
+      <ul class="aide-list">
+        <li><strong>Dates à exclure</strong> — retire des dates du planning PDF et du CSV transport (journée pédagogique, voyage, bac blanc…). Renseignez une <em>date de fin</em> pour exclure une période entière (option « jours ouvrés uniquement » pour ne viser que lun-ven), ou utilisez <em>📅 Sélection multiple sur calendrier</em> pour cocher des jours non consécutifs (ex. tous les vendredis de septembre).</li>
+        <li><strong>Dates à ajouter</strong> — pour un besoin de bus ponctuel hors planning habituel (sortie, compétition, rattrapage) : date, classe, lieu et horaires dédiés, sans dépendre d'une séance de l'EDT.</li>
+        <li>Les deux listes sont <strong>repliables</strong> (bouton « ▾ Masquer / ▸ Afficher les dates ») pour ne pas avoir à scroller après plusieurs ajouts ; le compteur de dates reste visible même repliée.</li>
+      </ul>
     `,
   },
   {
@@ -195,6 +222,10 @@ const SECTIONS = [
         <details>
           <summary>Où déclarer l'Association Sportive (AS) ? Je ne la trouve pas dans Données.</summary>
           <p>L'AS ne se déclare pas comme une classe ou une activité : c'est un type de séance qu'on place directement dans la grille. Allez dans <strong>Emploi du temps &gt; + Séance</strong> et cochez « Séance d'Association Sportive » tout en haut du formulaire — le champ Classe est alors remplacé par un intitulé libre. Le champ « AS (heures) » dans Données &gt; Enseignants ne sert lui qu'à déclarer le volume horaire statutaire, pas à placer les créneaux.</p>
+        </details>
+        <details>
+          <summary>Comment figer l'emploi du temps une fois accepté par tout le monde ?</summary>
+          <p>Cliquez sur <strong>🔓 Verrouiller l'EDT</strong> dans la barre d'outils de l'onglet Emploi du temps. Tant qu'il est verrouillé (bouton ambre 🔒), plus aucune modification n'est possible sur la grille — glisser-déposer, ajout, édition, suppression et Ctrl+Z sont bloqués. La <em>Programmation</em> annuelle reste modifiable ; les changements s'y accumulent et se répercutent sur l'EDT dès le déverrouillage.</p>
         </details>
       </div>
     `,
