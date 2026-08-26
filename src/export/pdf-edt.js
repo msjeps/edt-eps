@@ -58,6 +58,17 @@ function minToLabel(m) {
   return mn === 0 ? `${h}h` : `${h}h${String(mn).padStart(2, '0')}`;
 }
 
+// Hauteur approx. (mm) de la casse haute / du jambage d'une police à une taille donnée (pt),
+// utilisée pour centrer verticalement un bloc de texte sur sa baseline.
+function capH(pt)  { return pt * 0.72 * 0.3528; }
+function descH(pt) { return pt * 0.22 * 0.3528; }
+
+// Formate une date en J/M/AA (sans zéro initial, année sur 2 chiffres) — ex : 2/9/26
+function formatDateCourteAnnee(d) {
+  const dt = new Date(d);
+  return `${dt.getDate()}/${dt.getMonth() + 1}/${String(dt.getFullYear()).slice(-2)}`;
+}
+
 // Couleur basée sur le lieu (comme la grille EDT), pas sur l'installation
 function instColors(installation, lieux) {
   if (!installation) return getInstallationColors('default');
@@ -287,32 +298,41 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder
   if (h < 7) {
     const actName = actNom ? (actNom.length > 14 ? actNom.substring(0, 13) + '…' : actNom) : '';
     const label = primaryLabel && actName ? `${primaryLabel} — ${actName}` : primaryLabel || actName;
+    const size = 5.5;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(5.5);
+    doc.setFontSize(size);
     doc.setTextColor(...textRgb);
-    doc.text(label, x + pad, y + bandH + (h - bandH) / 2 + 1, { maxWidth: maxW });
+    // Export équipe (flatBorder) : centrage vertical réel sur la hauteur du bloc.
+    // Fiches (prof/classe) : formule d'origine inchangée.
+    const baseline = flatBorder
+      ? y + h / 2 + capH(size) / 2
+      : y + bandH + (h - bandH) / 2 + 1;
+    doc.text(label, x + pad, baseline, { maxWidth: maxW });
   } else {
-    let textY = y + bandH + 2.2;
-    if (primaryLabel) {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(6);
-      doc.setTextColor(...textRgb);
-      doc.text(primaryLabel, x + pad, textY, { maxWidth: maxW });
-      textY += 2.8;
+    const showInst = inst && h >= 11;
+    const nomAct = actNom.length > 18 ? actNom.substring(0, 16) + '…' : actNom;
+    const parts = [];
+    if (primaryLabel) parts.push({ text: primaryLabel, size: 6,   font: 'bold',   color: textRgb, gapAfter: 2.8 });
+    if (actNom)       parts.push({ text: nomAct,        size: 5.2, font: 'normal', color: textRgb, gapAfter: 2.4 });
+    if (showInst)     parts.push({ text: inst.nom.substring(0, 14), size: 5, font: 'italic', color: hexToRgb(colors.border), gapAfter: 0 });
+
+    let textY;
+    if (flatBorder && parts.length) {
+      // Centrage vertical réel : hauteur totale du bloc de texte (casse haute de la 1re ligne
+      // + interlignes + jambage de la dernière ligne) centrée dans h.
+      let contentH = capH(parts[0].size);
+      for (let i = 1; i < parts.length; i++) contentH += parts[i - 1].gapAfter;
+      contentH += descH(parts[parts.length - 1].size);
+      textY = y + (h - contentH) / 2 + capH(parts[0].size);
+    } else {
+      textY = y + bandH + 2.2;
     }
-    if (actNom) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(5.2);
-      doc.setTextColor(...textRgb);
-      const nomAct = actNom.length > 18 ? actNom.substring(0, 16) + '…' : actNom;
-      doc.text(nomAct, x + pad, textY, { maxWidth: maxW });
-      textY += 2.4;
-    }
-    if (inst && h >= 11) {
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(5);
-      doc.setTextColor(...hexToRgb(colors.border));
-      doc.text(inst.nom.substring(0, 14), x + pad, textY, { maxWidth: maxW });
+    for (const p of parts) {
+      doc.setFont('helvetica', p.font);
+      doc.setFontSize(p.size);
+      doc.setTextColor(...p.color);
+      doc.text(p.text, x + pad, textY, { maxWidth: maxW });
+      textY += p.gapAfter;
     }
   }
 
@@ -656,18 +676,33 @@ export async function exportPdfEquipe(periodeId) {
   const periodeLabel = periodeId
     ? (targetPeriodes[0]?.nom || '')
     : 'Toutes les périodes';
+  // Période précise sélectionnée → dates de la période plutôt que l'année scolaire ;
+  // "Toutes les périodes" → l'année scolaire reste le repère le plus lisible.
+  const perDates = targetPeriodes[0];
+  const subtitleRight = (periodeId && perDates?.dateDebut && perDates?.dateFin)
+    ? `du ${formatDateCourteAnnee(perDates.dateDebut)} au ${formatDateCourteAnnee(perDates.dateFin)}`
+    : anneeScolaire;
 
   // ---- TITRE ----
+  const titleSize = 10, subtitleSize = 8, titleGap = 4.2;
   doc.setFillColor(...HEADER_BG);
-  doc.rect(M, M, PW - 2 * M, TITLE_H - 1, 'F');
+  const bannerH = TITLE_H - 1;
+  doc.rect(M, M, PW - 2 * M, bannerH, 'F');
+
+  // Bloc titre + sous-titre centré verticalement dans le bandeau (au lieu de baselines fixes
+  // qui plaquaient le sous-titre tout en bas).
+  const titleContentH = capH(titleSize) + titleGap + descH(subtitleSize);
+  const titleBaseline = M + (bannerH - titleContentH) / 2 + capH(titleSize);
+  const subtitleBaseline = titleBaseline + titleGap;
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
+  doc.setFontSize(titleSize);
   doc.setTextColor(255, 255, 255);
-  doc.text(`EDT EPS — ${etablissement}`, M + 5, M + 7);
+  doc.text(`EDT EPS — ${etablissement}`, M + 5, titleBaseline);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
+  doc.setFontSize(subtitleSize);
   doc.setTextColor(190, 210, 245);
-  doc.text(`${periodeLabel}  ·  ${anneeScolaire}`, M + 5, M + 11);
+  doc.text(`${periodeLabel}  ·  ${subtitleRight}`, M + 5, subtitleBaseline);
 
   // ---- GRILLE ----
   const gX = M;
