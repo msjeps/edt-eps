@@ -10,7 +10,7 @@ import { JOURS_OUVRES, slugify, dateHeure } from '../../utils/helpers.js';
 import Papa from 'papaparse';
 import { saveExportFile } from '../../utils/filesystem.js';
 import ExcelJS from 'exceljs';
-import { exportPdfEquipe, exportPdfEnseignants, exportPdfClasses } from '../../export/pdf-edt.js';
+import { exportPdfEquipe, exportPdfEnseignants, exportPdfClasses, exportPdfInstallations } from '../../export/pdf-edt.js';
 import { getOverlappingPeriodeIds } from '../../utils/period-store.js';
 
 function addSheetFromAoa(wb, sheetName, wsData, colWidths, merges) {
@@ -165,6 +165,7 @@ export async function renderExports(container) {
   const enseignants = await db.enseignants.toArray();
   const classes = await db.classes.toArray();
   const lieux = await db.lieux.toArray();
+  const installations = await db.installations.toArray();
   const lieuxBus = lieux.filter(l => l.necessiteBus).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   const dirPath = fsSupported ? await getExportsDirPath() : null;
 
@@ -294,6 +295,35 @@ export async function renderExports(container) {
               ${classes.sort((a,b) => a.nom.localeCompare(b.nom,'fr')).map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
             </select>
             <button class="btn btn-primary" id="btn-export-pdf-classes" ${seances.length === 0 ? 'disabled' : ''}>
+              Exporter PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- EDT installation -->
+        <div class="card export-card" style="cursor:default;">
+          <div class="export-card-icon">&#127970;</div>
+          <h3 style="margin-bottom:var(--sp-2);">EDT installation</h3>
+          <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-4);">
+            Occupation de chaque installation au format PDF (portrait A4) — affiche la classe, l'enseignant et l'activité.
+          </p>
+          <div class="export-card-actions">
+            <select class="form-select" id="export-pdf-install-per" aria-label="Période — EDT installation (PDF)" style="flex:1;min-width:120px;">
+              <option value="">Toutes les périodes</option>
+              ${periodes.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')}
+            </select>
+            <select class="form-select" id="export-pdf-install-inst" aria-label="Installation — EDT installation (PDF)" style="flex:1;min-width:130px;">
+              <option value="">Toutes les installations</option>
+              ${[...installations].sort((a, b) => {
+                const la = lieux.find(l => l.id === a.lieuId)?.nom || '';
+                const lb = lieux.find(l => l.id === b.lieuId)?.nom || '';
+                return la.localeCompare(lb, 'fr') || a.nom.localeCompare(b.nom, 'fr');
+              }).map(i => {
+                const lieuNom = lieux.find(l => l.id === i.lieuId)?.nom || '';
+                return `<option value="${i.id}">${lieuNom ? lieuNom + ' — ' : ''}${i.nom}</option>`;
+              }).join('')}
+            </select>
+            <button class="btn btn-primary" id="btn-export-pdf-installations" ${seances.length === 0 ? 'disabled' : ''}>
               Exporter PDF
             </button>
           </div>
@@ -978,6 +1008,13 @@ export async function renderExports(container) {
     const periodeId = document.getElementById('export-pdf-classe-per')?.value;
     const classeId  = document.getElementById('export-pdf-classe-cls')?.value;
     await exportPdfClasses(periodeId, classeId);
+  });
+
+  // === Export PDF Fiches par installation ===
+  document.getElementById('btn-export-pdf-installations')?.addEventListener('click', async () => {
+    const periodeId     = document.getElementById('export-pdf-install-per')?.value;
+    const installationId = document.getElementById('export-pdf-install-inst')?.value;
+    await exportPdfInstallations(periodeId, installationId);
   });
 
   // === Synthèse occupation installations ===
