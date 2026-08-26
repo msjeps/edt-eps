@@ -46,6 +46,18 @@ function hexToRgb(hex) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
+// Assombrit une couleur RGB (pour un liseré discret sur un fond de la même teinte)
+function darkenRgb([r, g, b], factor = 0.72) {
+  return [Math.round(r * factor), Math.round(g * factor), Math.round(b * factor)];
+}
+
+// Choisit un texte encre foncée ou blanc selon la luminosité perçue du fond,
+// pour rester lisible quelle que soit la couleur d'installation.
+function pickTextColor([r, g, b]) {
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 150 ? [15, 23, 42] : [255, 255, 255];
+}
+
 function heureToMin(h) {
   if (!h) return 0;
   const [hh, mm] = h.split(':').map(Number);
@@ -273,9 +285,11 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder
   const actNom = seance.isAS ? (seance.activiteLibre || '') : (act?.nom || '');
   const colors = instColors(inst, lieux);
 
-  const bgRgb     = hexToRgb(colors.bg);
+  // Export équipe (flatBorder) : fond = couleur pleine de l'installation (identique à la légende),
+  // texte encre foncée ou blanc selon le contraste. Fiches (prof/classe) : teinte pastel inchangée.
+  const bgRgb     = flatBorder ? hexToRgb(colors.border) : hexToRgb(colors.bg);
   const borderRgb = hexToRgb(colors.border);
-  const textRgb   = hexToRgb(colors.text);
+  const textRgb   = flatBorder ? pickTextColor(bgRgb) : hexToRgb(colors.text);
 
   doc.setFillColor(...bgRgb);
   doc.rect(x, y, w, h, 'F');
@@ -314,7 +328,7 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder
     const parts = [];
     if (primaryLabel) parts.push({ text: primaryLabel, size: 6,   font: 'bold',   color: textRgb, gapAfter: 2.8 });
     if (actNom)       parts.push({ text: nomAct,        size: 5.2, font: 'normal', color: textRgb, gapAfter: 2.4 });
-    if (showInst)     parts.push({ text: inst.nom.substring(0, 14), size: 5, font: 'italic', color: hexToRgb(colors.border), gapAfter: 0 });
+    if (showInst)     parts.push({ text: inst.nom.substring(0, 14), size: 5, font: 'italic', color: flatBorder ? textRgb : hexToRgb(colors.border), gapAfter: 0 });
 
     let textY;
     if (flatBorder && parts.length) {
@@ -336,7 +350,9 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder
     }
   }
 
-  doc.setDrawColor(...borderRgb);
+  // Export équipe : liseré légèrement plus foncé que le fond (identique en teinte) pour garder
+  // les blocs distincts même entre deux séances de la même installation l'une sous l'autre.
+  doc.setDrawColor(...(flatBorder ? darkenRgb(borderRgb) : borderRgb));
   doc.setLineWidth(0.15);
   doc.rect(x, y, w, h, 'S');
 }
