@@ -28,8 +28,14 @@ import { getTheme, applyTheme, toggleTheme } from './utils/theme-store.js';
 
 let currentView = 'dashboard';
 
-// Vues filtrées par la période globale (sélecteur du header)
+// Vues filtrées par la période globale (sélecteur du header) : se re-rendent
+// automatiquement quand la période change, quelle qu'en soit la source
 const VUES_PERIODE = ['edt', 'vues'];
+// Vues où le sélecteur de période du HEADER est affiché. La vue "Vues" a son
+// propre sélecteur de période dans sa toolbar (redondant avec celui du header) :
+// on masque celui du header uniquement là, il reste utile sur EDT (pas de select
+// local équivalent, seulement des boutons rapides Toutes/T1/T2/T3).
+const VUES_HEADER_PERIODE = ['edt'];
 // Indicateur : les données ont-elles été modifiées depuis la dernière sauvegarde ?
 let dataModifiedSinceLastSave = false;
 
@@ -519,7 +525,7 @@ export async function navigateTo(viewName) {
 
   // Sélecteur de période : visible seulement sur les vues filtrées par période
   const periodeWrap = document.getElementById('header-periode-wrap');
-  if (periodeWrap) periodeWrap.hidden = !VUES_PERIODE.includes(viewName);
+  if (periodeWrap) periodeWrap.hidden = !VUES_HEADER_PERIODE.includes(viewName);
 
   // Vues nécessitant une configuration complète
   const VUES_PROTEGEES = ['edt'];
