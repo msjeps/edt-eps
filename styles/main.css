@@ -823,6 +823,18 @@ body {
   color: var(--c-primary);
 }
 
+/* Bouton "afficher/masquer" d'une liste repliable — fond bleu, plus
+   discret/transparent que .btn-primary (ex : listes exclusions/ajouts transport) */
+.btn-list-toggle {
+  background: var(--c-primary-bg);
+  border-color: var(--c-primary-bg-strong);
+  color: var(--c-primary-dark);
+}
+.btn-list-toggle:hover:not(:disabled) {
+  background: var(--c-primary-bg-strong);
+  border-color: var(--c-primary-light);
+}
+
 .btn-ghost {
   background: transparent;
   border-color: transparent;

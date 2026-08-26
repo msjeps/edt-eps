@@ -377,7 +377,7 @@ export async function renderExports(container) {
             <div class="export-card-icon" aria-hidden="true">🚫</div>
             <h3>Dates à exclure des transports</h3>
             <span class="export-card-meta">Journées péda, voyages, bac blanc… · <span id="excl-count-label">${exclusionsInit.length} date${exclusionsInit.length > 1 ? 's' : ''}</span></span>
-            <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-excl" style="white-space:nowrap;">
+            <button type="button" class="btn btn-list-toggle btn-sm" id="btn-toggle-excl" style="white-space:nowrap;">
               ${exclCollapsed ? '▸ Afficher les dates' : '▾ Masquer les dates'}
             </button>
           </div>
@@ -444,7 +444,7 @@ export async function renderExports(container) {
             <div class="export-card-icon" aria-hidden="true">➕</div>
             <h3>Dates à ajouter aux transports</h3>
             <span class="export-card-meta">Sorties, compétitions, rattrapages… · <span id="ajouts-count-label">${ajoutsInit.length} date${ajoutsInit.length > 1 ? 's' : ''}</span></span>
-            <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-ajouts" style="white-space:nowrap;">
+            <button type="button" class="btn btn-list-toggle btn-sm" id="btn-toggle-ajouts" style="white-space:nowrap;">
               ${ajoutsCollapsed ? '▸ Afficher les dates' : '▾ Masquer les dates'}
             </button>
           </div>
