@@ -15,6 +15,12 @@ const SLOT_PX = 24;
 
 let currentTab = 'enseignant';
 
+// Sélection d'entité par onglet (null = « Tous/Toutes »), mémorisée en changeant d'onglet
+let selectedEntityId = { enseignant: null, classe: null, installation: null };
+
+const ENTITY_FIELD = { enseignant: 'enseignantId', classe: 'classeId', installation: 'installationId' };
+const NIVEAU_ORDRE = { '6e': 1, '5e': 2, '4e': 3, '3e': 4, '2nde': 5, '1ere': 6, 'term': 7 };
+
 // ============================================================
 // UTILITAIRES
 // ============================================================
@@ -436,10 +442,9 @@ function renderVueClasses(seances, data, showPeriodeLabel = false) {
   const { enseignants, classes, activites, installations, lieux, periodes, patternsEnabled, instPatternMap } = data;
   const refs = { classes, enseignants, activites, installations, lieux, periodes };
 
-  const niveauOrdre = { '6e': 1, '5e': 2, '4e': 3, '3e': 4, '2nde': 5, '1ere': 6, 'term': 7 };
   const classesAvecSeances = classes
     .filter(c => seances.some(s => s.classeId === c.id))
-    .sort((a, b) => (niveauOrdre[a.niveau] ?? 99) - (niveauOrdre[b.niveau] ?? 99) || (a.nom || '').localeCompare(b.nom || ''));
+    .sort((a, b) => (NIVEAU_ORDRE[a.niveau] ?? 99) - (NIVEAU_ORDRE[b.niveau] ?? 99) || (a.nom || '').localeCompare(b.nom || ''));
 
   if (!classesAvecSeances.length) {
     return `<div class="empty-state"><div class="empty-state-icon">&#127979;</div><div class="empty-state-title">Aucune classe avec des séances</div></div>`;
@@ -541,6 +546,37 @@ export async function renderVues(container) {
   const data = { seances, enseignants, classes, activites, installations, lieux, periodes, patternsEnabled, instPatternMap };
   const periodesPrincipales = periodes.filter(p => !p.parentId).sort((a, b) => (a.ordre ?? a.id) - (b.ordre ?? b.id));
 
+  /** Options du menu déroulant d'entité, dépendant de l'onglet actif. */
+  function buildEntityOptions() {
+    const selId = selectedEntityId[currentTab];
+    if (currentTab === 'enseignant') {
+      return `<option value="">Tous les enseignants</option>` +
+        [...enseignants]
+          .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr') || (a.prenom || '').localeCompare(b.prenom || '', 'fr'))
+          .map(e => `<option value="${e.id}" ${selId === e.id ? 'selected' : ''}>${e.prenom ? e.prenom + ' ' : ''}${e.nom}</option>`).join('');
+    }
+    if (currentTab === 'classe') {
+      return `<option value="">Toutes les classes</option>` +
+        [...classes]
+          .sort((a, b) => (NIVEAU_ORDRE[a.niveau] ?? 99) - (NIVEAU_ORDRE[b.niveau] ?? 99) || (a.nom || '').localeCompare(b.nom || '', 'fr'))
+          .map(c => `<option value="${c.id}" ${selId === c.id ? 'selected' : ''}>${c.nom}</option>`).join('');
+    }
+    // installation
+    return `<option value="">Toutes les installations</option>` +
+      [...installations]
+        .sort((a, b) => {
+          const la = lieux.find(l => l.id === a.lieuId)?.nom || '';
+          const lb = lieux.find(l => l.id === b.lieuId)?.nom || '';
+          return la.localeCompare(lb, 'fr') || (a.nom || '').localeCompare(b.nom || '', 'fr');
+        })
+        .map(i => {
+          const lieu = lieux.find(l => l.id === i.lieuId);
+          return `<option value="${i.id}" ${selId === i.id ? 'selected' : ''}>${lieu ? lieu.nom + ' — ' : ''}${i.nom}</option>`;
+        }).join('');
+  }
+
+  const ENTITY_ARIA_LABEL = { enseignant: 'Enseignant', classe: 'Classe', installation: 'Installation' };
+
   container.innerHTML = `
     <div style="max-width:1400px;margin:0 auto;">
 
@@ -566,6 +602,11 @@ export async function renderVues(container) {
         <select class="form-select" id="vue-periode" aria-label="Période" style="width:auto;min-width:180px;">
           <option value="" ${getPeriodeGlobale() === 'all' ? 'selected' : ''}>Toutes les périodes</option>
           ${periodesPrincipales.map(p => `<option value="${p.id}" ${getPeriodeGlobale() === String(p.id) ? 'selected' : ''}>${p.nom}</option>`).join('')}
+        </select>
+
+        <!-- Filtre entité (dépend de l'onglet actif : un seul enseignant/classe/installation, ou tous/toutes) -->
+        <select class="form-select" id="vue-entity" aria-label="${ENTITY_ARIA_LABEL[currentTab]}" style="width:auto;min-width:180px;">
+          ${buildEntityOptions()}
         </select>
 
         <!-- Bouton Imprimer -->
@@ -598,6 +639,20 @@ export async function renderVues(container) {
     return seances.filter(s => !s.periodeId || visibleIds.has(s.periodeId));
   }
 
+  /** Nom lisible de l'entité sélectionnée pour l'onglet actif, ou null si « Tous/Toutes ». */
+  function selectedEntityLabel() {
+    const id = selectedEntityId[currentTab];
+    if (id == null) return null;
+    if (currentTab === 'enseignant') {
+      const e = enseignants.find(x => x.id === id);
+      return e ? `${e.prenom ? e.prenom + ' ' : ''}${e.nom}` : null;
+    }
+    if (currentTab === 'classe') {
+      return classes.find(x => x.id === id)?.nom || null;
+    }
+    return installations.find(x => x.id === id)?.nom || null;
+  }
+
   const TAB_LABELS = { enseignant: 'Par enseignant', classe: 'Par classe', installation: 'Par installation' };
 
   function updatePrintHeader() {
@@ -606,21 +661,27 @@ export async function renderVues(container) {
     if (titleEl) titleEl.textContent = `EDT EPS — ${TAB_LABELS[currentTab] || currentTab}`;
     if (subtitleEl) {
       const id = getPeriodeGlobaleId();
-      subtitleEl.textContent = id != null
+      let txt = id != null
         ? (periodesPrincipales.find(p => p.id === id)?.nom || '')
         : 'Toutes les périodes';
+      const entityLabel = selectedEntityLabel();
+      if (entityLabel) txt += ' · ' + entityLabel;
+      subtitleEl.textContent = txt;
     }
   }
 
   function renderContent() {
     const sf = getSeancesFiltrees();
+    const entityId = selectedEntityId[currentTab];
+    const entityField = ENTITY_FIELD[currentTab];
+    const sfEntity = entityId != null ? sf.filter(s => s[entityField] === entityId) : sf;
     const content = container.querySelector('#vue-content');
     if (!content) return;
     // Afficher les étiquettes de période seulement quand on voit TOUTES les périodes
     const showPeriodeLabel = getPeriodeGlobaleId() == null;
-    if (currentTab === 'enseignant')    content.innerHTML = renderVueEnseignants(sf, data, showPeriodeLabel);
-    else if (currentTab === 'classe')   content.innerHTML = renderVueClasses(sf, data, showPeriodeLabel);
-    else                                content.innerHTML = renderVueInstallations(sf, data, showPeriodeLabel);
+    if (currentTab === 'enseignant')    content.innerHTML = renderVueEnseignants(sfEntity, data, showPeriodeLabel);
+    else if (currentTab === 'classe')   content.innerHTML = renderVueClasses(sfEntity, data, showPeriodeLabel);
+    else                                content.innerHTML = renderVueInstallations(sfEntity, data, showPeriodeLabel);
     updatePrintHeader();
   }
 
@@ -635,6 +696,12 @@ export async function renderVues(container) {
   // Changement de période → on met à jour le store global (le re-render est piloté par app.js)
   container.querySelector('#vue-periode')?.addEventListener('change', (e) => {
     setPeriodeGlobale(e.target.value);
+  });
+
+  // Changement d'entité (enseignant/classe/installation) → local à l'onglet actif
+  container.querySelector('#vue-entity')?.addEventListener('change', (e) => {
+    selectedEntityId[currentTab] = e.target.value ? parseInt(e.target.value, 10) : null;
+    renderContent();
   });
 
   renderContent();
