@@ -73,6 +73,28 @@ async function saveAjouts(list) {
   await setConfig('ajoutsTransport', list);
 }
 
+// ============================================================
+// LISTES REPLIABLES (exclusions / ajouts transport) — état mémorisé
+// ============================================================
+function getListCollapsed(key) {
+  try { return localStorage.getItem(key) === '1'; } catch { return false; }
+}
+function setListCollapsed(key, collapsed) {
+  try { localStorage.setItem(key, collapsed ? '1' : '0'); } catch { /* mode privé */ }
+}
+/** Branche un bouton replier/déplier sur un conteneur de liste, avec mémorisation. */
+function wireListToggle(btnId, wrapId, storageKey) {
+  const btn = document.getElementById(btnId);
+  const wrap = document.getElementById(wrapId);
+  if (!btn || !wrap) return;
+  btn.addEventListener('click', () => {
+    const collapse = wrap.style.display !== 'none';
+    wrap.style.display = collapse ? 'none' : '';
+    btn.innerHTML = collapse ? '▸ Afficher les dates' : '▾ Masquer les dates';
+    setListCollapsed(storageKey, collapse);
+  });
+}
+
 function renderExclusionsList(exclusions, classes, containerId) {
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -145,6 +167,13 @@ export async function renderExports(container) {
   const lieux = await db.lieux.toArray();
   const lieuxBus = lieux.filter(l => l.necessiteBus).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   const dirPath = fsSupported ? await getExportsDirPath() : null;
+
+  // Exclusions / ajouts transport — chargés en amont pour connaître le nombre
+  // de dates déjà enregistrées et l'état replié/déplié mémorisé (localStorage).
+  const exclusionsInit = await loadExclusions();
+  const ajoutsInit = await loadAjouts();
+  const exclCollapsed = getListCollapsed('exports-excl-collapsed');
+  const ajoutsCollapsed = getListCollapsed('exports-ajouts-collapsed');
 
   container.innerHTML = `
     <div style="max-width:900px;margin:0 auto;">
@@ -347,7 +376,10 @@ export async function renderExports(container) {
           <div class="export-card-head">
             <div class="export-card-icon" aria-hidden="true">🚫</div>
             <h3>Dates à exclure des transports</h3>
-            <span class="export-card-meta">Journées péda, voyages, bac blanc…</span>
+            <span class="export-card-meta">Journées péda, voyages, bac blanc… · <span id="excl-count-label">${exclusionsInit.length} date${exclusionsInit.length > 1 ? 's' : ''}</span></span>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-excl" style="white-space:nowrap;">
+              ${exclCollapsed ? '▸ Afficher les dates' : '▾ Masquer les dates'}
+            </button>
           </div>
           <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
             Ces dates sont retirées du planning PDF transport. Une page récapitulative est ajoutée au PDF si des exclusions sont appliquées.
@@ -401,7 +433,9 @@ export async function renderExports(container) {
           </div>
 
           <!-- Liste des exclusions -->
-          <div id="exclusions-list"></div>
+          <div id="exclusions-list-wrap" style="${exclCollapsed ? 'display:none;' : ''}">
+            <div id="exclusions-list"></div>
+          </div>
         </div>
 
         <!-- Dates à ajouter aux transports (exceptionnel) -->
@@ -409,7 +443,10 @@ export async function renderExports(container) {
           <div class="export-card-head">
             <div class="export-card-icon" aria-hidden="true">➕</div>
             <h3>Dates à ajouter aux transports</h3>
-            <span class="export-card-meta">Sorties, compétitions, rattrapages…</span>
+            <span class="export-card-meta">Sorties, compétitions, rattrapages… · <span id="ajouts-count-label">${ajoutsInit.length} date${ajoutsInit.length > 1 ? 's' : ''}</span></span>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-ajouts" style="white-space:nowrap;">
+              ${ajoutsCollapsed ? '▸ Afficher les dates' : '▾ Masquer les dates'}
+            </button>
           </div>
           <p style="font-size:var(--fs-sm);color:var(--c-text-secondary);margin-bottom:var(--sp-3);">
             Pour un besoin de bus <strong>ponctuel</strong>, en dehors du planning hebdomadaire habituel (ex&nbsp;: une sortie
@@ -466,7 +503,9 @@ export async function renderExports(container) {
           </div>
 
           <!-- Liste des ajouts -->
-          <div id="ajouts-list"></div>
+          <div id="ajouts-list-wrap" style="${ajoutsCollapsed ? 'display:none;' : ''}">
+            <div id="ajouts-list"></div>
+          </div>
         </div>
 
         <!-- Réservation transports (CSV) -->
@@ -581,12 +620,25 @@ export async function renderExports(container) {
   });
 
   // === Exclusions transport — init liste ===
-  let exclusions = await loadExclusions();
+  let exclusions = exclusionsInit;
   renderExclusionsList(exclusions, classes, 'exclusions-list');
 
   // === Ajouts exceptionnels transport — init liste ===
-  let ajoutsTransport = await loadAjouts();
+  let ajoutsTransport = ajoutsInit;
   renderAjoutsList(ajoutsTransport, classes, lieux, 'ajouts-list');
+
+  // === Listes repliables (masquer/afficher) ===
+  wireListToggle('btn-toggle-excl', 'exclusions-list-wrap', 'exports-excl-collapsed');
+  wireListToggle('btn-toggle-ajouts', 'ajouts-list-wrap', 'exports-ajouts-collapsed');
+
+  function updateExclCountLabel() {
+    const el = document.getElementById('excl-count-label');
+    if (el) el.textContent = `${exclusions.length} date${exclusions.length > 1 ? 's' : ''}`;
+  }
+  function updateAjoutsCountLabel() {
+    const el = document.getElementById('ajouts-count-label');
+    if (el) el.textContent = `${ajoutsTransport.length} date${ajoutsTransport.length > 1 ? 's' : ''}`;
+  }
 
   // === Exclusions transport — "Toutes les classes" mutuellement exclusif ===
   // Par défaut "Toutes les classes" est sélectionné ; en multi-select natif, un
@@ -813,6 +865,7 @@ export async function renderExports(container) {
     });
     await saveExclusions(exclusions);
     renderExclusionsList(exclusions, classes, 'exclusions-list');
+    updateExclCountLabel();
 
     // Reset form
     if (document.getElementById('excl-date'))     document.getElementById('excl-date').value = '';
@@ -833,6 +886,7 @@ export async function renderExports(container) {
     exclusions = exclusions.filter(ex => ex.id !== id);
     await saveExclusions(exclusions);
     renderExclusionsList(exclusions, classes, 'exclusions-list');
+    updateExclCountLabel();
     toast.success('Exclusion supprimée');
   });
 
@@ -859,6 +913,7 @@ export async function renderExports(container) {
     });
     await saveAjouts(ajoutsTransport);
     renderAjoutsList(ajoutsTransport, classes, lieux, 'ajouts-list');
+    updateAjoutsCountLabel();
 
     // Reset form
     document.getElementById('ajout-date').value = '';
@@ -884,6 +939,7 @@ export async function renderExports(container) {
     ajoutsTransport = ajoutsTransport.filter(a => a.id !== id);
     await saveAjouts(ajoutsTransport);
     renderAjoutsList(ajoutsTransport, classes, lieux, 'ajouts-list');
+    updateAjoutsCountLabel();
     toast.success('Ajout supprimé');
   });
 
