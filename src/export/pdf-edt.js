@@ -251,7 +251,7 @@ function buildRows(seances, enseignants, periodes) {
 // ============================================================
 
 // showTeacher = true → affiche le nom de l'enseignant à la place de la classe (fiches par classe)
-function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false) {
+function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false, flatBorder = false) {
   const { classes, enseignants, activites, installations, lieux } = refs;
   if (w < 1) return;
 
@@ -269,9 +269,13 @@ function drawBloc(doc, x, y, w, h, seance, refs, showTeacher = false) {
   doc.setFillColor(...bgRgb);
   doc.rect(x, y, w, h, 'F');
 
-  const bandH = Math.min(1.5, h * 0.3);
-  doc.setFillColor(...borderRgb);
-  doc.rect(x, y, w, bandH, 'F');
+  // Bandeau coloré en haut du bloc : conservé pour les fiches (repère visuel installation),
+  // supprimé pour l'export équipe (flatBorder) afin que les 4 bordures du bloc soient identiques.
+  const bandH = flatBorder ? 0.8 : Math.min(1.5, h * 0.3);
+  if (!flatBorder) {
+    doc.setFillColor(...borderRgb);
+    doc.rect(x, y, w, bandH, 'F');
+  }
 
   const pad = 1;
   const maxW = w - 2 * pad;
@@ -333,6 +337,7 @@ function drawGrid(doc, {
   rowH, headerH,
   showEnsCol,                 // false pour fiches individuelles
   showTeacher = false,        // true pour fiches par classe
+  accent = false,             // true pour l'export équipe : quadrillage horaires accentué + blocs à bordure plate
 }) {
   const gridW = (showEnsCol
     ? jourColW + ensColW + perColW
@@ -440,7 +445,7 @@ function drawGrid(doc, {
 
       const bX = colTimeX + (xCoords[startIdx] - xCoords[0]) + 0.3;
       const bW = (xCoords[endIdx] - xCoords[startIdx]) - 0.6;
-      drawBloc(doc, bX, y + 0.4, bW, rowH - 0.8, s, refs, showTeacher);
+      drawBloc(doc, bX, y + 0.4, bW, rowH - 0.8, s, refs, showTeacher, accent);
     }
   });
 
@@ -453,17 +458,23 @@ function drawGrid(doc, {
     const isGroupBoundary = curr.jour !== prev.jour || (showEnsCol && curr.ens?.id !== prev.ens?.id);
 
     if (!isGroupBoundary) {
-      // Filet très fin entre périodes du même groupe (dans la zone période+horaires uniquement)
+      // Filet entre périodes du même groupe (dans la zone période+horaires uniquement)
       const thinStartX = showEnsCol ? col2X : col1X;
-      doc.setDrawColor(210, 215, 230);
-      doc.setLineWidth(0.07);
+      doc.setDrawColor(...(accent ? GRID_LINE : [210, 215, 230]));
+      doc.setLineWidth(accent ? 0.15 : 0.07);
       doc.line(thinStartX, y, gX + gridW, y);
+    } else if (accent) {
+      // Export équipe : la ligne de séparation forte (jour/enseignant) se prolonge
+      // sur toute la largeur (période + horaires), à l'identique de la partie gauche.
+      doc.setDrawColor(...JOUR_LINE);
+      doc.setLineWidth(0.4);
+      doc.line(gX, y, gX + gridW, y);
     }
   }
 
   // ---- TRAITS VERTICAUX (colonnes fixes) ----
-  doc.setDrawColor(...GRID_LINE);
-  doc.setLineWidth(0.2);
+  doc.setDrawColor(...(accent ? JOUR_LINE : GRID_LINE));
+  doc.setLineWidth(accent ? 0.4 : 0.2);
   if (showEnsCol) {
     doc.line(col1X, gY + headerH, col1X, gY + headerH + rows.length * rowH);
     doc.line(col2X, gY + headerH, col2X, gY + headerH + rows.length * rowH);
@@ -474,7 +485,7 @@ function drawGrid(doc, {
 
   // ---- TRAITS VERTICAUX (horaires) ----
   doc.setDrawColor(...GRID_LINE);
-  doc.setLineWidth(0.1);
+  doc.setLineWidth(accent ? 0.2 : 0.1);
   for (let i = 1; i < timeAxis.length; i++) {
     const x = colTimeX + (xCoords[i] - xCoords[0]);
     doc.line(x, gY + headerH, x, gY + headerH + rows.length * rowH);
@@ -672,6 +683,7 @@ export async function exportPdfEquipe(periodeId) {
     rowH: ROW_H,
     headerH: HEADER_H,
     showEnsCol: true,
+    accent: true,
   });
 
   // ---- LÉGENDE ----
