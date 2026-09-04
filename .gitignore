@@ -9,3 +9,14 @@ extracted_*.txt
 .claude/
 CLAUDE.md
 SECURITY_TODO.md
+
+# Secrets & clés — ne jamais committer
+.env
+.env.*
+*.jks
+*.keystore
+*.p12
+*.pem
+keystore.properties
+local.properties
+google-services.json
