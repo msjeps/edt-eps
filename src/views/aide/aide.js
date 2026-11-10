@@ -38,7 +38,7 @@ const SECTIONS = [
           <tr><td>Enseignants</td><td>Ajouter/modifier des enseignants, renseigner l'ORS, saisir les indisponibilités (jours, plages horaires)</td></tr>
           <tr><td>Classes</td><td>Créer des classes par niveau (6e → Terminale), associer un enseignant référent</td></tr>
           <tr><td>Activités</td><td>Choisir les APSA du catalogue EPS par champ d'apprentissage (CA1–CA4), définir la durée et l'installation requise</td></tr>
-          <tr><td>Installations</td><td>Gérer les lieux et installations, importer les disponibilités mairie (bouton "Import mairie")</td></tr>
+          <tr><td>Installations</td><td>Gérer les lieux et installations, importer les disponibilités mairie (bouton "Import mairie"), ou importer une liste de lieux et d'installations déjà prête (bouton "Importer lieux", fichier JSON exporté depuis EDT EPS ou fichier CSV à deux colonnes LIEUX et INSTALLATIONS) pour éviter une ressaisie. Les lieux déjà présents sont ignorés, les nouvelles installations sont ajoutées aux lieux existants.</td></tr>
           <tr><td>Périodes</td><td>Paramétrer les trimestres, semestres ou périodes personnalisées</td></tr>
           <tr><td>Créneaux</td><td>Définir les plages horaires de base (modifiables par période dans Programmation)</td></tr>
         </tbody>
