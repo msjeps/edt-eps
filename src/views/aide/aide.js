@@ -1,5 +1,8 @@
 /**
  * Vue Aide — Documentation et guide utilisateur
+ *
+ * ⚠️ Le guide PDF (edt-eps.pdf) reprend ce texte à la main : après toute modification ici,
+ * reporter le changement dans generer-guide-edt-eps.py puis lancer ./publier-guide.sh
  */
 import { navigateTo } from '../../app.js';
 
