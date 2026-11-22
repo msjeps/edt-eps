@@ -3,7 +3,7 @@
  * Cache statique pour usage hors-ligne
  * Base : /edt-eps/ (GitHub Pages)
  */
-const CACHE_NAME = 'edt-eps-v2';
+const CACHE_NAME = 'edt-eps-v3';
 const BASE = '/edt-eps/';
 
 const PRECACHE_URLS = [
